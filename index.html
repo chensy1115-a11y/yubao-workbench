@@ -1069,30 +1069,25 @@ function renderTravel(){
     <span><button class="btn sm ghost" data-wishdone="${w.id}">${w.done?'撤销':'标记成行'}</button> <button class="btn sm danger" data-wishdel="${w.id}">删</button></span></div>`).join(''):'<div class="empty">愿望清单为空</div>';
 
   return `
-  <!-- 新增 -->
+  <!-- 我的旅行（首栏：添加 + 列表） -->
   <div class="card">
-    <h3>新增旅行计划</h3>
+    <h3>我的旅行 <span class="cs">先添加，再点「编辑行程」为它安排逐日计划</span></h3>
     <form class="fr" data-add="trip">
       <div class="field" style="flex:1;min-width:180px"><label>名称</label><input name="name" placeholder="如 云南大理 7 日"></div>
       <div class="field"><label>出发日期</label><input type="date" name="date"></div>
       <div class="field"><label>预估预算(元)</label><input type="number" name="budget" placeholder="0"></div>
       <button class="btn" type="submit">添加</button>
     </form>
+    <div style="margin-top:14px">${tripsHtml}</div>
   </div>
 
-  <!-- 行程规划：紧跟新增表单，选择→粘贴→拆分 -->
+  <!-- 行程规划：紧跟我旅行，操作选中的那一次 -->
   <div class="card mt">
-    <h3>行程规划 <span class="cs">选择旅行 → 粘贴行程 → 自动拆分</span></h3>
+    <h3>行程规划 <span class="cs">${selTrip?('为「'+selTrip.name+'」安排逐日行程'):'请先在上方添加并选择一次旅行'}</span></h3>
     <div class="field" style="margin-bottom:10px"><label>选择行程</label>
       <select id="planTripSel">${trips.length?trips.map(t=>`<option value="${t.id}" ${t.id===DATA.travel.planTrip?'selected':''}>${t.name} · ${D.pretty(t.date)}</option>`).join(''):'<option value="">请先添加旅行</option>'}</select></div>
     ${planEditHtml}
     ${planPreviewHtml}
-  </div>
-
-  <!-- 我的旅行列表 -->
-  <div class="card mt">
-    <h3>我的旅行</h3>
-    ${tripsHtml}
   </div>
 
   <!-- 愿望清单 -->
