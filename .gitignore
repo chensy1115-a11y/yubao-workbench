@@ -1,0 +1,9 @@
+# 项目内部数据，不传远程
+.workbuddy/
+
+# 早期多文件版本残留（已合并进 index.html），无需上传
+charts.js
+store.js
+
+# 系统文件
+.DS_Store
