@@ -141,7 +141,7 @@ textarea{resize:vertical;width:100%} input[type=number]{width:120px}
 .tabs{display:flex;gap:6px;border-bottom:1px solid var(--border);margin-bottom:16px;flex-wrap:wrap}
 .tab{padding:9px 16px;cursor:pointer;font-size:13px;font-weight:700;color:var(--text-3);border-bottom:2px solid transparent;margin-bottom:-1px}
 .tab:hover{color:var(--text)} .tab.active{color:var(--primary-strong);border-bottom-color:var(--primary)}
-.kanban{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.kanban{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px}
 .kpi-box{background:var(--primary-soft);border-radius:var(--radius-sm);padding:16px;text-align:center;border:1px solid var(--border)}
 .kpi-box .v{font-size:28px;font-weight:800;color:var(--primary-strong);font-variant-numeric:tabular-nums}
 .kpi-box .l{font-size:12px;color:var(--text-2);margin-top:4px}
@@ -265,6 +265,17 @@ details.day>summary .cnt{margin-left:auto;font-size:11px;color:var(--text-3);fon
 }
 .overlay{position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:39;display:none}
 .overlay.show{display:block}
+
+.book-item{display:flex;align-items:center;gap:12px;padding:12px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:10px}
+.book-item.done{opacity:.6}
+.book-ico{width:38px;height:38px;border-radius:10px;background:var(--primary-soft);color:var(--primary-strong);display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+.book-main{flex:1;min-width:0}
+.book-title{font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.book-meta{font-size:12px;color:var(--text-2);margin-top:2px}
+.book-acts{display:flex;align-items:center;gap:10px;flex:0 0 auto}
+.kpi-box.hl{background:var(--primary-strong);border-color:var(--primary-strong)}
+.kpi-box.hl .v,.kpi-box.hl .l{color:#fff}
+.tag.primary{background:var(--primary);color:#fff;border-color:var(--primary)}
 </style>
 </head>
 <body>
@@ -630,13 +641,14 @@ function historyBlock(records,cols,path){
 
 /* 表单字段辅助 */
 function fDate(def){return `<div class="field"><label>日期</label><input type="date" name="date" value="${def}"></div>`;}
+function engMins(r){return (+r.minutes||0)||((+r.listening||0)+(+r.reading||0)+(+r.speaking||0));}
 
 /* ============================================================
    导航与页面定义
    ============================================================ */
 const MODULES=[
   {id:'english',name:'英语学习',ico:'en'},
-  {id:'reading',name:'每日阅读',ico:'reading'},
+  {id:'reading',name:'在读书目',ico:'reading'},
   {id:'exercise',name:'锻炼身体',ico:'exercise'},
   {id:'side',name:'副业统计',ico:'side'},
   {id:'media',name:'自媒体计划',ico:'media'},
@@ -660,7 +672,7 @@ function buildNav(){
 function setView(v){
   state.view=v;
   document.querySelectorAll('.nav-item').forEach(it=>it.classList.toggle('active',it.dataset.view===v));
-  const titles={home:['工作台','你的全能自律仪表盘'],english:['英语学习','单词 · 听力 · 阅读 · 口语'],reading:['每日阅读','读书笔记与月度趋势'],exercise:['锻炼身体','年度活跃度热力图'],side:['副业统计','ISO审核 / 自媒体 / 其他'],media:['自媒体计划','活人感大龄女青年·女性成长'],videos:['爆款视频','活人感大龄女青年·爆款素材'],travel:['旅游规划','愿望清单 · 行程 · 预算'],review:['每日复盘','弹性复盘 · 周/月报']};
+  const titles={home:['工作台','你的全能自律仪表盘'],english:['英语学习','统计每次学习时长'],reading:['在读书目','统计你读了多少本书'],exercise:['锻炼身体','年度活跃度热力图'],side:['副业统计','ISO审核 / 自媒体 / 其他'],media:['自媒体计划','活人感大龄女青年·女性成长'],videos:['爆款视频','活人感大龄女青年·爆款素材'],travel:['旅游规划','愿望清单 · 行程 · 预算'],review:['每日复盘','弹性复盘 · 周/月报']};
   const t=titles[v]||['',''];document.getElementById('pageTitle').textContent=t[0];document.getElementById('pageSub').textContent=t[1];
   render();
 }
@@ -672,7 +684,7 @@ function renderHome(){
   const today=D.today();
   const q=todayQuote();
   const week=D.thisWeekDays();
-  const studyMin=DATA.english.filter(r=>week.includes(r.date)).reduce((s,r)=>s+(+r.listening||0)+(+r.reading||0)+(+r.speaking||0),0);
+  const studyMin=DATA.english.filter(r=>week.includes(r.date)).reduce((s,r)=>s+engMins(r),0);
   const exCount=DATA.exercise.filter(r=>week.includes(r.date)).length;
   const sideInc=DATA.sideHustle.iso.concat(DATA.sideHustle.media,DATA.sideHustle.other).filter(r=>week.includes(r.date)).reduce((s,r)=>s+(+r.income||0),0);
   const checkins=CHECKIN_MODS.map(m=>({m,done:getCheckin(today,m)})).filter(x=>x.done).length;
@@ -689,7 +701,7 @@ function renderHome(){
       <span class="ci-st">${done?'已完成':'待完成'}</span></div>`;
   }).join('');
 
-  const weekStudyByDay=week.map(d=>DATA.english.filter(r=>r.date===d).reduce((s,r)=>s+(+r.listening||0)+(+r.reading||0)+(+r.speaking||0),0));
+  const weekStudyByDay=week.map(d=>DATA.english.filter(r=>r.date===d).reduce((s,r)=>s+engMins(r),0));
 
   const travelHtml = next?`<div class="countdown"><div class="plane">${ico('plane')}</div>
         <div class="cd-days">${cdDays}</div><div class="cd-l">天后出发</div><div class="cd-n">${next.name}</div></div>`
@@ -726,25 +738,24 @@ function renderHome(){
    ============================================================ */
 function renderEnglish(){
   const days=D.lastNDays(30);
-  const trend=days.map(d=>DATA.english.filter(r=>r.date===d).reduce((s,r)=>s+(+r.listening||0)+(+r.reading||0)+(+r.speaking||0),0));
+  const trend=days.map(d=>DATA.english.filter(r=>r.date===d).reduce((s,r)=>s+engMins(r),0));
   const monthDays=D.thisMonthDays();
-  const monthWords=DATA.english.filter(r=>monthDays.includes(r.date)).reduce((s,r)=>s+(+r.words||0),0);
-  const goal=100,pct=Math.min(100,monthWords/goal*100);
+  const monthMin=DATA.english.filter(r=>monthDays.includes(r.date)).reduce((s,r)=>s+engMins(r),0);
+  const todayMin=DATA.english.filter(r=>r.date===D.today()).reduce((s,r)=>s+engMins(r),0);
   return `
   <div class="card">
-    <h3>添加今日学习</h3>
+    <h3>添加学习记录</h3>
     <form class="fr" data-add="english">
       ${fDate(D.today())}
-      <div class="field"><label>背诵单词数</label><input type="number" name="words" placeholder="如 30"></div>
-      <div class="field"><label>听力(分钟)</label><input type="number" name="listening" placeholder="0"></div>
-      <div class="field"><label>阅读(分钟)</label><input type="number" name="reading" placeholder="0"></div>
-      <div class="field"><label>口语(分钟)</label><input type="number" name="speaking" placeholder="0"></div>
+      <div class="field"><label>学习时长(分钟)</label><input type="number" name="minutes" placeholder="如 30"></div>
+      <div class="field" style="flex:1;min-width:220px"><label>学习内容（可选）</label><input name="content" placeholder="如 单词 / 听力 / 阅读"></div>
       <button class="btn" type="submit">记录</button>
     </form>
   </div>
   <div class="card">
-    <h3>月度目标进度 <span class="cs">本月已背 ${monthWords} / ${goal} 词</span></h3>
-    <div class="progress"><span style="width:${pct}%"></span></div>
+    <h3>本月学习时长</h3>
+    <div style="font-size:34px;font-weight:700;color:var(--primary-strong)">${monthMin}<span class="small muted"> 分钟 / 本月</span></div>
+    <div class="muted small">今日已学 ${todayMin} 分钟</div>
   </div>
   <div class="card">
     <h3>近 30 天学习时长趋势（分钟）</h3>
@@ -752,7 +763,7 @@ function renderEnglish(){
   </div>
   <div class="card">
     <h3>历史记录 <span class="cs">按日期折叠</span></h3>
-    ${historyBlock(DATA.english,[{t:'单词',k:'words'},{t:'听力',k:'listening'},{t:'阅读',k:'reading'},{t:'口语',k:'speaking'}],'english')}
+    ${historyBlock(DATA.english,[{t:'时长',k:'minutes'},{t:'内容',k:'content'}],'english')}
   </div>
 `;
 }
@@ -761,24 +772,44 @@ function renderEnglish(){
    每日阅读
    ============================================================ */
 function renderReading(){
-  const days=D.lastNDays(30);
-  const trend=days.map(d=>DATA.reading.filter(r=>r.date===d).reduce((s,r)=>s+(+r.minutes||0),0));
+  const books=DATA.reading;
+  const reading=books.filter(b=>b.status!=='done');
+  const done=books.filter(b=>b.status==='done');
+  const total=books.length;
   return `
-  <div class="card">
-    <h3>添加阅读记录</h3>
+  <div class="kanban">
+    <div class="kpi-box"><div class="v">${done.length}</div><div class="l">已读完（累计）</div></div>
+    <div class="kpi-box"><div class="v">${reading.length}</div><div class="l">在读</div></div>
+    <div class="kpi-box"><div class="v">${total}</div><div class="l">书目总数</div></div>
+  </div>
+  <div class="card mt">
+    <h3>添加书目</h3>
     <form class="fr" data-add="reading">
-      ${fDate(D.today())}
-      <div class="field"><label>书名</label><input name="title" placeholder="如《认知觉醒》" style="width:200px"></div>
-      <div class="field"><label>时长(分钟)</label><input type="number" name="minutes" placeholder="0"></div>
-      <div class="field" style="flex:1;min-width:240px"><label>阅读笔记</label><textarea name="note" rows="1" placeholder="摘抄或感想…"></textarea></div>
-      <button class="btn" type="submit">记录</button>
+      <div class="field" style="flex:1;min-width:240px"><label>书名</label><input name="title" placeholder="如《认知觉醒》" required></div>
+      <div class="field"><label>状态</label><select name="status">${['reading','done'].map(s=>`<option value="${s}">${s==='reading'?'在读':'已读完'}</option>`).join('')}</select></div>
+      <button class="btn" type="submit">加入书单</button>
     </form>
   </div>
-  <div class="card"><h3>月度阅读时长趋势（分钟）</h3>${Charts.line(trend,{height:220})}</div>
-  <div class="card"><h3>历史记录 <span class="cs">按日期折叠</span></h3>
-    ${historyBlock(DATA.reading,[{t:'书名',k:'title'},{t:'时长',k:'minutes'},{t:'笔记',render:r=>(r.note||'').slice(0,30)}],'reading')}
+  <div class="card mt">
+    <h3>在读的书目 <span class="cs">${reading.length} 本</span></h3>
+    ${reading.length?reading.map(b=>bookCard(b)).join(''):`<div class="empty">暂无在读书目，上方添加 ✦</div>`}
+  </div>
+  <div class="card mt">
+    <h3>已读完 <span class="cs">${done.length} 本 · 累计读书数</span></h3>
+    ${done.length?done.map(b=>bookCard(b)).join(''):`<div class="empty">还没有读完的书，加油 ✦</div>`}
   </div>
 `;
+}
+function bookCard(b){
+  const done=b.status==='done';
+  return `<div class="book-item ${done?'done':''}">
+    <div class="book-ico">${ico('reading')}</div>
+    <div class="book-main"><div class="book-title">${b.title||'(未命名)'}</div><div class="book-meta">${done?'已读完':'在读中'}${b.date?' · 添加于 '+D.pretty(b.date):''}</div></div>
+    <div class="book-acts">
+      <span class="tag ${done?'':'primary'}" data-booktoggle="${b.id}">${done?'↩ 改为在读':'✓ 标记读完'}</span>
+      <span class="del" data-del="${b.id}">删除</span>
+    </div>
+  </div>`;
 }
 
 /* ============================================================
@@ -812,59 +843,47 @@ function renderExercise(){
    副业统计（重点）
    ============================================================ */
 function renderSide(){
-  const all=DATA.sideHustle.iso.concat(DATA.sideHustle.media,DATA.sideHustle.other);
-  const totalHours=all.reduce((s,r)=>s+(+r.hours||0),0);
-  const totalInc=all.reduce((s,r)=>s+(+r.income||0),0);
-  const avg=totalHours>0?totalInc/totalHours:0;
   const isoInc=DATA.sideHustle.iso.reduce((s,r)=>s+(+r.income||0),0);
   const mediaInc=DATA.sideHustle.media.reduce((s,r)=>s+(+r.income||0),0);
   const otherInc=DATA.sideHustle.other.reduce((s,r)=>s+(+r.income||0),0);
-  const segs=[{label:'ISO审核',value:isoInc},{label:'自媒体',value:mediaInc},{label:'其他',value:otherInc}].filter(s=>s.value>0);
+  const totalInc=isoInc+mediaInc+otherInc;
 
   const tab=state.sideTab;
   let formHtml='',histHtml='',cols=[];
   if(tab==='iso'){
     formHtml=`<form class="fr" data-add="sideIso">
       ${fDate(D.today())}
-      <div class="field"><label>工时(小时)</label><input type="number" step="0.5" name="hours" placeholder="0"></div>
       <div class="field"><label>项目节点</label><select name="node">${['初审','文件整理','审核','整改','复审','归档'].map(n=>`<option>${n}</option>`).join('')}</select></div>
-      <div class="field" style="flex:1;min-width:220px"><label>备注</label><textarea name="note" rows="1" placeholder="自由备注…"></textarea></div>
+      <div class="field" style="flex:1;min-width:200px"><label>备注</label><textarea name="note" rows="1" placeholder="自由备注…"></textarea></div>
+      <div class="field"><label>收入(元)</label><input type="number" name="income" placeholder="0"></div>
       <button class="btn" type="submit">记录</button></form>`;
-    cols=[{t:'工时',k:'hours'},{t:'节点',k:'node'},{t:'收入',k:'income'},{t:'备注',render:r=>(r.note||'').slice(0,20)}];
+    cols=[{t:'节点',k:'node'},{t:'备注',render:r=>(r.note||'').slice(0,20)},{t:'收入',k:'income'}];
     histHtml=historyBlock(DATA.sideHustle.iso,cols,'sideHustle.iso');
   }else if(tab==='media'){
     formHtml=`<form class="fr" data-add="sideMedia">
       ${fDate(D.today())}
       <div class="field"><label>平台</label><select name="platform">${['小红书','抖音','视频号','B站','公众号','其他'].map(n=>`<option>${n}</option>`).join('')}</select></div>
       <div class="field" style="flex:1;min-width:200px"><label>发布主题</label><input name="topic" placeholder="内容主题…"></div>
-      <div class="field"><label>耗时(小时)</label><input type="number" step="0.5" name="hours" placeholder="0"></div>
       <div class="field"><label>收益(元)</label><input type="number" name="income" placeholder="0"></div>
       <button class="btn" type="submit">记录</button></form>`;
-    cols=[{t:'平台',k:'platform'},{t:'主题',k:'topic'},{t:'工时',k:'hours'},{t:'收益',k:'income'}];
+    cols=[{t:'平台',k:'platform'},{t:'主题',k:'topic'},{t:'收益',k:'income'}];
     histHtml=historyBlock(DATA.sideHustle.media,cols,'sideHustle.media');
   }else{
     formHtml=`<form class="fr" data-add="sideOther">
       ${fDate(D.today())}
       <div class="field" style="flex:1;min-width:180px"><label>项目名称</label><input name="name" placeholder="自由项目…"></div>
-      <div class="field"><label>工时(小时)</label><input type="number" step="0.5" name="hours" placeholder="0"></div>
       <div class="field"><label>收入(元)</label><input type="number" name="income" placeholder="0"></div>
       <button class="btn" type="submit">记录</button></form>`;
-    cols=[{t:'项目',k:'name'},{t:'工时',k:'hours'},{t:'收入',k:'income'}];
+    cols=[{t:'项目',k:'name'},{t:'收入',k:'income'}];
     histHtml=historyBlock(DATA.sideHustle.other,cols,'sideHustle.other');
   }
 
   return `
   <div class="kanban">
-    <div class="kpi-box"><div class="v">${totalHours.toFixed(1)}</div><div class="l">总投入工时</div></div>
-    <div class="kpi-box"><div class="v">¥${totalInc.toFixed(0)}</div><div class="l">副业总收入</div></div>
-    <div class="kpi-box"><div class="v">¥${avg.toFixed(1)}</div><div class="l">平均时薪</div></div>
-  </div>
-  <div class="grid g2 mt">
-    <div class="card"><h3>收入占比</h3>${Charts.pie(segs,{center:'总收入'})}</div>
-    <div class="card"><h3>说明 <span class="cs">三类收入自动汇总</span></h3>
-      <div class="legend"><span><i style="background:#52C41A"></i>ISO审核 ¥${isoInc.toFixed(0)}</span><span><i style="background:#8be05a"></i>自媒体 ¥${mediaInc.toFixed(0)}</span><span><i style="background:#3f9713"></i>其他 ¥${otherInc.toFixed(0)}</span></div>
-      <p class="muted small" style="margin-top:14px">所有数字优先看「周/月累计」，不考核连续打卡，断更也没关系 ✦</p>
-    </div>
+    <div class="kpi-box"><div class="v">¥${isoInc.toFixed(0)}</div><div class="l">ISO审核</div></div>
+    <div class="kpi-box"><div class="v">¥${mediaInc.toFixed(0)}</div><div class="l">自媒体</div></div>
+    <div class="kpi-box"><div class="v">¥${otherInc.toFixed(0)}</div><div class="l">其他副业</div></div>
+    <div class="kpi-box hl"><div class="v">¥${totalInc.toFixed(0)}</div><div class="l">副业总收入</div></div>
   </div>
   <div class="card mt">
     <div class="tabs">
@@ -1131,17 +1150,17 @@ function buildReport(){
   }else return null;
   const days=[];let d=D.parse(start);const e=D.parse(end);
   while(d<=e){days.push(D.fmt(d));d.setDate(d.getDate()+1);}
-  const study=DATA.english.filter(r=>days.includes(r.date)).reduce((s,r)=>s+(+r.listening||0)+(+r.reading||0)+(+r.speaking||0),0);
+  const study=DATA.english.filter(r=>days.includes(r.date)).reduce((s,r)=>s+engMins(r),0);
   const exC=DATA.exercise.filter(r=>days.includes(r.date)).length;
   const exMin=DATA.exercise.filter(r=>days.includes(r.date)).reduce((s,r)=>s+(+r.duration||0),0);
   const sideInc=DATA.sideHustle.iso.concat(DATA.sideHustle.media,DATA.sideHustle.other).filter(r=>days.includes(r.date)).reduce((s,r)=>s+(+r.income||0),0);
-  const readMin=DATA.reading.filter(r=>days.includes(r.date)).reduce((s,r)=>s+(+r.minutes||0),0);
+  const booksDone=DATA.reading.filter(r=>r.status==='done'&&r.doneDate&&days.includes(r.doneDate)).length;
   const cards=`
     <div class="kpi-box"><div class="v">${study}</div><div class="l">学习时长(分)</div></div>
     <div class="kpi-box"><div class="v">${exC}</div><div class="l">运动次数</div></div>
     <div class="kpi-box"><div class="v">${exMin}</div><div class="l">运动分钟</div></div>
     <div class="kpi-box"><div class="v">¥${sideInc.toFixed(0)}</div><div class="l">副业收入</div></div>
-    <div class="kpi-box"><div class="v">${readMin}</div><div class="l">阅读分钟</div></div>
+    <div class="kpi-box"><div class="v">${booksDone}</div><div class="l">读完本数</div></div>
     <div class="kpi-box"><div class="v">${days.length}</div><div class="l">统计天数</div></div>`;
   return {title:title+'（'+D.pretty(start)+' ~ '+D.pretty(end)+'）',cards,note:DATA.reviews['_'+key+'_'+start]?DATA.reviews['_'+key+'_'+start].summary:''};
 }
@@ -1263,6 +1282,10 @@ function bindView(view){
   });
   // 侧边 Tab
   view.querySelectorAll('.tab[data-tab]').forEach(t=>t.onclick=()=>{state.sideTab=t.dataset.tab;render();});
+  view.querySelectorAll('[data-booktoggle]').forEach(b=>b.onclick=()=>{
+    const bk=DATA.reading.find(x=>x.id===b.dataset.booktoggle);
+    if(bk){bk.status=bk.status==='done'?'reading':'done';if(bk.status==='done')bk.doneDate=D.today();save();render();}
+  });
   // 旅游删除/愿望
   view.querySelectorAll('[data-deltrip]').forEach(b=>b.onclick=()=>{remove('travel.trips',t=>t.id===b.dataset.deltrip);DATA.travel.itineraries=DATA.travel.itineraries.filter(i=>i.tripId!==b.dataset.deltrip);if(DATA.travel.planTrip===b.dataset.deltrip)DATA.travel.planTrip='';save();render();});
   view.querySelectorAll('[data-wishdel]').forEach(b=>b.onclick=()=>{remove('travel.wishlist',w=>w.id===b.dataset.wishdel);render();});
