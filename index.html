@@ -93,6 +93,10 @@ button{font-family:inherit}
 .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow);margin-bottom:18px}
 .card h3{font-size:15px;margin-bottom:14px;display:flex;align-items:center;gap:8px}
 .card .cs{font-size:12px;color:var(--text-3);font-weight:400;margin-left:auto}
+.jump{cursor:pointer;transition:box-shadow .15s,transform .15s}
+.jump:hover{box-shadow:var(--shadow-lg);transform:translateY(-1px)}
+.enter{font-size:12px;color:var(--primary-strong);font-weight:600;margin-left:auto}
+.enter.sm{margin-left:0;margin-top:6px;font-size:11px;opacity:.7}
 .grid{display:grid;gap:18px}
 .g2{grid-template-columns:repeat(2,1fr)} .g3{grid-template-columns:repeat(3,1fr)} .g4{grid-template-columns:repeat(4,1fr)}
 .mt{margin-top:18px} .muted{color:var(--text-3)} .small{font-size:12px}
@@ -700,18 +704,18 @@ function renderHome(){
     <h3>弹性打卡墙</h3>
     <div class="checkin-wall">${checkinHtml}</div>
   </div>
-  <div class="card mt">
-    <h3>旅行倒计时</h3>
+  <div class="card mt jump" data-jump="travel">
+    <h3>旅行倒计时 <span class="enter">进入 ›</span></h3>
     ${travelHtml}
   </div>
   <div class="grid g4 mt">
-    <div class="card"><div class="kpi"><div class="num">${studyMin}<span class="small muted"> 分钟</span></div><div class="lbl">本周学习时长</div></div></div>
-    <div class="card"><div class="kpi"><div class="num">${exCount}<span class="small muted"> 次</span></div><div class="lbl">本周运动次数</div></div></div>
-    <div class="card"><div class="kpi"><div class="num">¥${sideInc.toFixed(0)}</div><div class="lbl">本周副业收入</div></div></div>
+    <div class="card jump" data-jump="english"><div class="kpi"><div class="num">${studyMin}<span class="small muted"> 分钟</span></div><div class="lbl">本周学习时长</div></div><div class="enter sm">进入 ›</div></div>
+    <div class="card jump" data-jump="exercise"><div class="kpi"><div class="num">${exCount}<span class="small muted"> 次</span></div><div class="lbl">本周运动次数</div></div><div class="enter sm">进入 ›</div></div>
+    <div class="card jump" data-jump="side"><div class="kpi"><div class="num">¥${sideInc.toFixed(0)}</div><div class="lbl">本周副业收入</div></div><div class="enter sm">进入 ›</div></div>
     <div class="card"><div class="kpi"><div class="num">${checkins}/9</div><div class="lbl">今日打卡</div></div></div>
   </div>
-  <div class="card mt">
-    <h3>本周概览 <span class="cs">周累计 · 无压力</span></h3>
+  <div class="card mt jump" data-jump="english">
+    <h3>本周概览 <span class="cs">周累计 · 无压力</span> <span class="enter">进入 ›</span></h3>
     ${Charts.bar(week.map((d,i)=>({label:D.weekday(d).slice(1),value:weekStudyByDay[i]})),{height:200})}
     <div class="muted small" style="margin-top:8px">近 7 天每日学习分钟数（周一→周日）</div>
   </div>`;
@@ -1201,6 +1205,11 @@ function bindView(view){
     const done=toggleCheckin(D.today(),el.dataset.check);el.classList.toggle('done',done);
     el.querySelector('.badge').innerHTML=done?ico('check'):'';
     el.querySelector('.ci-st').textContent=done?'已完成':'待完成';
+  });
+  // 首页卡片点击跳转
+  view.querySelectorAll('[data-jump]').forEach(c=>c.onclick=e=>{
+    if(e.target.closest('button,form,input,select,textarea,a'))return;
+    setView(c.dataset.jump);if(window.innerWidth<=860)closeSidebar();
   });
   // 表单新增
   view.querySelectorAll('form[data-add]').forEach(form=>form.onsubmit=e=>{
