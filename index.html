@@ -399,7 +399,7 @@ const DEFAULT={
   version:1, settings:{theme:'system'}, checkins:{},
   sideHustle:{iso:[],media:[],other:[]},
   english:[], reading:[], exercise:[],
-  mediaPlan:[], videos:[],
+  mediaPlan:[], videos:[], favHot:[],
   travel:{trips:[],wishlist:[],itineraries:[],rates:{},plan:''},
   reviews:{}
 };
@@ -955,6 +955,20 @@ function genScript(h){
 /* 你的赛道关键词：大龄单身女 / 独居 / 女性成长 / 相亲 / 搞钱 等 */
 const HOT_KEYWORDS=['大龄','单身','独居','相亲','女性','女生','成长','自我','学习','搞钱','理财','存款','养老','婚姻','脱单','内耗','情绪','副业','独立','清醒','治愈','读书','自律','三十','30岁','姐姐','离婚','不婚','认知','原生家庭','职场','宝妈','情感','提升','焦虑','催婚','买房','独身','未婚','普通女孩','中年','情绪价值','悦己','自我提升'];
 function fmtHot(n){n=+n||0;if(n>=10000)return (n/10000).toFixed(1)+'w';return ''+n;}
+/* 爆款收藏：把实时匹配到的真实爆款存起来（独立于"我的爆款拆解库"） */
+function toggleFav(item){
+  if(!item)return;
+  const arr=DATA.favHot||(DATA.favHot=[]);
+  const i=arr.findIndex(x=>x.title===item.title&&x.url===item.url);
+  if(i>=0){arr.splice(i,1);toast('已取消收藏');}
+  else{arr.push({title:item.title,url:item.url,src:item.src,hot:item.hot,t:D.today()});toast('已收藏 ⭐');}
+  save();render();
+}
+function renderFavHot(){
+  const arr=DATA.favHot||[];
+  if(!arr.length)return '<div class="empty">还没有收藏。在上方「为你匹配的真实爆款」里点 ☆ 收藏，灵感就永久存这里啦。</div>';
+  return arr.slice().reverse().map((f,i)=>{const key=arr.length-1-i;return '<div class="hot-card"><div class="hot-head"><div style="font-weight:700">'+esc(f.title)+'</div><span class="tag warn">'+esc(f.src||'')+'</span></div><div class="muted small" style="margin:4px 0 8px">收藏于 '+esc(f.t||'')+(f.hot!=null&&f.hot!==''?' · 热度 '+fmtHot(f.hot):'')+'</div><div class="fr" style="gap:8px;margin-top:6px"><a class="btn sm" href="'+esc(f.url)+'" target="_blank" rel="noopener">打开 →</a><button class="btn sm ghost" data-favdel="'+key+'">取消收藏</button></div></div>';}).join('');
+}
 /* 实时拉取真实热榜，并按你的赛道过滤（失败回退静态灵感） */
 async function loadLiveHot(container){
   try{
@@ -973,7 +987,9 @@ async function loadLiveHot(container){
     const matched=items.filter(it=>HOT_KEYWORDS.some(k=>it.title.includes(k)));
     const show=matched.length?matched:items.slice(0,12);
     const note=matched.length?('为你匹配到 <b>'+matched.length+'</b> 条「女性成长·独居·相亲·搞钱」相关爆款'):'今日匹配你赛道的内容较少，以下是全部热门供参考';
-    container.innerHTML='<div class="muted small" style="margin-bottom:10px">'+note+'</div>'+show.slice(0,15).map(it=>'<div class="hot-card"><div class="hot-head"><div style="font-weight:700">'+esc(it.title)+'</div><span class="tag warn">'+it.src+'</span></div><div class="muted small" style="margin:4px 0 8px">热度 '+fmtHot(it.hot)+'</div><a class="btn sm" href="'+esc(it.url)+'" target="_blank" rel="noopener">跳转观看 →</a></div>').join('');
+    const list=show.slice(0,15);
+    container.innerHTML='<div class="muted small" style="margin-bottom:10px">'+note+'</div>'+list.map((it,idx)=>{const faved=(DATA.favHot||[]).some(f=>f.title===it.title&&f.url===it.url);return '<div class="hot-card"><div class="hot-head"><div style="font-weight:700">'+esc(it.title)+'</div><span class="tag warn">'+it.src+'</span></div><div class="muted small" style="margin:4px 0 8px">热度 '+fmtHot(it.hot)+'</div><div class="fr" style="gap:8px;margin-top:6px"><a class="btn sm" href="'+esc(it.url)+'" target="_blank" rel="noopener">跳转观看 →</a><button class="btn sm ghost fav-btn" data-favidx="'+idx+'">'+(faved?'⭐ 已收藏':'☆ 收藏')+'</button></div></div>';}).join('');
+    container.querySelectorAll('.fav-btn').forEach(b=>b.onclick=()=>{toggleFav(list[+b.dataset.favidx]);});
   }catch(e){
     container.innerHTML='<div class="muted small" style="margin-bottom:10px">实时接口暂不可用，已为你展示往期灵感 ↓</div>'+HOT_SEED.map(h=>'<div class="hot-card"><div class="hot-head"><div style="font-weight:700">'+esc(h.title)+'</div><span class="tag warn">'+h.hot+'</span></div><div class="muted small" style="margin:4px 0 8px">赛道：'+esc(h.src)+'</div><a class="btn sm" href="https://www.douyin.com/search/'+encodeURIComponent(h.title)+'" target="_blank" rel="noopener">搜索相关 →</a></div>').join('');
   }
@@ -1019,6 +1035,10 @@ function renderVideos(){
   <div class="card mt">
     <h3>为你匹配的真实爆款 <span class="cs">女性成长 · 独居 · 相亲 · 搞钱 · 实时</span></h3>
     <div id="liveHot"><div class="muted small" style="padding:8px 0">正在拉取真实热榜…</div></div>
+  </div>
+  <div class="card mt">
+    <h3>我的爆款收藏 <span class="cs">点 ☆ 收藏实时爆款，灵感永久留存</span></h3>
+    <div id="favHotList">${renderFavHot()}</div>
   </div>
   <div class="card mt">
     <h3>爆款素材参考 <span class="cs">点击任意卡片展开拆解 + 二创脚本</span></h3>
@@ -1298,6 +1318,10 @@ function bindView(view){
     const head=c.querySelector('.hot-head'),tg=c.querySelector('.hot-toggle'),body=c.querySelector('.hot-body');
     const toggle=()=>{const open=body.style.display!=='none';body.style.display=open?'none':'block';tg.textContent=open?'点击展开拆解 / 二创脚本 ▾':'收起 ▴';};
     if(head)head.onclick=toggle; if(tg)tg.onclick=toggle;
+  });
+  // 爆款收藏区：取消收藏
+  view.querySelectorAll('[data-favdel]').forEach(b=>b.onclick=()=>{
+    const i=+b.dataset.favdel;if(DATA.favHot&&DATA.favHot[i]){DATA.favHot.splice(i,1);save();toast('已取消收藏');render();}
   });
   // 实时爆款拉取（女性成长赛道匹配）
   const liveHot=view.querySelector('#liveHot');
