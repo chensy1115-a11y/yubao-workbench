@@ -205,11 +205,6 @@ details.day>summary .cnt{margin-left:auto;font-size:11px;color:var(--text-3);fon
   cursor:pointer;border:2px solid var(--border);background:var(--bg);transition:all .15s}
 .mood.sel{border-color:var(--primary);background:var(--primary-soft);transform:scale(1.08)}
 
-/* 橙色横幅 */
-.banner{margin-top:6px;background:var(--accent);color:#fff;border-radius:var(--radius);padding:16px 18px;
-  font-size:22px;font-weight:800;letter-spacing:1px;display:flex;align-items:center;gap:10px;box-shadow:var(--shadow)}
-.banner svg{width:24px;height:24px}
-
 /* 悬浮备份 */
 .fab{position:fixed;right:24px;bottom:24px;z-index:60;width:56px;height:56px;border-radius:50%;border:none;cursor:pointer;
   background:var(--primary);color:#fff;box-shadow:var(--shadow-lg);display:flex;align-items:center;justify-content:center;transition:transform .15s}
@@ -719,7 +714,7 @@ function renderEnglish(){
     <h3>历史记录 <span class="cs">按日期折叠</span></h3>
     ${historyBlock(DATA.english,[{t:'单词',k:'words'},{t:'听力',k:'listening'},{t:'阅读',k:'reading'},{t:'口语',k:'speaking'}],'english')}
   </div>
-  ${banner('英语学习 ENGLISH')}`;
+`;
 }
 
 /* ============================================================
@@ -743,7 +738,7 @@ function renderReading(){
   <div class="card"><h3>历史记录 <span class="cs">按日期折叠</span></h3>
     ${historyBlock(DATA.reading,[{t:'书名',k:'title'},{t:'时长',k:'minutes'},{t:'笔记',render:r=>(r.note||'').slice(0,30)}],'reading')}
   </div>
-  ${banner('每日阅读 READING')}`;
+`;
 }
 
 /* ============================================================
@@ -770,7 +765,7 @@ function renderExercise(){
   <div class="card"><h3>历史记录 <span class="cs">按日期折叠</span></h3>
     ${historyBlock(DATA.exercise,[{t:'类型',k:'type'},{t:'时长',k:'duration'},{t:'千卡',k:'calories'}],'exercise')}
   </div>
-  ${banner('锻炼身体 EXERCISE')}`;
+`;
 }
 
 /* ============================================================
@@ -840,7 +835,7 @@ function renderSide(){
     ${formHtml}
   </div>
   <div class="card mt"><h3>历史记录 <span class="cs">按日期折叠</span></h3>${histHtml}</div>
-  ${banner('副业统计 SIDE HUSTLE')}`;
+`;
 }
 
 /* ============================================================
@@ -865,7 +860,7 @@ function renderMedia(){
   <div class="card"><h3>选题库 <span class="cs">按日期折叠</span></h3>
     ${historyBlock(DATA.mediaPlan,[{t:'平台',k:'platform'},{t:'选题',k:'plan'},{t:'状态',render:r=>`<span class="tag ${r.status==='已发布'?'':'gray'}">${r.status}</span>`}],'mediaPlan')}
   </div>
-  ${banner('自媒体计划 MEDIA PLAN')}`;
+`;
 }
 
 /* ============================================================
@@ -965,7 +960,7 @@ function renderVideos(){
     </form>
     ${historyBlock(DATA.videos,[{t:'标题',k:'title'},{t:'平台',k:'platform'},{t:'笔记',render:r=>(r.note||'').slice(0,30)}],'videos')}
   </div>
-  ${banner('爆款视频 HOT VIDEOS')}`;
+`;
 }
 
 /* ============================================================
@@ -1041,7 +1036,7 @@ function renderTravel(){
       <div class="field" style="flex:1;min-width:240px"><label>汇率备忘（自由文本）</label><textarea data-rates rows="2" placeholder="1 USD≈7.2 CNY；1 JPY≈0.048 CNY…">${DATA.travel.rates.note||''}</textarea></div>
     </div>
   </div>
-  ${banner('旅游规划 TRAVEL')}`;
+`;
 }
 
 /* ============================================================
@@ -1064,7 +1059,7 @@ function renderReview(){
     <div class="grid g2">${report.cards}</div>
     <div class="field mt"><label>我的感想</label><textarea id="reportNote" rows="3" placeholder="对这段时间的总结与下一步…">${report.note||''}</textarea></div>
     <button class="btn mt" id="saveReport" data-title="${report.title}">保存报告</button></div>`:''}
-  ${banner('每日复盘 REVIEW')}`;
+`;
 }
 function buildReport(){
   const now=new Date();const dow=now.getDay();const date=D.today();
@@ -1134,7 +1129,6 @@ function renderGuide(){
 /* ============================================================
    横幅
    ============================================================ */
-function banner(text){return `<div class="banner">${ico('star')||''} ${text}</div>`;}
 
 /* ============================================================
    渲染主入口
