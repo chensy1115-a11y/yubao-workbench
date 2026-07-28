@@ -777,12 +777,7 @@ function renderReading(){
   const done=books.filter(b=>b.status==='done');
   const total=books.length;
   return `
-  <div class="kanban">
-    <div class="kpi-box"><div class="v">${done.length}</div><div class="l">已读完（累计）</div></div>
-    <div class="kpi-box"><div class="v">${reading.length}</div><div class="l">在读</div></div>
-    <div class="kpi-box"><div class="v">${total}</div><div class="l">书目总数</div></div>
-  </div>
-  <div class="card mt">
+  <div class="card">
     <h3>添加书目</h3>
     <form class="fr" data-add="reading">
       <div class="field" style="flex:1;min-width:240px"><label>书名</label><input name="title" placeholder="如《认知觉醒》" required></div>
@@ -878,14 +873,15 @@ function renderSide(){
     histHtml=historyBlock(DATA.sideHustle.other,cols,'sideHustle.other');
   }
 
+  // 饼图数据：自动从三类收入生成
+  const pieSegs=[];
+  if(isoInc>0)pieSegs.push({label:'ISO审核',value:isoInc});
+  if(mediaInc>0)pieSegs.push({label:'自媒体',value:mediaInc});
+  if(otherInc>0)pieSegs.push({label:'其他副业',value:otherInc});
+
   return `
-  <div class="kanban">
-    <div class="kpi-box"><div class="v">¥${isoInc.toFixed(0)}</div><div class="l">ISO审核</div></div>
-    <div class="kpi-box"><div class="v">¥${mediaInc.toFixed(0)}</div><div class="l">自媒体</div></div>
-    <div class="kpi-box"><div class="v">¥${otherInc.toFixed(0)}</div><div class="l">其他副业</div></div>
-    <div class="kpi-box hl"><div class="v">¥${totalInc.toFixed(0)}</div><div class="l">副业总收入</div></div>
-  </div>
-  <div class="card mt">
+  <!-- 表单区（首栏） -->
+  <div class="card">
     <div class="tabs">
       <div class="tab ${tab==='iso'?'active':''}" data-tab="iso">ISO 审核</div>
       <div class="tab ${tab==='media'?'active':''}" data-tab="media">自媒体</div>
@@ -893,6 +889,13 @@ function renderSide(){
     </div>
     ${formHtml}
   </div>
+  <!-- 收入分布饼图（自动根据录入数据生成） -->
+  <div class="card mt" style="text-align:center">
+    <h3>收入分布 <span class="cs">根据你的录入自动生成</span></h3>
+    ${Charts.pie(pieSegs,{size:220,center:'总收入'})}
+    ${totalInc<=0?'':'<div class="muted small" style="margin-top:6px">ISO ¥'+isoInc.toFixed(0)+' · 自媒体 ¥'+mediaInc.toFixed(0)+' · 其他 ¥'+otherInc.toFixed(0)+'</div>'}
+  </div>
+  <!-- 历史记录 -->
   <div class="card mt"><h3>历史记录 <span class="cs">按日期折叠</span></h3>${histHtml}</div>
 `;
 }
@@ -1069,19 +1072,13 @@ function renderTravel(){
     <span><button class="btn sm ghost" data-wishdone="${w.id}">${w.done?'撤销':'标记成行'}</button> <button class="btn sm danger" data-wishdel="${w.id}">删</button></span></div>`).join(''):'<div class="empty">愿望清单为空</div>';
 
   return `
-  <!-- 我的旅行（首栏：添加 + 列表） -->
+  <!-- ① 我的旅行（列表，不含新增表单） -->
   <div class="card">
-    <h3>我的旅行 <span class="cs">先添加，再点「编辑行程」为它安排逐日计划</span></h3>
-    <form class="fr" data-add="trip">
-      <div class="field" style="flex:1;min-width:180px"><label>名称</label><input name="name" placeholder="如 云南大理 7 日"></div>
-      <div class="field"><label>出发日期</label><input type="date" name="date"></div>
-      <div class="field"><label>预估预算(元)</label><input type="number" name="budget" placeholder="0"></div>
-      <button class="btn" type="submit">添加</button>
-    </form>
-    <div style="margin-top:14px">${tripsHtml}</div>
+    <h3>我的旅行 <span class="cs">点「编辑行程」为选中旅行安排逐日计划</span></h3>
+    ${tripsHtml}
   </div>
 
-  <!-- 行程规划：紧跟我旅行，操作选中的那一次 -->
+  <!-- ② 行程规划：紧跟我的旅行 -->
   <div class="card mt">
     <h3>行程规划 <span class="cs">${selTrip?('为「'+selTrip.name+'」安排逐日行程'):'请先在上方添加并选择一次旅行'}</span></h3>
     <div class="field" style="margin-bottom:10px"><label>选择行程</label>
@@ -1090,26 +1087,22 @@ function renderTravel(){
     ${planPreviewHtml}
   </div>
 
-  <!-- 愿望清单 -->
+  <!-- ③ 愿望清单 -->
   <div class="card mt">
     <h3>愿望清单</h3>
     <form class="fr" data-add="wish" style="margin-bottom:12px"><div class="field" style="flex:1;min-width:200px"><label>想去的地方</label><input name="name" placeholder="如 冰岛"></div><button class="btn" type="submit">加入</button></form>
     ${wish}
   </div>
 
-  <!-- 预算管理 -->
+  <!-- ④ 新增旅行计划 -->
   <div class="card mt">
-    <h3>预算管理 <span class="cs">预估 / 实际 + 汇率备忘</span></h3>
-    <form class="fr" data-add="itinerary">
-      <div class="field"><label>所属旅行</label><select name="tripId">${trips.map(t=>`<option value="${t.id}">${t.name}</option>`).join('')||'<option>先建计划</option>'}</select></div>
-      <div class="field"><label>天数/项目</label><input name="day" placeholder="Day1 机票"></div>
-      <div class="field"><label>预估(元)</label><input type="number" name="est" placeholder="0"></div>
-      <div class="field"><label>实际(元)</label><input type="number" name="act" placeholder="0"></div>
-      <button class="btn" type="submit">添加明细</button>
+    <h3>新增旅行计划 <span class="cs">填写后点添加，新旅行会出现在上方「我的旅行」列表中</span></h3>
+    <form class="fr" data-add="trip">
+      <div class="field" style="flex:1;min-width:180px"><label>名称</label><input name="name" placeholder="如 云南大理 7 日"></div>
+      <div class="field"><label>出发日期</label><input type="date" name="date"></div>
+      <div class="field"><label>预估预算(元)</label><input type="number" name="budget" placeholder="0"></div>
+      <button class="btn" type="submit">添加</button>
     </form>
-    <div class="fr mt" style="align-items:flex-start">
-      <div class="field" style="flex:1;min-width:240px"><label>汇率备忘（自由文本）</label><textarea data-rates rows="2" placeholder="1 USD≈7.2 CNY；1 JPY≈0.048 CNY…">${DATA.travel.rates.note||''}</textarea></div>
-    </div>
   </div>`;
 }
 
