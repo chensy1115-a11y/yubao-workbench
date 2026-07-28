@@ -990,11 +990,14 @@ function renderPlan(text){
 
 function renderTravel(){
   const trips=DATA.travel.trips.slice().sort((a,b)=>a.date.localeCompare(b.date));
+  if(!DATA.travel.planTrip||!trips.find(t=>t.id===DATA.travel.planTrip))DATA.travel.planTrip=trips.length?trips[0].id:'';
+  const selTrip=trips.find(t=>t.id===DATA.travel.planTrip);
   const tripsHtml=trips.length?trips.map(t=>{
     const est=t.budget||0;const days=D.daysBetween(D.today(),t.date);
+    const arranged=(t.plan&&t.plan.trim())?' · <span class="cs">已排行程</span>':'';
     return `<div class="card" style="margin-bottom:10px"><div class="spread"><div style="font-weight:700">${t.name}</div><span class="tag">${D.pretty(t.date)}</span></div>
-      <div class="muted small" style="margin:6px 0">${days>=0?`还有 ${days} 天`:'已过期'} · 预估预算 ¥${(+est).toFixed(0)}</div>
-      <div class="fr" style="margin-top:6px"><button class="btn sm danger" data-deltrip="${t.id}">删除</button></div></div>`;
+      <div class="muted small" style="margin:6px 0">${days>=0?`还有 ${days} 天`:'已过期'} · 预估预算 ¥${(+est).toFixed(0)}${arranged}</div>
+      <div class="fr" style="margin-top:6px"><button class="btn sm" data-edittrip="${t.id}">编辑行程</button> <button class="btn sm danger" data-deltrip="${t.id}">删除</button></div></div>`;
   }).join(''):'<div class="empty">还没有旅行计划</div>';
 
   const wish=DATA.travel.wishlist.length?DATA.travel.wishlist.map(w=>`<div class="spread" style="padding:8px 0;border-bottom:1px solid var(--border)">
@@ -1018,10 +1021,12 @@ function renderTravel(){
       ${wish}</div>
   </div>
   <div class="card mt">
-    <h3>行程规划 <span class="cs">粘贴整段，自动按「第X天」拆分</span></h3>
-    <div class="field" style="margin-bottom:10px"><label>整体行程文本</label>
-      <textarea data-plan rows="6" placeholder="例如：&#10;第一天 抵达大理，入住古城民宿，傍晚逛人民路&#10;第二天 洱海骑行，喜洲古镇吃破酥粑粑&#10;第三天 苍山徒步，下午泡温泉返程">${DATA.travel.plan||''}</textarea></div>
-    <div id="planPreview">${renderPlan(DATA.travel.plan)}</div>
+    <h3>行程规划 <span class="cs">选择行程后，编辑它的逐日安排</span></h3>
+    <div class="field" style="margin-bottom:10px"><label>选择行程</label>
+      <select id="planTripSel">${trips.length?trips.map(t=>`<option value="${t.id}" ${t.id===DATA.travel.planTrip?'selected':''}>${t.name} · ${D.pretty(t.date)}</option>`).join(''):'<option value="">请先添加旅行</option>'}</select></div>
+    <div class="field" style="margin-bottom:10px"><label>逐日安排（粘贴整段，自动按「第X天」拆分）</label>
+      <textarea id="planText" data-plan rows="6" placeholder="例如：&#10;第一天 抵达巴黎，入住左岸酒店，傍晚塞纳河游船&#10;第二天 卢浮宫 · 香榭丽舍 · 凯旋门&#10;第三天 凡尔赛宫一日游">${selTrip?(selTrip.plan||''):''}</textarea></div>
+    <div id="planPreview">${selTrip?renderPlan(selTrip.plan):'<div class="empty">请先在上方选择一次旅行</div>'}</div>
   </div>
   <div class="card mt">
     <h3>预算管理 <span class="cs">预估 / 实际 + 汇率备忘</span></h3>
@@ -1185,7 +1190,7 @@ function bindView(view){
     else if(type==='videos'){push('videos',o);toast('已保存爆款拆解');}
     else if(type==='trip'){
       if(!o.date){toast('请填写出发日期');return;}
-      o.id='t'+Date.now();DATA.travel.trips.push(o);save();toast('已添加旅行');
+      o.id='t'+Date.now();o.plan='';DATA.travel.trips.push(o);save();toast('已添加旅行');
     }
     else if(type==='wish'){o.id='w'+Date.now();o.done=false;DATA.travel.wishlist.push(o);save();toast('已加入愿望清单');}
     else if(type==='itinerary'){o.id='i'+Date.now();DATA.travel.itineraries.push(o);save();toast('已添加预算明细');}
@@ -1200,9 +1205,11 @@ function bindView(view){
   // 侧边 Tab
   view.querySelectorAll('.tab[data-tab]').forEach(t=>t.onclick=()=>{state.sideTab=t.dataset.tab;render();});
   // 旅游删除/愿望
-  view.querySelectorAll('[data-deltrip]').forEach(b=>b.onclick=()=>{remove('travel.trips',t=>t.id===b.dataset.deltrip);DATA.travel.itineraries=DATA.travel.itineraries.filter(i=>i.tripId!==b.dataset.deltrip);save();render();});
+  view.querySelectorAll('[data-deltrip]').forEach(b=>b.onclick=()=>{remove('travel.trips',t=>t.id===b.dataset.deltrip);DATA.travel.itineraries=DATA.travel.itineraries.filter(i=>i.tripId!==b.dataset.deltrip);if(DATA.travel.planTrip===b.dataset.deltrip)DATA.travel.planTrip='';save();render();});
   view.querySelectorAll('[data-wishdel]').forEach(b=>b.onclick=()=>{remove('travel.wishlist',w=>w.id===b.dataset.wishdel);render();});
   view.querySelectorAll('[data-wishdone]').forEach(b=>b.onclick=()=>{update('travel.wishlist',w=>w.id===b.dataset.wishdone,{done:true});render();});
+  // 旅游：点击某旅行的「编辑行程」→ 切换下拉并滚动到行程规划
+  view.querySelectorAll('[data-edittrip]').forEach(b=>b.onclick=()=>{DATA.travel.planTrip=b.dataset.edittrip;save();render();const el=view.querySelector('#planTripSel');if(el)el.scrollIntoView({behavior:'smooth',block:'center'});});
   // 爆款素材卡片：点击展开/收起（修复“打不开内容”）
   view.querySelectorAll('[data-hot]').forEach(c=>{
     const head=c.querySelector('.hot-head'),tg=c.querySelector('.hot-toggle'),body=c.querySelector('.hot-body');
@@ -1227,9 +1234,20 @@ function bindView(view){
   // 汇率备忘自动保存
   const rates=view.querySelector('[data-rates]');
   if(rates)rates.oninput=()=>{DATA.travel.rates.note=rates.value;save();};
-  // 行程规划：实时解析，仅更新预览，不整页重渲染（保留输入框焦点）
+  // 行程规划：下拉切换行程 + 实时解析（仅更新预览，不整页重渲染）
+  const planSel=view.querySelector('#planTripSel');
+  if(planSel)planSel.onchange=()=>{
+    const ta=view.querySelector('#planText');
+    const old=DATA.travel.trips.find(t=>t.id===DATA.travel.planTrip);
+    if(old&&ta)old.plan=ta.value;
+    DATA.travel.planTrip=planSel.value;save();
+    const t=DATA.travel.trips.find(x=>x.id===planSel.value);
+    if(ta)ta.value=t?t.plan||'':'';
+    const prev=view.querySelector('#planPreview');
+    if(prev)prev.innerHTML=t?renderPlan(t.plan):'<div class="empty">请先选择旅行</div>';
+  };
   const plan=view.querySelector('[data-plan]');
-  if(plan)plan.oninput=()=>{DATA.travel.plan=plan.value;save();const prev=view.querySelector('#planPreview');if(prev)prev.innerHTML=renderPlan(plan.value);};
+  if(plan)plan.oninput=()=>{const t=DATA.travel.trips.find(x=>x.id===DATA.travel.planTrip);if(t)t.plan=plan.value;save();const prev=view.querySelector('#planPreview');if(prev)prev.innerHTML=renderPlan(plan.value);};
   // 复盘心情
   const moods=view.querySelector('#moods');
   if(moods)moods.querySelectorAll('.mood').forEach(m=>m.onclick=()=>{
