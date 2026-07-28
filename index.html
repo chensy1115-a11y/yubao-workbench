@@ -952,15 +952,34 @@ function genScript(h){
     '· 结尾 CTA：你呢？评论区聊聊。点赞收藏，下期接着讲。\n'+
     '（口播风格：自然像唠嗑，不用提词器也能量产；前期主做口播类型）';
 }
-function todaysPush(){
-  const n=new Date();
-  const doy=Math.floor((n-new Date(n.getFullYear(),0,0))/86400000);
-  return HOT_SEED[doy%HOT_SEED.length];
+/* 你的赛道关键词：大龄单身女 / 独居 / 女性成长 / 相亲 / 搞钱 等 */
+const HOT_KEYWORDS=['大龄','单身','独居','相亲','女性','女生','成长','自我','学习','搞钱','理财','存款','养老','婚姻','脱单','内耗','情绪','副业','独立','清醒','治愈','读书','自律','三十','30岁','姐姐','离婚','不婚','认知','原生家庭','职场','宝妈','情感','提升','焦虑','催婚','买房','独身','未婚','普通女孩','中年','情绪价值','悦己','自我提升'];
+function fmtHot(n){n=+n||0;if(n>=10000)return (n/10000).toFixed(1)+'w';return ''+n;}
+/* 实时拉取真实热榜，并按你的赛道过滤（失败回退静态灵感） */
+async function loadLiveHot(container){
+  try{
+    const [dy,wb]=await Promise.allSettled([
+      fetch('https://v2.xxapi.cn/api/douyinhot').then(r=>r.json()),
+      fetch('https://v2.xxapi.cn/api/weibohot').then(r=>r.json())
+    ]);
+    let items=[];
+    if(dy.status==='fulfilled'&&dy.value&&dy.value.code===200){
+      items=items.concat((dy.value.data||[]).map(x=>({title:x.word||'',hot:x.hot_value,url:x.group_id?('https://www.douyin.com/video/'+x.group_id):('https://www.douyin.com/search/'+encodeURIComponent(x.word||'')),src:'抖音'})));
+    }
+    if(wb.status==='fulfilled'&&wb.value&&wb.value.code===200){
+      items=items.concat((wb.value.data||[]).map(x=>({title:x.title||'',hot:x.hot,url:x.url||('https://s.weibo.com/weibo?q='+encodeURIComponent(x.title||'')),src:'微博'})));
+    }
+    if(!items.length)throw new Error('empty');
+    const matched=items.filter(it=>HOT_KEYWORDS.some(k=>it.title.includes(k)));
+    const show=matched.length?matched:items.slice(0,12);
+    const note=matched.length?('为你匹配到 <b>'+matched.length+'</b> 条「女性成长·独居·相亲·搞钱」相关爆款'):'今日匹配你赛道的内容较少，以下是全部热门供参考';
+    container.innerHTML='<div class="muted small" style="margin-bottom:10px">'+note+'</div>'+show.slice(0,15).map(it=>'<div class="hot-card"><div class="hot-head"><div style="font-weight:700">'+esc(it.title)+'</div><span class="tag warn">'+it.src+'</span></div><div class="muted small" style="margin:4px 0 8px">热度 '+fmtHot(it.hot)+'</div><a class="btn sm" href="'+esc(it.url)+'" target="_blank" rel="noopener">跳转观看 →</a></div>').join('');
+  }catch(e){
+    container.innerHTML='<div class="muted small" style="margin-bottom:10px">实时接口暂不可用，已为你展示往期灵感 ↓</div>'+HOT_SEED.map(h=>'<div class="hot-card"><div class="hot-head"><div style="font-weight:700">'+esc(h.title)+'</div><span class="tag warn">'+h.hot+'</span></div><div class="muted small" style="margin:4px 0 8px">赛道：'+esc(h.src)+'</div><a class="btn sm" href="https://www.douyin.com/search/'+encodeURIComponent(h.title)+'" target="_blank" rel="noopener">搜索相关 →</a></div>').join('');
+  }
 }
-function pushUnlocked(){return new Date().getHours()>=10;}
 
 function renderVideos(){
-  const p=todaysPush(),unlocked=pushUnlocked();
   const seed=HOT_SEED.map((h,i)=>`<div class="hot-card" data-hot="${i}">
     <div class="hot-head"><div style="font-weight:700">${esc(h.title)}</div><span class="tag warn">${h.hot}</span></div>
     <div class="muted small" style="margin:4px 0 8px">赛道：${esc(h.src)}</div>
@@ -997,15 +1016,9 @@ function renderVideos(){
     <h3>赛道定位 <span class="cs">活人感的大龄女青年</span></h3>
     <p class="small muted">内容方向：独居、女性自我提升、学习、理财、相亲。真实、松弛、不说教，用"活人感"建立信任。</p>
   </div>
-  <div class="card">
-    <h3>今日爆款推送 <span class="cs">每天 10:00 自动上线 · 口播向</span></h3>
-    ${unlocked?`
-      <div style="font-weight:700;font-size:16px">${esc(p.title)}</div>
-      <div class="muted small" style="margin:4px 0 10px">赛道：${esc(p.src)} · 热度 ${p.hot}</div>
-      <div class="sub-h">自动拆解笔记</div><div class="box">${esc(genDeconstruct(p))}</div>
-      <div class="sub-h mt">口播二创脚本（可直接拍）</div><div class="box">${esc(genScript(p))}</div>
-      <button class="btn sm mt" data-collectpush="1">收藏今日推送</button>
-    `:`<div class="muted">今日爆款推送将在 <b>10:00</b> 准时自动上线，先看看下方往期素材 ↓</div>`}
+  <div class="card mt">
+    <h3>为你匹配的真实爆款 <span class="cs">女性成长 · 独居 · 相亲 · 搞钱 · 实时</span></h3>
+    <div id="liveHot"><div class="muted small" style="padding:8px 0">正在拉取真实热榜…</div></div>
   </div>
   <div class="card mt">
     <h3>爆款素材参考 <span class="cs">点击任意卡片展开拆解 + 二创脚本</span></h3>
@@ -1286,6 +1299,9 @@ function bindView(view){
     const toggle=()=>{const open=body.style.display!=='none';body.style.display=open?'none':'block';tg.textContent=open?'点击展开拆解 / 二创脚本 ▾':'收起 ▴';};
     if(head)head.onclick=toggle; if(tg)tg.onclick=toggle;
   });
+  // 实时爆款拉取（女性成长赛道匹配）
+  const liveHot=view.querySelector('#liveHot');
+  if(liveHot)loadLiveHot(liveHot);
   // 爆款收藏（默认带上自动生成的拆解 + 口播脚本）
   view.querySelectorAll('[data-collect]').forEach(b=>b.onclick=()=>{
     const h=HOT_SEED[+b.dataset.collect];
@@ -1294,12 +1310,6 @@ function bindView(view){
     const note=myNote?myNote+'\n\n'+auto:auto;
     push('videos',{id:'r'+Date.now(),date:D.today(),_t:new Date().toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'}),title:h.title,platform:'参考',note:note});
     toast('已收藏到拆解库');render();
-  });
-  // 今日推送收藏
-  view.querySelectorAll('[data-collectpush]').forEach(b=>b.onclick=()=>{
-    const p=todaysPush();
-    push('videos',{id:'r'+Date.now(),date:D.today(),_t:new Date().toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'}),title:p.title,platform:'今日推送',note:'【自动拆解】\n'+genDeconstruct(p)+'\n\n【口播二创脚本】\n'+genScript(p)});
-    toast('已收藏今日推送');render();
   });
   // 汇率备忘自动保存
   const rates=view.querySelector('[data-rates]');
