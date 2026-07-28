@@ -312,8 +312,8 @@ details.day>summary .cnt{margin-left:auto;font-size:11px;color:var(--text-3);fon
 <div class="modal-mask" id="sbModal">
   <div class="modal">
     <h3>云端同步设置（Supabase）</h3>
-    <div class="field" style="margin-bottom:12px"><label>Supabase URL</label><input id="sbUrl" style="width:100%" placeholder="https://xxxx.supabase.co" /></div>
-    <div class="field" style="margin-bottom:8px"><label>Anon Key（公开）</label><input id="sbKey" style="width:100%" placeholder="eyJhbGci..." /></div>
+    <div class="field" style="margin-bottom:12px"><label>Supabase URL</label><input id="sbUrl" style="width:100%" value="https://cqikmvpkuykzsmlbjahh.supabase.co" /></div>
+    <div class="field" style="margin-bottom:8px"><label>Anon Key（公开）</label><input id="sbKey" style="width:100%" value="sb_publishable_daqpOgBblJ-GVmay6x4bGg_7lrcbscP" /></div>
     <div class="hint">在 Supabase 控制台执行建表 SQL：<br>
       create table yubao_data (id text primary key, payload jsonb, updated_at timestamptz default now());<br>
       填入后点击连接，状态栏会显示「云端已连接」。
