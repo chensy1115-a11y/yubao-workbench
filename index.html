@@ -276,6 +276,7 @@ details.day>summary .cnt{margin-left:auto;font-size:11px;color:var(--text-3);fon
 .kpi-box.hl{background:var(--primary-strong);border-color:var(--primary-strong)}
 .kpi-box.hl .v,.kpi-box.hl .l{color:#fff}
 .tag.primary{background:var(--primary);color:#fff;border-color:var(--primary)}
+.prog{height:10px;background:var(--accent-soft,#E8F5E9);border-radius:6px;overflow:hidden;margin:6px 0}.prog-bar{height:100%;background:var(--accent,#2E7D32);border-radius:6px;transition:width .35s}
 </style>
 </head>
 <body>
@@ -399,7 +400,7 @@ const DEFAULT={
   version:1, settings:{theme:'system'}, checkins:{},
   sideHustle:{iso:[],media:[],other:[]},
   english:[], reading:[], exercise:[],
-  mediaPlan:[], videos:[], favHot:[],
+  mediaPlan:[], videos:[], favHot:[], goals:{readingYear:12, sideMonth:0, engWeek:0},
   travel:{trips:[],wishlist:[],itineraries:[],rates:{},plan:''},
   reviews:{}
 };
@@ -736,12 +737,27 @@ function renderHome(){
 /* ============================================================
    英语学习
    ============================================================ */
+/* 目标进度条组件：current 当前值 / goal 目标值 / unit 单位 / key 存到 DATA.goals */
+function goalBlock(title,current,goal,unit,key){
+  const g=goal||0;const pct=g>0?Math.min(100,Math.round(current/g*100)):0;
+  return `<div class="card mt">
+    <h3>${title} <span class="cs">${current}${unit} / 目标 ${g}${unit}</span></h3>
+    <div class="prog"><div class="prog-bar" style="width:${pct}%"></div></div>
+    <div class="fr" style="align-items:center;margin-top:8px;gap:8px">
+      <span class="muted small">目标（${unit}）</span>
+      <input type="number" min="0" class="small" style="width:90px" value="${g}" data-goal="${key}">
+      <span class="muted small">已达成 ${pct}%</span>
+    </div>
+  </div>`;
+}
 function renderEnglish(){
   const days=D.lastNDays(30);
   const trend=days.map(d=>DATA.english.filter(r=>r.date===d).reduce((s,r)=>s+engMins(r),0));
   const monthDays=D.thisMonthDays();
   const monthMin=DATA.english.filter(r=>monthDays.includes(r.date)).reduce((s,r)=>s+engMins(r),0);
   const todayMin=DATA.english.filter(r=>r.date===D.today()).reduce((s,r)=>s+engMins(r),0);
+  const wkDays=D.lastNDays(7);
+  const wkMin=DATA.english.filter(r=>wkDays.includes(r.date)).reduce((s,r)=>s+engMins(r),0);
   return `
   <div class="card">
     <h3>添加学习记录</h3>
@@ -757,6 +773,7 @@ function renderEnglish(){
     <div style="font-size:34px;font-weight:700;color:var(--primary-strong)">${monthMin}<span class="small muted"> 分钟 / 本月</span></div>
     <div class="muted small">今日已学 ${todayMin} 分钟</div>
   </div>
+  ${goalBlock('本周学习时长目标',wkMin,DATA.goals.engWeek,'分钟','engWeek')}
   <div class="card">
     <h3>近 30 天学习时长趋势（分钟）</h3>
     ${Charts.line(trend,{height:220})}
@@ -776,7 +793,10 @@ function renderReading(){
   const reading=books.filter(b=>b.status!=='done');
   const done=books.filter(b=>b.status==='done');
   const total=books.length;
+  const gY=(DATA.goals||{}).readingYear||0;
+  const gblock=goalBlock('年度读书目标',done.length,gY,'本','readingYear');
   return `
+  ${gblock}
   <div class="card">
     <h3>添加书目</h3>
     <form class="fr" data-add="reading">
@@ -878,6 +898,8 @@ function renderSide(){
   if(isoInc>0)pieSegs.push({label:'ISO审核',value:isoInc});
   if(mediaInc>0)pieSegs.push({label:'自媒体',value:mediaInc});
   if(otherInc>0)pieSegs.push({label:'其他副业',value:otherInc});
+  const ym=D.today().slice(0,7);
+  const monthInc=(DATA.sideHustle.iso.concat(DATA.sideHustle.media,DATA.sideHustle.other)).filter(r=>r.date&&r.date.slice(0,7)===ym).reduce((s,r)=>s+(+r.income||0),0);
 
   return `
   <!-- 表单区（首栏） -->
@@ -895,6 +917,7 @@ function renderSide(){
     ${Charts.pie(pieSegs,{size:220,center:'总收入'})}
     ${totalInc<=0?'':'<div class="muted small" style="margin-top:6px">ISO ¥'+isoInc.toFixed(0)+' · 自媒体 ¥'+mediaInc.toFixed(0)+' · 其他 ¥'+otherInc.toFixed(0)+'</div>'}
   </div>
+  ${goalBlock('本月副业收入目标',monthInc,DATA.goals.sideMonth,'元','sideMonth')}
   <!-- 历史记录 -->
   <div class="card mt"><h3>历史记录 <span class="cs">按日期折叠</span></h3>${histHtml}</div>
 `;
@@ -1322,6 +1345,10 @@ function bindView(view){
   // 爆款收藏区：取消收藏
   view.querySelectorAll('[data-favdel]').forEach(b=>b.onclick=()=>{
     const i=+b.dataset.favdel;if(DATA.favHot&&DATA.favHot[i]){DATA.favHot.splice(i,1);save();toast('已取消收藏');render();}
+  });
+  // 目标线：编辑目标即时保存
+  view.querySelectorAll('[data-goal]').forEach(inp=>inp.onchange=()=>{
+    DATA.goals=DATA.goals||{};DATA.goals[inp.dataset.goal]=Math.max(0,+inp.value||0);save();render();
   });
   // 实时爆款拉取（女性成长赛道匹配）
   const liveHot=view.querySelector('#liveHot');
