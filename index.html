@@ -309,8 +309,10 @@ details.day>summary .cnt{margin-left:auto;font-size:11px;color:var(--text-3);fon
     <h3>云端同步设置（Supabase）</h3>
     <div class="field" style="margin-bottom:12px"><label>Supabase URL</label><input id="sbUrl" style="width:100%" value="https://cqikmvpkuykzsmlbjahh.supabase.co" /></div>
     <div class="field" style="margin-bottom:8px"><label>Anon Key（公开）</label><input id="sbKey" style="width:100%" value="sb_publishable_daqpOgBblJ-GVmay6x4bGg_7lrcbscP" /></div>
-    <div class="hint">在 Supabase 控制台执行建表 SQL：<br>
+    <div class="field" style="margin-bottom:8px"><label>同步密钥（隐私隔离 · 可选）</label><input id="sbSpace" style="width:100%" placeholder="留空=本机独立空间；多设备共享填同一个" /></div>
+    <div class="hint">建表 SQL：<br>
       create table yubao_data (id text primary key, payload jsonb, updated_at timestamptz default now());<br>
+      <strong>同步密钥</strong>留空时，每台设备的云端数据相互独立、互不可见；多台设备想共享同一份数据，就都填<strong>同一个密钥</strong>。别人不知道你的密钥就进不了你的空间。<br>
       填入后点击连接，状态栏会显示「云端已连接」。
     </div>
     <div class="actions">
@@ -515,7 +517,7 @@ function todayQuote(){const i=Math.floor((Date.now()/86400000))%QUOTES.length;re
    Supabase 云端同步（可选，无网络不影响本地使用）
    ============================================================ */
 const SBKEY='yubao_supabase_cfg';
-let sbClient=null,sbStatus='off',sbCfg=null,sbTimer=null;
+let sbClient=null,sbStatus='off',sbCfg=null,sbTimer=null,sbRowId=null;
 function loadSbCfg(){try{sbCfg=JSON.parse(localStorage.getItem(SBKEY)||'null');}catch(e){sbCfg=null;}}
 function setSbStatus(s,t){sbStatus=s;const b=document.getElementById('connBtn'),t1=document.getElementById('connText');
   b.className='conn '+(s==='connected'?'connected':s==='err'?'err':s==='sync'?'sync':'off');
@@ -532,32 +534,66 @@ function connectSupabase(){
   setSbStatus('sync','连接中…');
   loadSbScript(err=>{
     if(err||!window.supabase){setSbStatus('err','CDN 不可用');return;}
-    try{
-      sbClient=window.supabase.createClient(sbCfg.url,sbCfg.key);
-      sbClient.from('yubao_data').select('updated_at').eq('id','me').maybeSingle()
-        .then(({data,error})=>{
-          if(error){setSbStatus('err',error.message.slice(0,20));return;}
-          setSbStatus('connected');pullThenPush();
-          try{sbClient.channel('yubao').on('postgres_changes',{event:'*',schema:'public',table:'yubao_data'},()=>pull()).subscribe();}catch(e){}
-        }).catch(e=>setSbStatus('err',e.message.slice(0,20)));
-    }catch(e){setSbStatus('err',e.message.slice(0,20));}
+    try{ sbClient=window.supabase.createClient(sbCfg.url,sbCfg.key); }
+    catch(e){ setSbStatus('err',e.message.slice(0,20)); return; }
+    getSyncRowId().then(rowId=>{
+      sbRowId=rowId;
+      sbClient.from('yubao_data').select('payload,updated_at').eq('id',rowId).maybeSingle()
+      .then(({data,error})=>{
+        if(error){setSbStatus('err',error.message.slice(0,20));return;}
+        if(data&&data.payload){
+          try{importJSON(JSON.stringify(data.payload));render();}catch(e){}
+          finishConnect();
+        }else{
+          // 本空间为空：尝试从旧公共行 'me' 迁移（仅首次，避免朋友误读你的数据）
+          sbClient.from('yubao_data').select('payload,updated_at').eq('id','me').maybeSingle()
+          .then(({data:m})=>{
+            if(m&&m.payload){
+              try{importJSON(JSON.stringify(m.payload));render();}catch(e){}
+              sbClient.from('yubao_data').upsert({id:rowId,payload:DATA,updated_at:new Date().toISOString()})
+               .then(()=>{ sbClient.from('yubao_data').delete().eq('id','me').then(()=>{}).catch(()=>{}); toast('已迁移旧云端数据并隔离'); })
+               .catch(()=>{});
+            }
+            finishConnect();
+          }).catch(()=>finishConnect());
+        }
+      }).catch(e=>setSbStatus('err',e.message.slice(0,20)));
+    }).catch(e=>setSbStatus('err','密钥处理失败'));
   });
 }
-function pullThenPush(){
-  if(!sbClient)return;
-  sbClient.from('yubao_data').select('payload,updated_at').eq('id','me').maybeSingle()
-    .then(({data,error})=>{
-      if(!error&&data&&data.payload){try{importJSON(JSON.stringify(data.payload));render();}catch(e){}}
-    }).catch(()=>{});
+function finishConnect(){
+  setSbStatus('connected');
+  try{sbClient.channel('yubao').on('postgres_changes',{event:'*',schema:'public',table:'yubao_data'},()=>pull()).subscribe();}catch(e){}
+}
+function pull(){
+  if(!sbClient||!sbRowId)return;
+  sbClient.from('yubao_data').select('payload,updated_at').eq('id',sbRowId).maybeSingle()
+   .then(({data,error})=>{ if(!error&&data&&data.payload){try{importJSON(JSON.stringify(data.payload));render();}catch(e){}} })
+   .catch(()=>{});
 }
 function scheduleSync(){
-  if(sbStatus!=='connected'||!sbClient)return;
+  if(sbStatus!=='connected'||!sbClient||!sbRowId)return;
   clearTimeout(sbTimer);
   sbTimer=setTimeout(()=>{
     setSbStatus('sync');
-    sbClient.from('yubao_data').upsert({id:'me',payload:DATA,updated_at:new Date().toISOString()})
+    sbClient.from('yubao_data').upsert({id:sbRowId,payload:DATA,updated_at:new Date().toISOString()})
       .then(()=>setSbStatus('connected')).catch(()=>setSbStatus('err','同步失败'));
   },800);
+}
+function getDeviceId(){
+  let id=localStorage.getItem('yubao_device_id');
+  if(!id){id=(crypto&&crypto.randomUUID)?crypto.randomUUID():('d'+Date.now()+Math.random().toString(16).slice(2));localStorage.setItem('yubao_device_id',id);}
+  return id;
+}
+async function sha256(s){
+  try{ if(crypto&&crypto.subtle){const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');} }catch(e){}
+  return 'h'+simpleHash(s);
+}
+function simpleHash(s){let h=5381;for(let i=0;i<s.length;i++){h=((h<<5)+h+s.charCodeAt(i))>>>0;}return h.toString(16);}
+async function getSyncRowId(){
+  const space=(sbCfg&&sbCfg.space)?sbCfg.space.trim():'';
+  if(space) return 'k_'+await sha256('yubao:'+space);
+  return 'd_'+getDeviceId();
 }
 
 /* ============================================================
@@ -1344,10 +1380,10 @@ function initBackup(){
    ============================================================ */
 function initSbModal(){
   const modal=document.getElementById('sbModal');
-  document.getElementById('connBtn').onclick=()=>{document.getElementById('sbUrl').value=sbCfg?.url||'';document.getElementById('sbKey').value=sbCfg?.key||'';modal.classList.add('open');};
+  document.getElementById('connBtn').onclick=()=>{document.getElementById('sbUrl').value=sbCfg?.url||'';document.getElementById('sbKey').value=sbCfg?.key||'';document.getElementById('sbSpace').value=sbCfg?.space||'';modal.classList.add('open');};
   document.getElementById('sbCancel').onclick=()=>modal.classList.remove('open');
   document.getElementById('sbConnect').onclick=()=>{
-    sbCfg={url:document.getElementById('sbUrl').value.trim(),key:document.getElementById('sbKey').value.trim()};
+    sbCfg={url:document.getElementById('sbUrl').value.trim(),key:document.getElementById('sbKey').value.trim(),space:document.getElementById('sbSpace').value.trim()};
     localStorage.setItem(SBKEY,JSON.stringify(sbCfg));modal.classList.remove('open');connectSupabase();
   };
   document.getElementById('sbDisconnect').onclick=()=>{
