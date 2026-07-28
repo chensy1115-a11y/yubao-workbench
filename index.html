@@ -1027,10 +1027,20 @@ function renderTravel(){
   const trips=DATA.travel.trips.slice().sort((a,b)=>a.date.localeCompare(b.date));
   if(!DATA.travel.planTrip||!trips.find(t=>t.id===DATA.travel.planTrip))DATA.travel.planTrip=trips.length?trips[0].id:'';
   const selTrip=trips.find(t=>t.id===DATA.travel.planTrip);
+  const hasPlan=selTrip&&(selTrip.plan&&selTrip.plan.trim());
+
+  // 有内容时隐藏文本框只显示卡片+编辑按钮；无内容时显示文本框
+  const planEditHtml = hasPlan ? '' : `<div class="field" style="margin-bottom:10px"><label>逐日安排（粘贴整段，自动按「第X天」拆分）</label>
+      <textarea id="planText" data-plan rows="6" placeholder="例如：&#10;第一天 抵达巴黎，入住左岸酒店，傍晚塞纳河游船&#10;第二天 卢浮宫 · 香榭丽舍 · 凯旋门&#10;第三天 凡尔赛宫一日游">${selTrip?(selTrip.plan||''):''}</textarea></div>`;
+  const planPreviewHtml = hasPlan
+    ? `<div id="planPreview">${renderPlan(selTrip.plan)}</div><div style="margin-top:8px;text-align:right"><button class="btn sm ghost" id="planEditBtn">✎ 编辑行程</button></div>`
+    : `<div id="planPreview">${selTrip?renderPlan(selTrip.plan):'<div class="empty">请先在上方选择一次旅行</div>'}</div>`;
+
   const tripsHtml=trips.length?trips.map(t=>{
     const est=t.budget||0;const days=D.daysBetween(D.today(),t.date);
     const arranged=(t.plan&&t.plan.trim())?' · <span class="cs">已排行程</span>':'';
-    return `<div class="card" style="margin-bottom:10px"><div class="spread"><div style="font-weight:700">${t.name}</div><span class="tag">${D.pretty(t.date)}</span></div>
+    const isSel=t.id===DATA.travel.planTrip;
+    return `<div class="card trip-card" style="margin-bottom:10px${isSel?';border-left:3px solid var(--primary)':''}"><div class="spread"><div style="font-weight:700">${t.name}${isSel?' <span class="cs small">当前选中</span>':''}</div><span class="tag">${D.pretty(t.date)}</span></div>
       <div class="muted small" style="margin:6px 0">${days>=0?`还有 ${days} 天`:'已过期'} · 预估预算 ¥${(+est).toFixed(0)}${arranged}</div>
       <div class="fr" style="margin-top:6px"><button class="btn sm" data-edittrip="${t.id}">编辑行程</button> <button class="btn sm danger" data-deltrip="${t.id}">删除</button></div></div>`;
   }).join(''):'<div class="empty">还没有旅行计划</div>';
@@ -1040,6 +1050,7 @@ function renderTravel(){
     <span><button class="btn sm ghost" data-wishdone="${w.id}">${w.done?'撤销':'标记成行'}</button> <button class="btn sm danger" data-wishdel="${w.id}">删</button></span></div>`).join(''):'<div class="empty">愿望清单为空</div>';
 
   return `
+  <!-- 新增 -->
   <div class="card">
     <h3>新增旅行计划</h3>
     <form class="fr" data-add="trip">
@@ -1049,20 +1060,30 @@ function renderTravel(){
       <button class="btn" type="submit">添加</button>
     </form>
   </div>
-  <div class="grid g2">
-    <div class="card"><h3>旅行计划</h3>${tripsHtml}</div>
-    <div class="card"><h3>愿望清单</h3>
-      <form class="fr" data-add="wish" style="margin-bottom:12px"><div class="field" style="flex:1;min-width:200px"><label>想去的地方</label><input name="name" placeholder="如 冰岛"></div><button class="btn" type="submit">加入</button></form>
-      ${wish}</div>
-  </div>
+
+  <!-- 行程规划：紧跟新增表单，选择→粘贴→拆分 -->
   <div class="card mt">
-    <h3>行程规划 <span class="cs">选择行程后，编辑它的逐日安排</span></h3>
+    <h3>行程规划 <span class="cs">选择旅行 → 粘贴行程 → 自动拆分</span></h3>
     <div class="field" style="margin-bottom:10px"><label>选择行程</label>
       <select id="planTripSel">${trips.length?trips.map(t=>`<option value="${t.id}" ${t.id===DATA.travel.planTrip?'selected':''}>${t.name} · ${D.pretty(t.date)}</option>`).join(''):'<option value="">请先添加旅行</option>'}</select></div>
-    <div class="field" style="margin-bottom:10px"><label>逐日安排（粘贴整段，自动按「第X天」拆分）</label>
-      <textarea id="planText" data-plan rows="6" placeholder="例如：&#10;第一天 抵达巴黎，入住左岸酒店，傍晚塞纳河游船&#10;第二天 卢浮宫 · 香榭丽舍 · 凯旋门&#10;第三天 凡尔赛宫一日游">${selTrip?(selTrip.plan||''):''}</textarea></div>
-    <div id="planPreview">${selTrip?renderPlan(selTrip.plan):'<div class="empty">请先在上方选择一次旅行</div>'}</div>
+    ${planEditHtml}
+    ${planPreviewHtml}
   </div>
+
+  <!-- 我的旅行列表 -->
+  <div class="card mt">
+    <h3>我的旅行</h3>
+    ${tripsHtml}
+  </div>
+
+  <!-- 愿望清单 -->
+  <div class="card mt">
+    <h3>愿望清单</h3>
+    <form class="fr" data-add="wish" style="margin-bottom:12px"><div class="field" style="flex:1;min-width:200px"><label>想去的地方</label><input name="name" placeholder="如 冰岛"></div><button class="btn" type="submit">加入</button></form>
+    ${wish}
+  </div>
+
+  <!-- 预算管理 -->
   <div class="card mt">
     <h3>预算管理 <span class="cs">预估 / 实际 + 汇率备忘</span></h3>
     <form class="fr" data-add="itinerary">
@@ -1075,8 +1096,7 @@ function renderTravel(){
     <div class="fr mt" style="align-items:flex-start">
       <div class="field" style="flex:1;min-width:240px"><label>汇率备忘（自由文本）</label><textarea data-rates rows="2" placeholder="1 USD≈7.2 CNY；1 JPY≈0.048 CNY…">${DATA.travel.rates.note||''}</textarea></div>
     </div>
-  </div>
-`;
+  </div>`;
 }
 
 /* ============================================================
@@ -1287,6 +1307,23 @@ function bindView(view){
   };
   const plan=view.querySelector('[data-plan]');
   if(plan)plan.oninput=()=>{const t=DATA.travel.trips.find(x=>x.id===DATA.travel.planTrip);if(t)t.plan=plan.value;save();const prev=view.querySelector('#planPreview');if(prev)prev.innerHTML=renderPlan(plan.value);};
+  // 编辑行程按钮：有内容时点击重新显示文本框
+  const editBtn=view.querySelector('#planEditBtn');
+  if(editBtn)editBtn.onclick=()=>{
+    const t=DATA.travel.trips.find(x=>x.id===DATA.travel.planTrip);
+    const prev=view.querySelector('#planPreview');
+    if(prev&&t){
+      prev.innerHTML=`<div class="field"><label>逐日安排（修改后自动更新预览）</label>
+        <textarea id="planText" data-plan rows="8">${t.plan||''}</textarea></div>
+        <div id="planPreviewInner">${renderPlan(t.plan)}</div>
+        <div style="margin-top:8px;text-align:right"><button class="btn sm" id="planSaveBtn">完成编辑 ✓</button></div>`;
+      // bind new textarea
+      const ta=prev.querySelector('[data-plan]');
+      if(ta)ta.oninput=()=>{t.plan=ta.value;save();const inner=prev.querySelector('#planPreviewInner');if(inner)inner.innerHTML=renderPlan(ta.value);};
+      const saveBtn=prev.querySelector('#planSaveBtn');
+      if(saveBtn)saveBtn.onclick=()=>{save();render();};
+    }
+  };
   // 复盘心情
   const moods=view.querySelector('#moods');
   if(moods)moods.querySelectorAll('.mood').forEach(m=>m.onclick=()=>{
