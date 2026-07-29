@@ -307,7 +307,26 @@ details.day>summary .cnt{margin-left:auto;font-size:11px;color:var(--text-3);fon
 .word-zh{font-size:12px;color:var(--text-3);font-style:normal;margin-top:2px}
 .dw-all{margin-top:14px}
 .dw-done{margin-top:14px;padding:12px 14px;border-radius:12px;background:var(--accent-soft,#E8F5E9);color:var(--primary-strong,#2E7D32);font-weight:600;text-align:center}
-@media(max-width:860px){.word-grid{grid-template-columns:1fr}}
+.word-acts{margin-top:8px}
+.word-wrong{display:inline-block;font-size:12px;color:var(--text-3);cursor:pointer;user-select:none;border:1px solid var(--border);padding:2px 10px;border-radius:20px}
+.word-wrong.on{background:#fdecea;color:#c0392b;border-color:#f5c6c0}
+.wrong-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}
+.wrong-item:last-child{border-bottom:none}
+.word-spk.sm{width:30px;height:30px;flex:0 0 auto}
+.word-spk.sm svg{width:15px;height:15px}
+.wrong-main{flex:1;min-width:0}
+.word-master{font-size:12px;color:var(--accent,#2E7D32);cursor:pointer;border:1px solid var(--accent,#2E7D32);padding:3px 10px;border-radius:20px;white-space:nowrap}
+.flip-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.flip{border:1px solid var(--border);border-radius:12px;padding:14px;cursor:pointer;min-height:88px;display:flex;flex-direction:column;justify-content:center;text-align:center;background:var(--bg,#fff);transition:border-color .2s,box-shadow .2s}
+.flip:hover{border-color:var(--primary,#2E7D32)}
+.flip-face{width:100%}
+.flip-cn{font-size:16px;font-weight:600;color:var(--text-1)}
+.flip-hint{font-size:12px;color:var(--text-3);margin-top:6px}
+.flip-back .word-w{font-size:18px}
+.flip-back .word-spk{margin:8px auto 0}
+.flip-acts{display:flex;gap:8px;justify-content:center;margin-top:8px}
+.flip-acts .word-wrong{font-size:12px}
+@media(max-width:860px){.word-grid{grid-template-columns:1fr}.flip-grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -459,7 +478,7 @@ const DEFAULT={
   sideHustle:{iso:[],media:[],other:[]},
   english:[], reading:[], exercise:[],
   mediaPlan:[], videos:[], favHot:[], goals:{readingYear:12, sideMonth:0, engWeek:0},
-  engWords:{done:{}},
+  engWords:{done:{},wrong:[]},
   travel:{trips:[],wishlist:[],itineraries:[],rates:{},plan:''},
   reviews:{}
 };
@@ -899,7 +918,139 @@ const B1_WORDS=[
  {w:"tidy",pos:"adj.",ph:"/ˈtaɪdi/",cn:"整洁的",ex:"Keep your room tidy.",zh:"保持房间整洁。"},
  {w:"mess",pos:"n.",ph:"/mes/",cn:"杂乱",ex:"Sorry, what a mess!",zh:"抱歉，太乱了！"},
  {w:"heat",pos:"v.",ph:"/hiːt/",cn:"加热",ex:"Heat the water, please.",zh:"请把水加热。"},
- {w:"freeze",pos:"v.",ph:"/friːz/",cn:"冷冻",ex:"Freeze the leftovers.",zh:"把剩菜冷冻起来。"}
+ {w:"freeze",pos:"v.",ph:"/friːz/",cn:"冷冻",ex:"Freeze the leftovers.",zh:"把剩菜冷冻起来。"},
+
+ {w:"headache",pos:"n.",ph:"/ˈhedeɪk/",cn:"头痛",ex:"I have a headache.",zh:"我头痛。"},
+ {w:"fever",pos:"n.",ph:"/ˈfiːvər/",cn:"发烧",ex:"He has a fever.",zh:"他发烧了。"},
+ {w:"cough",pos:"v./n.",ph:"/kɔːf/",cn:"咳嗽",ex:"I cough at night.",zh:"我晚上咳嗽。"},
+ {w:"stomachache",pos:"n.",ph:"/ˈstʌməkeɪk/",cn:"胃痛",ex:"I've a stomachache.",zh:"我肚子痛。"},
+ {w:"sneeze",pos:"v.",ph:"/sniːz/",cn:"打喷嚏",ex:"I sneeze a lot.",zh:"我老打喷嚏。"},
+ {w:"breath",pos:"n.",ph:"/breθ/",cn:"呼吸",ex:"Take a deep breath.",zh:"深呼吸一下。"},
+ {w:"weight",pos:"n.",ph:"/weɪt/",cn:"体重",ex:"I lost some weight.",zh:"我瘦了些。"},
+ {w:"tooth",pos:"n.",ph:"/tuːθ/",cn:"牙齿",ex:"I brush my teeth.",zh:"我刷牙。"},
+ {w:"blood",pos:"n.",ph:"/blʌd/",cn:"血",ex:"Blood is red.",zh:"血是红色的。"},
+ {w:"energy",pos:"n.",ph:"/ˈenərdʒi/",cn:"精力",ex:"I have no energy.",zh:"我没精神。"},
+
+ {w:"hungry",pos:"adj.",ph:"/ˈhʌŋɡri/",cn:"饿的",ex:"I'm so hungry.",zh:"我好饿。"},
+ {w:"thirsty",pos:"adj.",ph:"/ˈθɜːrsti/",cn:"渴的",ex:"Are you thirsty?",zh:"你渴吗？"},
+ {w:"order",pos:"v.",ph:"/ˈɔːrdər/",cn:"点餐",ex:"I ordered pizza.",zh:"我点了披萨。"},
+ {w:"menu",pos:"n.",ph:"/ˈmenjuː/",cn:"菜单",ex:"Show me the menu.",zh:"给我看看菜单。"},
+ {w:"bill",pos:"n.",ph:"/bɪl/",cn:"账单",ex:"Can we have the bill?",zh:"买单好吗？"},
+ {w:"tip",pos:"n.",ph:"/tɪp/",cn:"小费",ex:"Keep the tip.",zh:"小费你留着。"},
+ {w:"spicy",pos:"adj.",ph:"/ˈspaɪsi/",cn:"辣的",ex:"This is too spicy.",zh:"这太辣了。"},
+ {w:"sweet",pos:"adj.",ph:"/swiːt/",cn:"甜的",ex:"I like sweet food.",zh:"我喜欢甜食。"},
+ {w:"taste",pos:"v.",ph:"/teɪst/",cn:"尝",ex:"It tastes good.",zh:"味道不错。"},
+ {w:"full",pos:"adj.",ph:"/fʊl/",cn:"饱的",ex:"I'm full, thanks.",zh:"我饱了，谢谢。"},
+
+ {w:"weather",pos:"n.",ph:"/ˈweðər/",cn:"天气",ex:"The weather is nice.",zh:"天气真好。"},
+ {w:"sunny",pos:"adj.",ph:"/ˈsʌni/",cn:"晴朗的",ex:"It's sunny today.",zh:"今天晴天。"},
+ {w:"rainy",pos:"adj.",ph:"/ˈreɪni/",cn:"下雨的",ex:"It's rainy season.",zh:"现在是雨季。"},
+ {w:"windy",pos:"adj.",ph:"/ˈwɪndi/",cn:"有风的",ex:"It's very windy.",zh:"风很大。"},
+ {w:"snow",pos:"n./v.",ph:"/snoʊ/",cn:"雪",ex:"It snows in winter.",zh:"冬天下雪。"},
+ {w:"temperature",pos:"n.",ph:"/ˈtemprətʃər/",cn:"温度",ex:"The temperature dropped.",zh:"气温降了。"},
+ {w:"forecast",pos:"n.",ph:"/ˈfɔːrkæst/",cn:"预报",ex:"The forecast is sunny.",zh:"预报是晴天。"},
+ {w:"season",pos:"n.",ph:"/ˈsiːzn/",cn:"季节",ex:"My favorite season is spring.",zh:"我最爱春天。"},
+ {w:"spring",pos:"n.",ph:"/sprɪŋ/",cn:"春天",ex:"Spring is lovely.",zh:"春天很美。"},
+ {w:"warm",pos:"adj.",ph:"/wɔːrm/",cn:"温暖的",ex:"It's warm outside.",zh:"外面挺暖。"},
+
+ {w:"occasionally",pos:"adv.",ph:"/əˈkeɪʒnəli/",cn:"偶尔",ex:"I go there occasionally.",zh:"我偶尔去那。"},
+ {w:"regularly",pos:"adv.",ph:"/ˈreɡjələrli/",cn:"定期地",ex:"I exercise regularly.",zh:"我定期锻炼。"},
+ {w:"lately",pos:"adv.",ph:"/ˈleɪtli/",cn:"最近",ex:"I've been busy lately.",zh:"我最近很忙。"},
+ {w:"soon",pos:"adv.",ph:"/suːn/",cn:"很快",ex:"See you soon.",zh:"很快见。"},
+ {w:"already",pos:"adv.",ph:"/ɔːlˈredi/",cn:"已经",ex:"I already ate.",zh:"我已经吃了。"},
+ {w:"yet",pos:"adv.",ph:"/jet/",cn:"还（未）",ex:"Not finished yet.",zh:"还没完成。"},
+ {w:"since",pos:"prep./conj.",ph:"/sɪns/",cn:"自从",ex:"I've been here since May.",zh:"我五月就在这了。"},
+ {w:"until",pos:"prep.",ph:"/ənˈtɪl/",cn:"直到",ex:"Wait until noon.",zh:"等到中午。"},
+ {w:"weekend",pos:"n.",ph:"/ˈwiːkend/",cn:"周末",ex:"I love the weekend.",zh:"我喜欢周末。"},
+ {w:"tonight",pos:"adv.",ph:"/təˈnaɪt/",cn:"今晚",ex:"See you tonight.",zh:"今晚见。"},
+
+ {w:"station",pos:"n.",ph:"/ˈsteɪʃn/",cn:"车站",ex:"The station is near.",zh:"车站很近。"},
+ {w:"subway",pos:"n.",ph:"/ˈsʌbweɪ/",cn:"地铁",ex:"I take the subway.",zh:"我坐地铁。"},
+ {w:"taxi",pos:"n.",ph:"/ˈtæksi/",cn:"出租车",ex:"Let's take a taxi.",zh:"我们打车吧。"},
+ {w:"traffic",pos:"n.",ph:"/ˈtræfɪk/",cn:"交通",ex:"Traffic is heavy.",zh:"交通很堵。"},
+ {w:"block",pos:"n.",ph:"/blɑːk/",cn:"街区",ex:"It's two blocks away.",zh:"过两个街区就到。"},
+ {w:"corner",pos:"n.",ph:"/ˈkɔːrnər/",cn:"街角",ex:"Turn at the corner.",zh:"在街角转弯。"},
+ {w:"address",pos:"n.",ph:"/əˈdres/",cn:"地址",ex:"What's your address?",zh:"你的地址是？"},
+ {w:"distance",pos:"n.",ph:"/ˈdɪstəns/",cn:"距离",ex:"It's a short distance.",zh:"距离不远。"},
+ {w:"straight",pos:"adv.",ph:"/streɪt/",cn:"直走",ex:"Go straight ahead.",zh:"一直往前走。"},
+ {w:"opposite",pos:"prep.",ph:"/ˈɑːpəzɪt/",cn:"在…对面",ex:"It's opposite the bank.",zh:"在银行对面。"},
+
+ {w:"cook",pos:"v.",ph:"/kʊk/",cn:"做饭",ex:"I cook dinner.",zh:"我做晚饭。"},
+ {w:"wash",pos:"v.",ph:"/wɑːʃ/",cn:"洗",ex:"Wash your hands.",zh:"洗手。"},
+ {w:"sweep",pos:"v.",ph:"/swiːp/",cn:"扫地",ex:"I sweep the floor.",zh:"我扫地。"},
+ {w:"dust",pos:"v.",ph:"/dʌst/",cn:"擦灰",ex:"I dust the shelf.",zh:"我擦架子上的灰。"},
+ {w:"iron",pos:"v.",ph:"/ˈaɪərn/",cn:"熨",ex:"I iron my shirt.",zh:"我熨衬衫。"},
+ {w:"fix",pos:"v.",ph:"/fɪks/",cn:"修理",ex:"Can you fix it?",zh:"你能修好吗？"},
+ {w:"empty",pos:"adj.",ph:"/ˈempti/",cn:"空的",ex:"The glass is empty.",zh:"杯子空了。"},
+ {w:"spare",pos:"adj.",ph:"/sper/",cn:"备用的",ex:"Do you have a spare?",zh:"你有备用的吗？"},
+ {w:"shelf",pos:"n.",ph:"/ʃelf/",cn:"架子",ex:"Put it on the shelf.",zh:"放架子上。"},
+ {w:"blanket",pos:"n.",ph:"/ˈblæŋkɪt/",cn:"毯子",ex:"I need a blanket.",zh:"我需要一条毯子。"},
+
+ {w:"message",pos:"n.",ph:"/ˈmesɪdʒ/",cn:"消息",ex:"I got your message.",zh:"我收到你消息了。"},
+ {w:"reply",pos:"v.",ph:"/rɪˈplaɪ/",cn:"回复",ex:"Please reply soon.",zh:"请尽快回复。"},
+ {w:"call",pos:"v.",ph:"/kɔːl/",cn:"打电话",ex:"I'll call you.",zh:"我给你打电话。"},
+ {w:"text",pos:"v.",ph:"/tekst/",cn:"发短信",ex:"Text me later.",zh:"晚点给我发短信。"},
+ {w:"email",pos:"n.",ph:"/ˈiːmeɪl/",cn:"邮件",ex:"Check your email.",zh:"查下邮件。"},
+ {w:"password",pos:"n.",ph:"/ˈpæswɜːrd/",cn:"密码",ex:"I forgot my password.",zh:"我忘密码了。"},
+ {w:"charge",pos:"v.",ph:"/tʃɑːrdʒ/",cn:"充电",ex:"My phone is charging.",zh:"手机在充电。"},
+ {w:"signal",pos:"n.",ph:"/ˈsɪɡnəl/",cn:"信号",ex:"The signal is weak.",zh:"信号弱。"},
+ {w:"connect",pos:"v.",ph:"/kəˈnekt/",cn:"连接",ex:"Connect to Wi-Fi.",zh:"连上 Wi-Fi。"},
+ {w:"download",pos:"v.",ph:"/ˌdaʊnˈloʊd/",cn:"下载",ex:"I downloaded the app.",zh:"我下载了 App。"},
+
+ {w:"calm",pos:"adj.",ph:"/kɑːm/",cn:"冷静的",ex:"Stay calm.",zh:"保持冷静。"},
+ {w:"confident",pos:"adj.",ph:"/ˈkɑːnfɪdənt/",cn:"自信的",ex:"Be confident.",zh:"自信点。"},
+ {w:"jealous",pos:"adj.",ph:"/ˈdʒeləs/",cn:"嫉妒的",ex:"Don't be jealous.",zh:"别吃醋。"},
+ {w:"grateful",pos:"adj.",ph:"/ˈɡreɪtfl/",cn:"感激的",ex:"I'm grateful to you.",zh:"我很感激你。"},
+ {w:"shy",pos:"adj.",ph:"/ʃaɪ/",cn:"害羞的",ex:"She is shy.",zh:"她很害羞。"},
+ {w:"brave",pos:"adj.",ph:"/breɪv/",cn:"勇敢的",ex:"You are brave.",zh:"你很勇敢。"},
+ {w:"lazy",pos:"adj.",ph:"/ˈleɪzi/",cn:"懒的",ex:"I feel lazy today.",zh:"我今天懒洋洋。"},
+ {w:"patient",pos:"adj.",ph:"/ˈpeɪʃnt/",cn:"有耐心的",ex:"Be patient.",zh:"耐心点。"},
+ {w:"honest",pos:"adj.",ph:"/ˈɑːnɪst/",cn:"诚实的",ex:"He is honest.",zh:"他很诚实。"},
+ {w:"serious",pos:"adj.",ph:"/ˈsɪriəs/",cn:"严重的",ex:"It's a serious problem.",zh:"这是个严重问题。"},
+
+ {w:"improve",pos:"v.",ph:"/ɪmˈpruːv/",cn:"提高",ex:"I want to improve.",zh:"我想进步。"},
+ {w:"practice",pos:"v.",ph:"/ˈpræktɪs/",cn:"练习",ex:"Practice every day.",zh:"每天练习。"},
+ {w:"memorize",pos:"v.",ph:"/ˈmeməraɪz/",cn:"记住",ex:"Memorize the words.",zh:"背下这些词。"},
+ {w:"discuss",pos:"v.",ph:"/dɪˈskʌs/",cn:"讨论",ex:"Let's discuss it.",zh:"我们讨论下。"},
+ {w:"explain",pos:"v.",ph:"/ɪkˈspleɪn/",cn:"解释",ex:"Explain it again.",zh:"再解释一遍。"},
+ {w:"understand",pos:"v.",ph:"/ˌʌndərˈstænd/",cn:"理解",ex:"I don't understand.",zh:"我不懂。"},
+ {w:"attention",pos:"n.",ph:"/əˈtenʃn/",cn:"注意",ex:"Pay attention.",zh:"集中注意力。"},
+ {w:"progress",pos:"n.",ph:"/ˈprɑːɡres/",cn:"进步",ex:"You made progress.",zh:"你有进步了。"},
+ {w:"mistake",pos:"n.",ph:"/mɪˈsteɪk/",cn:"错误",ex:"It's a small mistake.",zh:"小错误而已。"},
+ {w:"repeat",pos:"v.",ph:"/rɪˈpiːt/",cn:"重复",ex:"Please repeat that.",zh:"请重复一遍。"},
+
+ {w:"congratulations",pos:"n.",ph:"/kənˌɡrætʃuˈleɪʃnz/",cn:"恭喜",ex:"Congratulations!",zh:"恭喜你！"},
+ {w:"forgive",pos:"v.",ph:"/fərˈɡɪv/",cn:"原谅",ex:"Forgive me, please.",zh:"请原谅我。"},
+ {w:"welcome",pos:"adj.",ph:"/ˈwelkəm/",cn:"受欢迎的",ex:"You're welcome.",zh:"不客气。"},
+ {w:"pleasure",pos:"n.",ph:"/ˈpleʒər/",cn:"荣幸",ex:"My pleasure.",zh:"我的荣幸。"},
+ {w:"excuse",pos:"v.",ph:"/ɪkˈskjuːz/",cn:"打扰/原谅",ex:"Excuse me.",zh:"打扰一下。"},
+ {w:"introduce",pos:"v.",ph:"/ˌɪntrəˈdjuːs/",cn:"介绍",ex:"Let me introduce myself.",zh:"我来自我介绍。"},
+ {w:"recommend",pos:"v.",ph:"/ˌrekəˈmend/",cn:"推荐",ex:"I recommend this.",zh:"我推荐这个。"},
+ {w:"accept",pos:"v.",ph:"/əkˈsept/",cn:"接受",ex:"I accept your offer.",zh:"我接受你的提议。"},
+ {w:"offer",pos:"v.",ph:"/ˈɔːfər/",cn:"提供",ex:"I offer you help.",zh:"我向你提供帮助。"},
+ {w:"treat",pos:"v.",ph:"/triːt/",cn:"请客",ex:"I'll treat you.",zh:"我请客。"},
+
+ {w:"tiny",pos:"adj.",ph:"/ˈtaɪni/",cn:"微小的",ex:"A tiny bug.",zh:"一只小虫子。"},
+ {w:"huge",pos:"adj.",ph:"/hjuːdʒ/",cn:"巨大的",ex:"A huge building.",zh:"一栋巨大的楼。"},
+ {w:"narrow",pos:"adj.",ph:"/ˈnæroʊ/",cn:"窄的",ex:"A narrow street.",zh:"窄窄的街。"},
+ {w:"wide",pos:"adj.",ph:"/waɪd/",cn:"宽的",ex:"A wide road.",zh:"一条宽马路。"},
+ {w:"bright",pos:"adj.",ph:"/braɪt/",cn:"明亮的",ex:"A bright room.",zh:"明亮的房间。"},
+ {w:"dark",pos:"adj.",ph:"/dɑːrk/",cn:"暗的",ex:"It's dark outside.",zh:"外面黑了。"},
+ {w:"clean",pos:"adj.",ph:"/kliːn/",cn:"干净的",ex:"The room is clean.",zh:"房间很干净。"},
+ {w:"dirty",pos:"adj.",ph:"/ˈdɜːrti/",cn:"脏的",ex:"Your hands are dirty.",zh:"你手脏了。"},
+ {w:"smooth",pos:"adj.",ph:"/smuːð/",cn:"顺滑的",ex:"The road is smooth.",zh:"路很平顺。"},
+ {w:"noisy",pos:"adj.",ph:"/ˈnɔɪzi/",cn:"吵闹的",ex:"It's too noisy.",zh:"太吵了。"},
+
+ {w:"give up",pos:"phr.",ph:"/ɡɪv ʌp/",cn:"放弃",ex:"Don't give up.",zh:"别放弃。"},
+ {w:"look up",pos:"phr.",ph:"/lʊk ʌp/",cn:"查阅",ex:"Look it up online.",zh:"上网查查。"},
+ {w:"turn on",pos:"phr.",ph:"/tɜːrn ɑːn/",cn:"打开",ex:"Turn on the light.",zh:"开灯。"},
+ {w:"turn off",pos:"phr.",ph:"/tɜːrn ɔːf/",cn:"关掉",ex:"Turn off the TV.",zh:"关电视。"},
+ {w:"put on",pos:"phr.",ph:"/pʊt ɑːn/",cn:"穿上",ex:"Put on your coat.",zh:"穿上外套。"},
+ {w:"take off",pos:"phr.",ph:"/teɪk ɔːf/",cn:"脱下/起飞",ex:"Take off your shoes.",zh:"脱鞋。"},
+ {w:"pick up",pos:"phr.",ph:"/pɪk ʌp/",cn:"捡起/接人",ex:"Pick me up at 8.",zh:"8 点来接我。"},
+ {w:"wake up",pos:"phr.",ph:"/weɪk ʌp/",cn:"醒来",ex:"Wake up early.",zh:"早点醒。"},
+ {w:"calm down",pos:"phr.",ph:"/kɑːm daʊn/",cn:"冷静",ex:"Calm down, please.",zh:"请冷静。"},
+ {w:"figure out",pos:"phr.",ph:"/ˈfɪɡjər aʊt/",cn:"弄明白",ex:"I'll figure it out.",zh:"我会弄明白的。"}
 ];
 const WORD_ANCHOR='2026-07-29';
 function todayWordSet(){
@@ -920,11 +1071,13 @@ function renderDailyWords(){
   const today=D.today();
   const set=todayWordSet();
   const doneSet=new Set((DATA.engWords.done[today]||[]));
+  const wrongSet=new Set(DATA.engWords.wrong||[]);
   const learned=set.filter(w=>doneSet.has(w.gi)).length;
   const allDone=learned>=set.length;
   const streak=wordStreak();
   const cards=set.map(w=>{
     const isL=doneSet.has(w.gi);
+    const isW=wrongSet.has(w.gi);
     return `<div class="word-card ${isL?'learned':''}" data-wordtoggle="${w.gi}">
       <div class="word-top">
         <button type="button" class="word-spk" data-spk="${w.w}" title="点击发音（美式）" aria-label="发音">${ico('sound')}</button>
@@ -936,6 +1089,7 @@ function renderDailyWords(){
       </div>
       <div class="word-cn">${w.cn}</div>
       <div class="word-ex">${w.ex}<div class="word-zh">${w.zh}</div></div>
+      <div class="word-acts"><span class="word-wrong ${isW?'on':''}" data-wrong="${w.gi}">${isW?'❌ 已在错词本':'没记住？点这'}</span></div>
     </div>`;
   }).join('');
   return `<div class="card daily-words">
@@ -948,7 +1102,67 @@ function renderDailyWords(){
     ${allDone
       ? `<div class="dw-done">🎉 今日 ${set.length} 词全部掌握，打卡完成！明天见～</div>`
       : `<button type="button" class="btn sm dw-all" data-daycheck>一键完成今日打卡（全部标记已会）</button>`}
-    <div class="muted small" style="margin-top:8px">点击 🔊 听美式发音；点击卡片标记「已会」，进度自动保存。</div>
+    <div class="muted small" style="margin-top:8px">点击 🔊 听美式发音；点击卡片标记「已会」；记不住就点「没记住」收进错词本。</div>
+  </div>`;
+}
+/* 已学单词集合（跨日期去重） */
+function learnedSet(){
+  const s=new Set();
+  const done=DATA.engWords.done||{};
+  Object.keys(done).forEach(d=>Array.isArray(done[d])&&done[d].forEach(g=>s.add(g)));
+  return s;
+}
+/* 错词本 */
+function renderWrongWords(){
+  const wrong=DATA.engWords.wrong||[];
+  const items=wrong.map(gi=>({w:B1_WORDS[gi],gi})).filter(x=>x.w);
+  const inner=items.length?items.map(x=>`
+    <div class="wrong-item">
+      <button type="button" class="word-spk sm" data-spk="${x.w.w}" title="发音" aria-label="发音">${ico('sound')}</button>
+      <div class="wrong-main">
+        <div class="word-w">${x.w.w} <span class="word-pos">${x.w.pos}</span></div>
+        <div class="word-ph">${x.w.ph}</div>
+      </div>
+      <div class="word-cn">${x.w.cn}</div>
+      <span class="word-master" data-review-master="${x.gi}">✓ 已掌握</span>
+    </div>`).join('')
+    : `<div class="empty">还没有错词，继续保持 💪</div>`;
+  return `<div class="card">
+    <h3>错词本 <span class="cs">${items.length} 个待巩固</span></h3>
+    ${inner}
+  </div>`;
+}
+/* 复习打卡：优先错词本，没有则复习已学单词；翻牌自测 */
+function reviewItems(){
+  const wrong=(DATA.engWords.wrong||[]).slice();
+  const gis=wrong.length?wrong:Array.from(learnedSet());
+  return Array.from(new Set(gis)).slice(0,20).map(gi=>B1_WORDS[gi]).filter(Boolean);
+}
+function renderReviewWords(){
+  const items=reviewItems();
+  if(!items.length) return `<div class="card"><h3>复习打卡</h3><div class="empty">先学几天单词，再来复习吧 ✦</div></div>`;
+  const cards=items.map(w=>{
+    const gi=B1_WORDS.indexOf(w);
+    return `<div class="flip" data-flip="${gi}">
+      <div class="flip-face flip-front">
+        <div class="flip-cn">${w.cn}</div>
+        <div class="flip-hint">点击看英文 ↻</div>
+      </div>
+      <div class="flip-face flip-back" style="display:none">
+        <div class="word-w">${w.w} <span class="word-pos">${w.pos}</span></div>
+        <div class="word-ph">${w.ph}</div>
+        <button type="button" class="word-spk sm" data-review-spk="${w.w}" title="发音" aria-label="发音">${ico('sound')}</button>
+        <div class="flip-acts">
+          <span class="word-master" data-review-master="${gi}">✓ 记住了</span>
+          <span class="word-wrong" data-wrong="${gi}">还不会</span>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+  return `<div class="card">
+    <h3>复习打卡 <span class="cs">${items.length} 张 · 看中文回想英文</span></h3>
+    <div class="flip-grid">${cards}</div>
+    <div class="muted small" style="margin-top:8px">点卡片翻面看英文并听发音；「记住了」移出错词本，「还不会」加入错词本。</div>
   </div>`;
 }
 function renderEnglish(){
@@ -961,6 +1175,8 @@ function renderEnglish(){
   const wkMin=DATA.english.filter(r=>wkDays.includes(r.date)).reduce((s,r)=>s+engMins(r),0);
   return `
   ${renderDailyWords()}
+  ${renderWrongWords()}
+  ${renderReviewWords()}
   <div class="card">
     <h3>添加学习记录</h3>
     <form class="fr" data-add="english">
@@ -1567,6 +1783,25 @@ function bindView(view){
     const date=D.today(); const set=todayWordSet();
     DATA.engWords.done[date]=set.map(w=>w.gi);
     save();toast('今日打卡完成 🎉');render();
+  });
+  // 错词本：加入 / 移出（每日卡片与复习卡片共用）
+  view.querySelectorAll('[data-wrong]').forEach(b=>b.onclick=e=>{e.stopPropagation();
+    const gi=+b.dataset.wrong; const w=DATA.engWords.wrong||(DATA.engWords.wrong=[]);
+    const i=w.indexOf(gi); if(i>=0)w.splice(i,1);else w.push(gi);
+    save();render();
+  });
+  // 复习翻牌：点卡片翻面
+  view.querySelectorAll('[data-flip]').forEach(c=>c.onclick=()=>{
+    const f=c.querySelector('.flip-front'), bk=c.querySelector('.flip-back');
+    const showBack=f.style.display!=='none';
+    f.style.display=showBack?'none':'block'; bk.style.display=showBack?'block':'none';
+  });
+  // 复习卡片内发音
+  view.querySelectorAll('[data-review-spk]').forEach(b=>b.onclick=e=>{e.stopPropagation();speakWord(b.dataset.reviewSpk);});
+  // 复习：记住了 → 移出错词本
+  view.querySelectorAll('[data-review-master]').forEach(b=>b.onclick=e=>{e.stopPropagation();
+    const gi=+b.dataset.reviewMaster; const w=DATA.engWords.wrong||(DATA.engWords.wrong=[]); const i=w.indexOf(gi);
+    if(i>=0){w.splice(i,1);save();toast('已从错词本移除 🎉');render();}
   });
   // 实时爆款拉取（女性成长赛道匹配）
   const liveHot=view.querySelector('#liveHot');
