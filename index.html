@@ -283,6 +283,31 @@ details.day>summary .cnt{margin-left:auto;font-size:11px;color:var(--text-3);fon
 .kpi-box.hl .v,.kpi-box.hl .l{color:#fff}
 .tag.primary{background:var(--primary);color:#fff;border-color:var(--primary)}
 .prog{height:10px;background:var(--accent-soft,#E8F5E9);border-radius:6px;overflow:hidden;margin:6px 0}.prog-bar{height:100%;background:var(--accent,#2E7D32);border-radius:6px;transition:width .35s}
+/* 每日单词打卡 */
+.daily-words .dw-bar{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+.daily-words .dw-streak,.daily-words .dw-prog{font-size:13px;color:var(--text-2);background:var(--primary-soft,#E8F5E9);padding:5px 12px;border-radius:20px}
+.daily-words .dw-streak b,.daily-words .dw-prog b{color:var(--primary-strong,#2E7D32);font-size:15px}
+.word-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.word-card{background:var(--bg,#fff);border:1px solid var(--border);border-radius:12px;padding:12px 14px;cursor:pointer;transition:border-color .2s,box-shadow .2s,background .2s;position:relative}
+.word-card:hover{border-color:var(--primary,#2E7D32);box-shadow:0 3px 12px rgba(46,125,50,.12)}
+.word-card.learned{background:var(--accent-soft,#E8F5E9);border-color:var(--accent,#2E7D32)}
+.word-card.learned .word-w{text-decoration:line-through;opacity:.7}
+.word-top{display:flex;align-items:flex-start;gap:10px}
+.word-spk{flex:0 0 auto;width:34px;height:34px;border-radius:50%;border:1px solid var(--border);background:var(--primary-soft,#E8F5E9);color:var(--primary-strong,#2E7D32);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0}
+.word-spk svg{width:18px;height:18px}
+.word-spk:active{transform:scale(.92)}
+.word-head{flex:1;min-width:0}
+.word-w{font-size:18px;font-weight:700;color:var(--text-1);letter-spacing:.3px}
+.word-pos{font-size:11px;font-weight:400;color:var(--text-3);margin-left:6px}
+.word-ph{font-size:12px;color:var(--text-3);margin-top:2px;font-family:'Cambria','Times New Roman',serif}
+.word-check{flex:0 0 auto;width:24px;height:24px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--text-3);font-weight:700}
+.word-check.on{background:var(--accent,#2E7D32);border-color:var(--accent,#2E7D32);color:#fff}
+.word-cn{font-size:13px;color:var(--text-2);margin-top:8px}
+.word-ex{font-size:13px;color:var(--text-1);margin-top:6px;font-style:italic}
+.word-zh{font-size:12px;color:var(--text-3);font-style:normal;margin-top:2px}
+.dw-all{margin-top:14px}
+.dw-done{margin-top:14px;padding:12px 14px;border-radius:12px;background:var(--accent-soft,#E8F5E9);color:var(--primary-strong,#2E7D32);font-weight:600;text-align:center}
+@media(max-width:860px){.word-grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -387,7 +412,8 @@ const ICONS = {
   dockMusic:'<svg viewBox="0 0 24 24" fill="#ff2d55"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2.5" fill="#fff"/></svg>',
   star:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9 6.8 19.1l1-5.8L3.5 9.2l5.9-.9z"/></svg>',
   plus:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
-  fire:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c1 3-2 4-2 7a2 2 0 0 0 4 0c0 0 3 2 3 5a5 5 0 0 1-10 0c0-4 5-7 5-12z"/></svg>'
+  fire:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c1 3-2 4-2 7a2 2 0 0 0 4 0c0 0 3 2 3 5a5 5 0 0 1-10 0c0-4 5-7 5-12z"/></svg>',
+  sound:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16 9a3 3 0 0 1 0 6"/><path d="M18.5 6.5a7 7 0 0 1 0 11"/></svg>'
 };
 function ico(name){ return ICONS[name]||''; }
 
@@ -399,6 +425,32 @@ function paintIcons(root){
 }
 
 /* ============================================================
+   美式发音（Web Speech API，免费、无需后端）
+   ============================================================ */
+let US_VOICE=null;
+function pickUSVoice(){
+  if(!('speechSynthesis' in window))return null;
+  const vs=speechSynthesis.getVoices()||[];
+  return vs.find(v=>/^en[-_]US$/i.test(v.lang))
+      || vs.find(v=>/^en/i.test(v.lang)&&/US|America|United States/i.test(v.name))
+      || vs.find(v=>/^en/i.test(v.lang)) || null;
+}
+function speakWord(text){
+  if(!('speechSynthesis' in window)){toast('当前浏览器不支持发音');return;}
+  try{
+    speechSynthesis.cancel();
+    const u=new SpeechSynthesisUtterance(text);
+    u.lang='en-US'; u.rate=0.9; u.pitch=1;
+    const v=pickUSVoice(); if(v)u.voice=v;
+    speechSynthesis.speak(u);
+  }catch(e){toast('发音失败：'+(e&&e.message||e));}
+}
+if('speechSynthesis' in window){
+  speechSynthesis.onvoiceschanged=()=>{US_VOICE=pickUSVoice();};
+  US_VOICE=pickUSVoice();
+}
+
+/* ============================================================
    数据层（LocalStorage，自动保存）
    ============================================================ */
 const KEY='yubao_workbench_v1';
@@ -407,6 +459,7 @@ const DEFAULT={
   sideHustle:{iso:[],media:[],other:[]},
   english:[], reading:[], exercise:[],
   mediaPlan:[], videos:[], favHot:[], goals:{readingYear:12, sideMonth:0, engWeek:0},
+  engWords:{done:{}},
   travel:{trips:[],wishlist:[],itineraries:[],rates:{},plan:''},
   reviews:{}
 };
@@ -756,6 +809,148 @@ function goalBlock(title,current,goal,unit,key){
     </div>
   </div>`;
 }
+/* ============================================================
+   每日单词打卡（B1 口语 · 每天推送 10 个 · 美式发音）
+   ============================================================ */
+const B1_WORDS=[
+ {w:"agree",pos:"v.",ph:"/əˈɡriː/",cn:"同意",ex:"I agree with you.",zh:"我同意你的看法。"},
+ {w:"apologize",pos:"v.",ph:"/əˈpɑːlədʒaɪz/",cn:"道歉",ex:"I apologize for being late.",zh:"我为迟到道歉。"},
+ {w:"invite",pos:"v.",ph:"/ɪnˈvaɪt/",cn:"邀请",ex:"Can I invite you to dinner?",zh:"我能请你吃晚饭吗？"},
+ {w:"refuse",pos:"v.",ph:"/rɪˈfjuːz/",cn:"拒绝",ex:"He refused to help.",zh:"他拒绝帮忙。"},
+ {w:"suggest",pos:"v.",ph:"/səˈdʒest/",cn:"建议",ex:"I suggest we leave now.",zh:"我建议我们现在走。"},
+ {w:"borrow",pos:"v.",ph:"/ˈbɑːroʊ/",cn:"借（入）",ex:"Can I borrow your pen?",zh:"我能借你的笔吗？"},
+ {w:"complain",pos:"v.",ph:"/kəmˈpleɪn/",cn:"抱怨",ex:"She complained about the noise.",zh:"她抱怨噪音太大。"},
+ {w:"promise",pos:"v.",ph:"/ˈprɑːmɪs/",cn:"承诺",ex:"I promise to call you.",zh:"我保证会给你打电话。"},
+ {w:"remind",pos:"v.",ph:"/rɪˈmaɪnd/",cn:"提醒",ex:"Please remind me tomorrow.",zh:"请明天提醒我。"},
+ {w:"argue",pos:"v.",ph:"/ˈɑːrɡjuː/",cn:"争吵",ex:"They argued about money.",zh:"他们为钱争吵。"},
+
+ {w:"annoyed",pos:"adj.",ph:"/əˈnɔɪd/",cn:"恼火的",ex:"I'm annoyed by the delay.",zh:"我对延误感到恼火。"},
+ {w:"confused",pos:"adj.",ph:"/kənˈfjuːzd/",cn:"困惑的",ex:"I'm confused about this.",zh:"我对此很困惑。"},
+ {w:"embarrassed",pos:"adj.",ph:"/ɪmˈbærəst/",cn:"尴尬的",ex:"He felt embarrassed.",zh:"他感到尴尬。"},
+ {w:"excited",pos:"adj.",ph:"/ɪkˈsaɪtɪd/",cn:"兴奋的",ex:"I'm excited about the trip.",zh:"我对这趟旅行很兴奋。"},
+ {w:"frightened",pos:"adj.",ph:"/ˈfraɪtnd/",cn:"害怕的",ex:"She was frightened of the dog.",zh:"她怕那只狗。"},
+ {w:"lonely",pos:"adj.",ph:"/ˈloʊnli/",cn:"孤独的",ex:"I feel lonely sometimes.",zh:"我有时感到孤独。"},
+ {w:"proud",pos:"adj.",ph:"/praʊd/",cn:"自豪的",ex:"I'm proud of you.",zh:"我为你感到骄傲。"},
+ {w:"relieved",pos:"adj.",ph:"/rɪˈliːvd/",cn:"松口气的",ex:"I'm relieved it's over.",zh:"结束了我真松了口气。"},
+ {w:"satisfied",pos:"adj.",ph:"/ˈsætɪsfaɪd/",cn:"满意的",ex:"I'm satisfied with the result.",zh:"我对结果很满意。"},
+ {w:"worried",pos:"adj.",ph:"/ˈwɜːrid/",cn:"担心的",ex:"I'm worried about him.",zh:"我很担心他。"},
+
+ {w:"awful",pos:"adj.",ph:"/ˈɔːfl/",cn:"糟糕的",ex:"The weather is awful.",zh:"天气糟透了。"},
+ {w:"brilliant",pos:"adj.",ph:"/ˈbrɪljənt/",cn:"极好的",ex:"That's a brilliant idea!",zh:"那是个绝妙的主意！"},
+ {w:"clever",pos:"adj.",ph:"/ˈklevər/",cn:"聪明的",ex:"She's very clever.",zh:"她很聪明。"},
+ {w:"delicious",pos:"adj.",ph:"/dɪˈlɪʃəs/",cn:"美味的",ex:"The food was delicious.",zh:"食物很美味。"},
+ {w:"exhausted",pos:"adj.",ph:"/ɪɡˈzɔːstɪd/",cn:"筋疲力尽的",ex:"I'm exhausted today.",zh:"我今天累坏了。"},
+ {w:"furious",pos:"adj.",ph:"/ˈfjʊriəs/",cn:"暴怒的",ex:"He was furious with me.",zh:"他对我大发雷霆。"},
+ {w:"gorgeous",pos:"adj.",ph:"/ˈɡɔːrdʒəs/",cn:"极美的",ex:"What a gorgeous view!",zh:"多美的景色！"},
+ {w:"horrible",pos:"adj.",ph:"/ˈhɔːrəbl/",cn:"糟透的",ex:"I had a horrible day.",zh:"我今天过得糟透了。"},
+ {w:"polite",pos:"adj.",ph:"/pəˈlaɪt/",cn:"有礼貌的",ex:"Be polite to strangers.",zh:"对陌生人要有礼貌。"},
+ {w:"rude",pos:"adj.",ph:"/ruːd/",cn:"粗鲁的",ex:"That was very rude.",zh:"那很没礼貌。"},
+
+ {w:"colleague",pos:"n.",ph:"/ˈkɑːliːɡ/",cn:"同事",ex:"My colleague is friendly.",zh:"我的同事很友好。"},
+ {w:"neighbor",pos:"n.",ph:"/ˈneɪbər/",cn:"邻居",ex:"Our neighbor is quiet.",zh:"我们的邻居很安静。"},
+ {w:"relative",pos:"n.",ph:"/ˈrelətɪv/",cn:"亲戚",ex:"I visited a relative.",zh:"我看望了一位亲戚。"},
+ {w:"stranger",pos:"n.",ph:"/ˈstreɪndʒər/",cn:"陌生人",ex:"Don't talk to strangers.",zh:"别和陌生人说话。"},
+ {w:"date",pos:"n.",ph:"/deɪt/",cn:"约会",ex:"We went on a date.",zh:"我们去约会了。"},
+ {w:"gossip",pos:"n./v.",ph:"/ˈɡɑːsɪp/",cn:"八卦",ex:"They love to gossip.",zh:"他们爱说闲话。"},
+ {w:"trust",pos:"v.",ph:"/trʌst/",cn:"信任",ex:"I trust my friend.",zh:"我信任我的朋友。"},
+ {w:"break up",pos:"phr.",ph:"/breɪk ʌp/",cn:"分手",ex:"They broke up last month.",zh:"他们上个月分手了。"},
+ {w:"get along",pos:"phr.",ph:"/ɡet əˈlɔːŋ/",cn:"相处",ex:"We get along well.",zh:"我们相处得很好。"},
+ {w:"miss",pos:"v.",ph:"/mɪs/",cn:"想念",ex:"I miss my family.",zh:"我想念我的家人。"},
+
+ {w:"bargain",pos:"n.",ph:"/ˈbɑːrɡən/",cn:"便宜货",ex:"This is a real bargain.",zh:"这真是划算。"},
+ {w:"receipt",pos:"n.",ph:"/rɪˈsiːt/",cn:"收据",ex:"Keep the receipt, please.",zh:"请保留收据。"},
+ {w:"refund",pos:"n./v.",ph:"/ˈriːfʌnd/",cn:"退款",ex:"Can I get a refund?",zh:"我能退款吗？"},
+ {w:"discount",pos:"n.",ph:"/ˈdɪskaʊnt/",cn:"折扣",ex:"Is there a discount?",zh:"有折扣吗？"},
+ {w:"expensive",pos:"adj.",ph:"/ɪkˈspensɪv/",cn:"昂贵的",ex:"It's too expensive.",zh:"这太贵了。"},
+ {w:"afford",pos:"v.",ph:"/əˈfɔːrd/",cn:"负担得起",ex:"I can't afford it.",zh:"我买不起。"},
+ {w:"worth",pos:"adj.",ph:"/wɜːrθ/",cn:"值得的",ex:"It's worth the money.",zh:"这钱花得值。"},
+ {w:"price",pos:"n.",ph:"/praɪs/",cn:"价格",ex:"What's the price?",zh:"价格是多少？"},
+ {w:"sale",pos:"n.",ph:"/seɪl/",cn:"促销",ex:"It's on sale today.",zh:"今天在打折。"},
+ {w:"pay",pos:"v.",ph:"/peɪ/",cn:"付款",ex:"I'll pay by card.",zh:"我用卡付。"},
+
+ {w:"directions",pos:"n.",ph:"/dəˈrekʃənz/",cn:"方向/指引",ex:"Can you give directions?",zh:"你能指个路吗？"},
+ {w:"arrival",pos:"n.",ph:"/əˈraɪvl/",cn:"到达",ex:"The arrival is delayed.",zh:"到达延误了。"},
+ {w:"depart",pos:"v.",ph:"/dɪˈpɑːrt/",cn:"出发",ex:"We depart at noon.",zh:"我们中午出发。"},
+ {w:"luggage",pos:"n.",ph:"/ˈlʌɡɪdʒ/",cn:"行李",ex:"Where is my luggage?",zh:"我的行李在哪？"},
+ {w:"board",pos:"v.",ph:"/bɔːrd/",cn:"登机/上车",ex:"We board the plane now.",zh:"我们现在登机。"},
+ {w:"delay",pos:"n./v.",ph:"/dɪˈleɪ/",cn:"延误",ex:"The train is delayed.",zh:"火车晚点了。"},
+ {w:"reserve",pos:"v.",ph:"/rɪˈzɜːrv/",cn:"预订",ex:"I reserved a table.",zh:"我订了位子。"},
+ {w:"route",pos:"n.",ph:"/ruːt/",cn:"路线",ex:"This is the best route.",zh:"这是最佳路线。"},
+ {w:"cross",pos:"v.",ph:"/krɔːs/",cn:"穿过",ex:"Cross the street carefully.",zh:"过马路要小心。"},
+ {w:"sign",pos:"n.",ph:"/saɪn/",cn:"标志",ex:"The sign says Stop.",zh:"标志上写着“停”。"},
+
+ {w:"deadline",pos:"n.",ph:"/ˈdedlaɪn/",cn:"截止日期",ex:"The deadline is Friday.",zh:"截止日期是周五。"},
+ {w:"meeting",pos:"n.",ph:"/ˈmiːtɪŋ/",cn:"会议",ex:"We have a meeting.",zh:"我们开个会。"},
+ {w:"project",pos:"n.",ph:"/ˈprɑːdʒekt/",cn:"项目",ex:"The project is done.",zh:"项目做完了。"},
+ {w:"schedule",pos:"n./v.",ph:"/ˈskedʒuːl/",cn:"日程",ex:"My schedule is full.",zh:"我的日程排满了。"},
+ {w:"task",pos:"n.",ph:"/tæsk/",cn:"任务",ex:"Finish your task first.",zh:"先完成你的任务。"},
+ {w:"overtime",pos:"n.",ph:"/ˈoʊvərtaɪm/",cn:"加班",ex:"I worked overtime.",zh:"我加了班。"},
+ {w:"interview",pos:"n.",ph:"/ˈɪntərvjuː/",cn:"面试",ex:"I have an interview.",zh:"我有个面试。"},
+ {w:"promote",pos:"v.",ph:"/prəˈmoʊt/",cn:"晋升",ex:"She was promoted.",zh:"她升职了。"},
+ {w:"salary",pos:"n.",ph:"/ˈsæləri/",cn:"薪水",ex:"The salary is good.",zh:"薪水不错。"},
+ {w:"retire",pos:"v.",ph:"/rɪˈtaɪər/",cn:"退休",ex:"He will retire soon.",zh:"他快退休了。"},
+
+ {w:"appointment",pos:"n.",ph:"/əˈpɔɪntmənt/",cn:"预约",ex:"I have a doctor appointment.",zh:"我和医生有约。"},
+ {w:"symptom",pos:"n.",ph:"/ˈsɪmptəm/",cn:"症状",ex:"I have cold symptoms.",zh:"我有感冒症状。"},
+ {w:"recipe",pos:"n.",ph:"/ˈresəpi/",cn:"食谱",ex:"Can you share the recipe?",zh:"能分享下食谱吗？"},
+ {w:"laundry",pos:"n.",ph:"/ˈlɔːndri/",cn:"要洗的衣服",ex:"I did the laundry.",zh:"我洗了衣服。"},
+ {w:"furniture",pos:"n.",ph:"/ˈfɜːrnɪtʃər/",cn:"家具",ex:"We need new furniture.",zh:"我们需要新家具。"},
+ {w:"repair",pos:"v.",ph:"/rɪˈper/",cn:"修理",ex:"Can you repair this?",zh:"你能修这个吗？"},
+ {w:"tidy",pos:"adj.",ph:"/ˈtaɪdi/",cn:"整洁的",ex:"Keep your room tidy.",zh:"保持房间整洁。"},
+ {w:"mess",pos:"n.",ph:"/mes/",cn:"杂乱",ex:"Sorry, what a mess!",zh:"抱歉，太乱了！"},
+ {w:"heat",pos:"v.",ph:"/hiːt/",cn:"加热",ex:"Heat the water, please.",zh:"请把水加热。"},
+ {w:"freeze",pos:"v.",ph:"/friːz/",cn:"冷冻",ex:"Freeze the leftovers.",zh:"把剩菜冷冻起来。"}
+];
+const WORD_ANCHOR='2026-07-29';
+function todayWordSet(){
+  const total=B1_WORDS.length;
+  const groups=Math.max(1,Math.ceil(total/10));
+  const dayIdx=Math.max(0,D.daysBetween(WORD_ANCHOR,D.today()));
+  const g=((dayIdx%groups)+groups)%groups;
+  const start=g*10;
+  return B1_WORDS.slice(start,start+10).map((w,i)=>Object.assign({},w,{gi:start+i}));
+}
+function wordStreak(){
+  let streak=0; let d=new Date();
+  if(!(DATA.engWords.done[D.fmt(d)]&&DATA.engWords.done[D.fmt(d)].length)) d=D.addDays(d,-1);
+  while(DATA.engWords.done[D.fmt(d)]&&DATA.engWords.done[D.fmt(d)].length){streak++;d=D.addDays(d,-1);}
+  return streak;
+}
+function renderDailyWords(){
+  const today=D.today();
+  const set=todayWordSet();
+  const doneSet=new Set((DATA.engWords.done[today]||[]));
+  const learned=set.filter(w=>doneSet.has(w.gi)).length;
+  const allDone=learned>=set.length;
+  const streak=wordStreak();
+  const cards=set.map(w=>{
+    const isL=doneSet.has(w.gi);
+    return `<div class="word-card ${isL?'learned':''}" data-wordtoggle="${w.gi}">
+      <div class="word-top">
+        <button type="button" class="word-spk" data-spk="${w.w}" title="点击发音（美式）" aria-label="发音">${ico('sound')}</button>
+        <div class="word-head">
+          <div class="word-w">${w.w} <span class="word-pos">${w.pos}</span></div>
+          <div class="word-ph">${w.ph}</div>
+        </div>
+        <div class="word-check ${isL?'on':''}">${isL?'✓':'○'}</div>
+      </div>
+      <div class="word-cn">${w.cn}</div>
+      <div class="word-ex">${w.ex}<div class="word-zh">${w.zh}</div></div>
+    </div>`;
+  }).join('');
+  return `<div class="card daily-words">
+    <h3>每日单词打卡 <span class="cs">B1 口语 · 今日推送 ${set.length} 个</span></h3>
+    <div class="dw-bar">
+      <div class="dw-streak">🔥 连续打卡 <b>${streak}</b> 天</div>
+      <div class="dw-prog">今日已掌握 <b>${learned}/${set.length}</b></div>
+    </div>
+    <div class="word-grid">${cards}</div>
+    ${allDone
+      ? `<div class="dw-done">🎉 今日 ${set.length} 词全部掌握，打卡完成！明天见～</div>`
+      : `<button type="button" class="btn sm dw-all" data-daycheck>一键完成今日打卡（全部标记已会）</button>`}
+    <div class="muted small" style="margin-top:8px">点击 🔊 听美式发音；点击卡片标记「已会」，进度自动保存。</div>
+  </div>`;
+}
 function renderEnglish(){
   const days=D.lastNDays(30);
   const trend=days.map(d=>DATA.english.filter(r=>r.date===d).reduce((s,r)=>s+engMins(r),0));
@@ -765,6 +960,7 @@ function renderEnglish(){
   const wkDays=D.lastNDays(7);
   const wkMin=DATA.english.filter(r=>wkDays.includes(r.date)).reduce((s,r)=>s+engMins(r),0);
   return `
+  ${renderDailyWords()}
   <div class="card">
     <h3>添加学习记录</h3>
     <form class="fr" data-add="english">
@@ -1355,6 +1551,22 @@ function bindView(view){
   // 目标线：编辑目标即时保存
   view.querySelectorAll('[data-goal]').forEach(inp=>inp.onchange=()=>{
     DATA.goals=DATA.goals||{};DATA.goals[inp.dataset.goal]=Math.max(0,+inp.value||0);save();render();
+  });
+  // 每日单词：点击发音（美式）
+  view.querySelectorAll('[data-spk]').forEach(b=>b.onclick=e=>{e.stopPropagation();speakWord(b.dataset.spk);});
+  // 每日单词：点击卡片标记「已会」
+  view.querySelectorAll('[data-wordtoggle]').forEach(c=>c.onclick=()=>{
+    const gi=+c.dataset.wordtoggle; const date=D.today();
+    DATA.engWords.done[date]=DATA.engWords.done[date]||[];
+    const arr=DATA.engWords.done[date]; const i=arr.indexOf(gi);
+    if(i>=0)arr.splice(i,1);else arr.push(gi);
+    save();render();
+  });
+  // 每日单词：一键完成今日打卡
+  view.querySelectorAll('[data-daycheck]').forEach(b=>b.onclick=()=>{
+    const date=D.today(); const set=todayWordSet();
+    DATA.engWords.done[date]=set.map(w=>w.gi);
+    save();toast('今日打卡完成 🎉');render();
   });
   // 实时爆款拉取（女性成长赛道匹配）
   const liveHot=view.querySelector('#liveHot');
