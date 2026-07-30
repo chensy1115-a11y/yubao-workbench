@@ -131,13 +131,13 @@ button{font-family:inherit}
 .countdown .cd-days{font-size:44px;font-weight:800;line-height:1} .countdown .cd-l{font-size:13px;opacity:.92;margin-top:6px}
 .countdown .cd-n{font-size:15px;font-weight:700;margin-top:4px}
 .countdown .plane{position:absolute;right:14px;top:14px;opacity:.35} .countdown .plane svg{width:54px;height:54px}
-/* ── 首页区块长按拖拽 ── */
-.home-blocks .card{cursor:default;transition:box-shadow .2s,border-color .2s}
-.home-blocks .card.dragging{opacity:.3;box-shadow:none}
-.home-blocks .card.drag-over{border:2px dashed var(--primary);transform:translateY(2px)}
+/* ── 页面区块长按拖拽（通用，作用于 #view 下 [data-block]） ── */
+#view [data-block]{transition:box-shadow .2s,border-color .2s}
+#view [data-block].dragging{opacity:.3;box-shadow:none}
+#view [data-block].drag-over{outline:2px dashed var(--primary);outline-offset:3px;border-radius:var(--radius)}
 body.home-dragging{overscroll-behavior:none;user-select:none}
-body.home-dragging .home-blocks .card{touch-action:none}
-.home-blocks .card .drag-clone{box-shadow:0 14px 34px rgba(60,120,40,.28);border-radius:var(--radius);background:var(--card)}
+body.home-dragging #view [data-block]{touch-action:none}
+#view [data-block].drag-clone{box-shadow:0 14px 34px rgba(60,120,40,.28);border-radius:var(--radius);background:var(--card)}
 /* 旅游规划：紧凑行内列表 */
 .trip-list{display:flex;flex-direction:column;gap:6px;margin-bottom:4px}
 .trip-row{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:var(--bg);cursor:pointer;transition:border-color .2s}
@@ -576,7 +576,7 @@ if('speechSynthesis' in window){
    ============================================================ */
 const KEY='yubao_workbench_v1';
 const DEFAULT={
-  version:1, settings:{theme:'system',engLevel:'b1',homeOrder:['today','wall','travel','summary']}, checkins:{},
+  version:1, settings:{theme:'system',engLevel:'b1',blockOrder:{home:['today','wall','travel','summary']}}, checkins:{},
   sideHustle:{iso:[],media:[],other:[]},
   english:[], reading:[], exercise:[],
   mediaPlan:[], videos:[], favHot:[], goals:{readingYear:12, sideMonth:0, engWeek:0},
@@ -880,73 +880,75 @@ function buildNav(){
   });
 }
 
-/* 首页区块长按拖拽排序（桌面鼠标 + 移动端触摸通用） */
-function applyHomeOrder(){
-  const wrap=document.getElementById('homeBlocks');if(!wrap)return;
-  const order=DATA.settings.homeOrder;
+/* 页面区块长按拖拽排序（桌面鼠标 + 移动端触摸通用，作用于 #view 下所有 [data-block]） */
+function applyBlockOrder(view){
+  const order=DATA.settings.blockOrder&&DATA.settings.blockOrder[view];
   if(!Array.isArray(order))return;
-  const map={};
-  wrap.querySelectorAll('.card[data-block]').forEach(c=>map[c.dataset.block]=c);
-  order.forEach(id=>{ if(map[id]) wrap.appendChild(map[id]); });
+  const root=document.getElementById('view');
+  order.forEach(id=>{
+    const el=root.querySelector('[data-block="'+CSS.escape(id)+'"]');
+    if(el&&el.parentNode) el.parentNode.appendChild(el);
+  });
 }
-function initHomeDrag(){
-  const wrap=document.getElementById('homeBlocks');if(!wrap)return;
-  const cards=()=>Array.from(wrap.querySelectorAll('.card[data-block]'));
-  let pressTimer=null,dragging=false,clone=null,srcCard=null,justDragged=false;
-  cards().forEach(card=>{
-    card.addEventListener('pointerdown',e=>{
+function initBlockDrag(view){
+  const root=document.getElementById('view');
+  const blocks=()=>Array.from(root.querySelectorAll('[data-block]'));
+  let pressTimer=null,dragging=false,clone=null,justDragged=false;
+  blocks().forEach(block=>{
+    block.addEventListener('pointerdown',e=>{
       if(e.button!==undefined&&e.button!==0)return;
       pressTimer=setTimeout(()=>{
-        dragging=true;srcCard=card;justDragged=true;
-        card.classList.add('dragging');
+        dragging=true;justDragged=true;
+        block.classList.add('dragging');
         document.body.classList.add('home-dragging');
-        clone=card.cloneNode(true);
+        clone=block.cloneNode(true);
         clone.classList.add('drag-clone');
         clone.style.position='fixed';clone.style.zIndex='9999';
-        clone.style.width=card.offsetWidth+'px';clone.style.margin='0';
+        clone.style.width=block.offsetWidth+'px';clone.style.margin='0';
         clone.style.pointerEvents='none';
         document.body.appendChild(clone);
         moveClone(e.clientX,e.clientY);
       },400);
     });
-    card.addEventListener('pointermove',e=>{
+    block.addEventListener('pointermove',e=>{
       if(!dragging)return;
       e.preventDefault();
       moveClone(e.clientX,e.clientY);
       const below=document.elementFromPoint(e.clientX,e.clientY);
-      cards().forEach(c=>c.classList.remove('drag-over'));
-      const tgt=below&&below.closest('.card[data-block]');
-      if(tgt&&tgt!==card)tgt.classList.add('drag-over');
+      blocks().forEach(c=>c.classList.remove('drag-over'));
+      const tgt=below&&below.closest('[data-block]');
+      if(tgt&&tgt!==block)tgt.classList.add('drag-over');
     });
-    card.addEventListener('pointerup',e=>{
+    block.addEventListener('pointerup',e=>{
       clearTimeout(pressTimer);
       if(!dragging)return;
       dragging=false;
       document.body.classList.remove('home-dragging');
       const below=document.elementFromPoint(e.clientX,e.clientY);
-      const tgt=below&&below.closest('.card[data-block]');
-      cards().forEach(c=>c.classList.remove('drag-over'));
-      if(tgt&&tgt!==card){
-        const order=cards().map(c=>c.dataset.block);
-        const si=order.indexOf(card.dataset.block),ti=order.indexOf(tgt.dataset.block);
-        const arr=DATA.settings.homeOrder.slice();
-        arr.splice(si,1);arr.splice(ti,0,card.dataset.block);
-        DATA.settings.homeOrder=arr;save();
-        applyHomeOrder();
+      const tgt=below&&below.closest('[data-block]');
+      blocks().forEach(c=>c.classList.remove('drag-over'));
+      if(tgt&&tgt!==block){
+        const order=blocks().map(c=>c.dataset.block);
+        const si=order.indexOf(block.dataset.block),ti=order.indexOf(tgt.dataset.block);
+        const arr=(DATA.settings.blockOrder&&DATA.settings.blockOrder[view])?DATA.settings.blockOrder[view].slice():order.slice();
+        arr.splice(si,1);arr.splice(ti,0,block.dataset.block);
+        DATA.settings.blockOrder=DATA.settings.blockOrder||{};
+        DATA.settings.blockOrder[view]=arr;save();
+        applyBlockOrder(view);
       }
       if(clone){clone.remove();clone=null;}
-      card.classList.remove('dragging');
+      block.classList.remove('dragging');
     });
-    card.addEventListener('pointercancel',()=>{
+    block.addEventListener('pointercancel',()=>{
       clearTimeout(pressTimer);
       dragging=false;
       document.body.classList.remove('home-dragging');
       if(clone){clone.remove();clone=null;}
-      card.classList.remove('dragging');
-      cards().forEach(c=>c.classList.remove('drag-over'));
+      block.classList.remove('dragging');
+      blocks().forEach(c=>c.classList.remove('drag-over'));
     });
     /* 拖拽后抑制误触发的 click（如旅游卡片的跳转） */
-    card.addEventListener('click',e=>{
+    block.addEventListener('click',e=>{
       if(justDragged){justDragged=false;e.stopPropagation();e.preventDefault();}
     },true);
   });
@@ -1000,7 +1002,6 @@ function renderHome(){
         :`<div class="countdown" style="background:var(--bg);color:var(--text-2)"><div class="cd-n">还没有旅行计划</div><div class="cd-l">去「旅游规划」添加吧 ✦</div></div>`;
 
   return `
-  <div class="home-blocks" id="homeBlocks">
   <div class="card" data-block="today">
     <h3>今日能量 <span class="cs">每日自动轮换</span></h3>
     <div class="energy"><div class="qm">"</div><div><div class="zh">${q.zh}</div><div class="en">${q.en}</div></div></div>
@@ -1021,7 +1022,6 @@ function renderHome(){
       <div class="sm-item"><div class="sm-num">${monthBooks}<span class="sm-unit"> 本</span></div><div class="sm-lbl">读完书目</div></div>
       <div class="sm-item"><div class="sm-num">¥${monthSideInc.toFixed(0)}</div><div class="sm-lbl">副业收入</div></div>
     </div>
-  </div>
   </div>`;
 }
 
@@ -4455,7 +4455,7 @@ function renderDailyWords(){
       <button type="button" class="word-paw ${isL?'done':''}" data-wordtoggle="${w.gi}" title="${isL?'已掌握':'学会了点这里'}" aria-label="打卡">${isL?'':ico('paw')}</button>
     </div>`;
   }).join('');
-  return `<div class="card daily-words">
+  return `<div class="card daily-words" data-block="words">
     <div class="dw-header">${ico('reading')}<span class="dw-title">每日单词</span></div>
     <div class="dw-tag">先跟读，学会了点右侧爪印</div>
     <div class="dw-gradient-bar"><div class="dw-fill" style="width:${pct}%"></div></div>
@@ -4488,7 +4488,7 @@ function renderWrongWords(){
       <span class="word-master" data-review-master="${x.gi}">✓ 已掌握</span>
     </div>`).join('')}</div>`
     : `<div class="empty" style="padding:24px;text-align:center;color:#90A4AE">还没有错词，继续保持</div>`;
-  return `<div class="card">
+  return `<div class="card" data-block="wrong">
     <h3>${ico('notebook')} 错词本 <span class="cs">${items.length} 个待巩固</span></h3>
     ${inner}
   </div>`;
@@ -4501,7 +4501,7 @@ function reviewItems(){
 }
 function renderReviewWords(){
   const items=reviewItems();
-  if(!items.length) return `<div class="card"><h3>${ico('refresh')} 复习打卡</h3><div class="empty" style="padding:24px;text-align:center;color:#90A4AE">先学几天单词，再来复习吧 ✦</div></div>`;
+  if(!items.length) return `<div class="card" data-block="review"><h3>${ico('refresh')} 复习打卡</h3><div class="empty" style="padding:24px;text-align:center;color:#90A4AE">先学几天单词，再来复习吧 ✦</div></div>`;
   const cards=items.map(w=>{
     const gi=B1_WORDS.indexOf(w);
     return `<div class="flip" data-flip="${gi}">
@@ -4520,7 +4520,7 @@ function renderReviewWords(){
       </div>
     </div>`;
   }).join('');
-  return `<div class="card">
+  return `<div class="card" data-block="review">
     <h3>${ico('refresh')} 复习打卡 <span class="cs">${items.length} 张 · 看中文回想英文</span></h3>
     <div class="flip-grid">${cards}</div>
     <div class="muted small" style="margin-top:10px;color:#90A4AE">点卡片翻面看英文并听发音；「记住了」移出错词本，「还不会」加入错词本。</div>
@@ -4538,7 +4538,7 @@ function renderEnglish(){
   ${renderDailyWords()}
   ${renderWrongWords()}
   ${renderReviewWords()}
-  <div class="card">
+  <div class="card" data-block="add">
     <h3>添加学习记录</h3>
     <form class="fr" data-add="english">
       ${fDate(D.today())}
@@ -4547,17 +4547,17 @@ function renderEnglish(){
       <button class="btn" type="submit">记录</button>
     </form>
   </div>
-  <div class="card">
+  <div class="card" data-block="month">
     <h3>本月学习时长</h3>
     <div style="font-size:34px;font-weight:700;color:var(--primary-strong)">${monthMin}<span class="small muted"> 分钟 / 本月</span></div>
     <div class="muted small">今日已学 ${todayMin} 分钟</div>
   </div>
   ${goalBlock('本周学习时长目标',wkMin,DATA.goals.engWeek,'分钟','engWeek')}
-  <div class="card">
+  <div class="card" data-block="trend">
     <h3>近 30 天学习时长趋势（分钟）</h3>
     ${Charts.line(trend,{height:220})}
   </div>
-  <div class="card">
+  <div class="card" data-block="hist">
     <h3>历史记录 <span class="cs">按日期折叠</span></h3>
     ${historyBlock(DATA.english,[{t:'时长',k:'minutes'},{t:'内容',k:'content'}],'english')}
   </div>
@@ -4576,7 +4576,7 @@ function renderReading(){
   const gblock=goalBlock('年度读书目标',done.length,gY,'本','readingYear');
   return `
   ${gblock}
-  <div class="card">
+  <div class="card" data-block="add">
     <h3>添加书目</h3>
     <form class="fr" data-add="reading">
       <div class="field" style="flex:1;min-width:240px"><label>书名</label><input name="title" placeholder="如《认知觉醒》" required></div>
@@ -4584,11 +4584,11 @@ function renderReading(){
       <button class="btn" type="submit">加入书单</button>
     </form>
   </div>
-  <div class="card mt">
+  <div class="card mt" data-block="reading">
     <h3>在读的书目 <span class="cs">${reading.length} 本</span></h3>
     ${reading.length?reading.map(b=>bookCard(b)).join(''):`<div class="empty">暂无在读书目，上方添加 ✦</div>`}
   </div>
-  <div class="card mt">
+  <div class="card mt" data-block="done">
     <h3>读完历史 <span class="cs">${done.length} 本 · 按读完日期折叠</span></h3>
     ${historyBlock(done.map(b=>({date:b.doneDate||b.date||'',id:b.id,title:b.title})),[{t:'书名',k:'title'}],'reading')}
   </div>
@@ -4613,7 +4613,7 @@ const EX_TYPES=['跑步','快走','骑行','游泳','瑜伽','健身','跳绳','
 function renderExercise(){
   const map={};DATA.exercise.forEach(r=>{map[r.date]=(map[r.date]||0)+(+r.duration||0);});
   return `
-  <div class="card">
+  <div class="card" data-block="add">
     <h3>添加运动</h3>
     <form class="fr" data-add="exercise">
       ${fDate(D.today())}
@@ -4623,11 +4623,11 @@ function renderExercise(){
       <button class="btn" type="submit">记录</button>
     </form>
   </div>
-  <div class="card"><h3>年度运动热力图 <span class="cs">只看整体活跃度，不强制连续</span></h3>
+  <div class="card" data-block="heat"><h3>年度运动热力图 <span class="cs">只看整体活跃度，不强制连续</span></h3>
     ${Charts.heatmap(map,{year:new Date().getFullYear()})}
     <div class="legend"><span><i style="background:var(--heat-0)"></i>0 分钟</span><span><i style="background:var(--heat-1)"></i>&lt;30</span><span><i style="background:var(--heat-2)"></i>30-60</span><span><i style="background:var(--heat-3)"></i>60-120</span><span><i style="background:var(--heat-4)"></i>&gt;120</span></div>
   </div>
-  <div class="card"><h3>历史记录 <span class="cs">按日期折叠</span></h3>
+  <div class="card" data-block="hist"><h3>历史记录 <span class="cs">按日期折叠</span></h3>
     ${historyBlock(DATA.exercise,[{t:'类型',k:'type'},{t:'时长',k:'duration'},{t:'千卡',k:'calories'}],'exercise')}
   </div>
 `;
@@ -4682,7 +4682,7 @@ function renderSide(){
 
   return `
   <!-- 表单区（首栏） -->
-  <div class="card">
+  <div class="card" data-block="form">
     <div class="tabs">
       <div class="tab ${tab==='iso'?'active':''}" data-tab="iso">ISO 审核</div>
       <div class="tab ${tab==='media'?'active':''}" data-tab="media">自媒体</div>
@@ -4691,14 +4691,14 @@ function renderSide(){
     ${formHtml}
   </div>
   <!-- 收入分布饼图（自动根据录入数据生成） -->
-  <div class="card mt" style="text-align:center">
+  <div class="card mt" data-block="pie" style="text-align:center">
     <h3>收入分布 <span class="cs">根据你的录入自动生成</span></h3>
     ${Charts.pie(pieSegs,{size:220,center:'总收入'})}
     ${totalInc<=0?'':'<div class="muted small" style="margin-top:6px">ISO ¥'+isoInc.toFixed(0)+' · 自媒体 ¥'+mediaInc.toFixed(0)+' · 其他 ¥'+otherInc.toFixed(0)+'</div>'}
   </div>
   ${goalBlock('本月副业收入目标',monthInc,DATA.goals.sideMonth,'元','sideMonth')}
   <!-- 历史记录 -->
-  <div class="card mt"><h3>历史记录 <span class="cs">按日期折叠</span></h3>${histHtml}</div>
+  <div class="card mt" data-block="hist"><h3>历史记录 <span class="cs">按日期折叠</span></h3>${histHtml}</div>
 `;
 }
 
@@ -4707,11 +4707,11 @@ function renderSide(){
    ============================================================ */
 function renderMedia(){
   return `
-  <div class="card">
+  <div class="card" data-block="pos">
     <h3>赛道定位 <span class="cs">活人感的大龄女青年</span></h3>
     <p class="small muted">内容方向：独居、女性自我提升、学习、理财、相亲。真实、松弛、不说教，用“活人感”建立信任，提供可落地的成长方法。</p>
   </div>
-  <div class="card">
+  <div class="card" data-block="plan">
     <h3>内容排期 / 选题储备</h3>
     <form class="fr" data-add="mediaPlan">
       ${fDate(D.today())}
@@ -4721,7 +4721,7 @@ function renderMedia(){
       <button class="btn" type="submit">添加</button>
     </form>
   </div>
-  <div class="card"><h3>选题库 <span class="cs">按日期折叠</span></h3>
+  <div class="card" data-block="lib"><h3>选题库 <span class="cs">按日期折叠</span></h3>
     ${historyBlock(DATA.mediaPlan,[{t:'平台',k:'platform'},{t:'选题',k:'plan'},{t:'状态',render:r=>`<span class="tag ${r.status==='已发布'?'':'gray'}">${r.status}</span>`}],'mediaPlan')}
   </div>
 `;
@@ -4812,19 +4812,19 @@ function renderVideos(){
     <div class="hot-toggle" data-toggle="${i}">点击展开拆解 / 二创脚本 ▾</div>
   </div>`).join('');
   return `
-  <div class="card">
-    <h3>为你匹配的真实爆款 <span class="cs">女性成长 · 独居 · 相亲 · 搞钱 · 实时</span></h3>
-    <div id="liveHot"><div class="muted small" style="padding:8px 0">正在拉取真实热榜…</div></div>
-  </div>
-  <div class="card mt">
-    <h3>我的爆款收藏 <span class="cs">点 ☆ 收藏实时爆款，灵感永久留存</span></h3>
-    <div id="favHotList">${renderFavHot()}</div>
-  </div>
-  <div class="card mt">
+  <div class="card" data-block="ref">
     <h3>爆款素材参考 <span class="cs">点击任意卡片展开拆解 + 二创脚本</span></h3>
     ${seed}
   </div>
-  <div class="card mt">
+  <div class="card mt" data-block="fav">
+    <h3>我的爆款收藏 <span class="cs">点 ☆ 收藏实时爆款，灵感永久留存</span></h3>
+    <div id="favHotList">${renderFavHot()}</div>
+  </div>
+  <div class="card mt" data-block="match">
+    <h3>为你匹配的真实爆款 <span class="cs">女性成长 · 独居 · 相亲 · 搞钱 · 实时</span></h3>
+    <div id="liveHot"><div class="muted small" style="padding:8px 0">正在拉取真实热榜…</div></div>
+  </div>
+  <div class="card mt" data-block="lib">
     <h3>我的爆款拆解库 <span class="cs">收藏 + 笔记</span></h3>
     <form class="fr" data-add="videos" style="margin-bottom:14px">
       ${fDate(D.today())}
@@ -4890,7 +4890,7 @@ function renderTravel(){
 
   return `
   <!-- ═══ 旅游规划 + 行程安排（同框） ═══ -->
-  <div class="card">
+  <div class="card" data-block="plan">
     <h3>${ico('luggage')} 旅游规划 <span class="cs">旅行与行程一站式管理</span></h3>
 
     <!-- 旅行列表 -->
@@ -4909,19 +4909,19 @@ function renderTravel(){
   </div>
 
   <!-- 愿望清单 -->
-  <div class="card mt">
+  <div class="card mt" data-block="wish">
     <h3>愿望清单</h3>
     <form class="fr" data-add="wish" style="margin-bottom:12px"><div class="field" style="flex:1;min-width:200px"><label>想去的地方</label><input name="name" placeholder="如 冰岛"></div><button class="btn" type="submit">加入</button></form>
     ${wish}
   </div>
 
   <!-- 历史行程（可折叠） -->
-  <details class="day mt"><summary><span class="chev">${ico('chev')}</span>历史行程 <span class="cnt">${trips.filter(t=>D.daysBetween(today,t.date)<0).length} 条</span></summary>
+  <details class="day mt" data-block="hist"><summary><span class="chev">${ico('chev')}</span>历史行程 <span class="cnt">${trips.filter(t=>D.daysBetween(today,t.date)<0).length} 条</span></summary>
     <div class="day-body">${trips.filter(t=>D.daysBetween(today,t.date)<0).length?trips.filter(t=>D.daysBetween(today,t.date)<0).map(t=>`<div class="spread" style="padding:8px 0;border-bottom:1px solid var(--border)"><span><span class="tag gray">已过去</span> ${t.name}</span><span class="cs small">${D.pretty(t.date)}</span></div>`).join(''):'<div class="empty">还没有过去的旅行</div>'}</div>
   </details>
 
   <!-- 新增旅行 -->
-  <div class="card mt">
+  <div class="card mt" data-block="add">
     <h3>+ 新增旅行计划</h3>
     <form class="fr" data-add="trip">
       <div class="field" style="flex:1;min-width:180px"><label>名称</label><input name="name" placeholder="如 云南大理 7 日"></div>
@@ -4964,18 +4964,18 @@ function renderReview(){
   // 自动生成周/月报（每次进入检查）
   const report=buildReport();
   return `
-  <div class="card">
+  <div class="card" data-block="today">
     <h3>今日复盘 <span class="cs">${D.pretty(today)}</span></h3>
     <div class="field" style="margin-bottom:12px"><label>今天心情</label><div class="moods" id="moods">
       ${MOODS.map(m=>`<div class="mood ${r.mood===m.k?'sel':''}" data-mood="${m.k}" title="${m.label}">${m.svg}</div>`).join('')}</div></div>
     <div class="field"><label>今日小结</label><textarea id="reviewSummary" rows="4" placeholder="今天做了什么、感受如何、明天想做什么…">${r.summary||''}</textarea></div>
     <div class="muted small" style="margin-top:8px">输入即时自动保存，关闭后再次打开不会消失 ✦</div>
   </div>
-  ${report?`<div class="card"><h3>${report.title}</h3>
+  ${report?`<div class="card" data-block="report"><h3>${report.title}</h3>
     <div class="grid g2">${report.cards}</div>
     <div class="field mt"><label>我的感想</label><textarea id="reportNote" rows="3" placeholder="对这段时间的总结与下一步…">${report.note||''}</textarea></div>
     <button class="btn mt" id="saveReport" data-title="${report.title}">保存报告</button></div>`:''}
-  <div class="card mt">
+  <div class="card mt" data-block="hist">
     <h3>复盘历史 <span class="cs">按日期折叠 · 往日心情与小结（也作你的日记 / 随笔）</span></h3>
     ${historyBlock(reviewHistoryRecs(),[{t:'心情',render:r=>MOOD_LABEL[r.mood]||'—'},{t:'小结',render:r=>(r.summary||'(空)')}],'reviews')}
   </div>
@@ -5116,11 +5116,11 @@ async function loadLiveNews(container){
 }
 function renderGrow(){
   return `
-  <div class="card">
+  <div class="card" data-block="news">
     <h3>${ico('news')} 时政热点 <span class="cs">每日检索 · 结构化要闻</span> <button type="button" class="btn sm ghost" id="newsRefresh" style="float:right;margin-top:-4px">${ico('refresh')} 刷新推送</button></h3>
     <div id="liveNews"><div class="muted small" style="padding:8px 0">正在检索今日时政 / 财经热点…</div></div>
   </div>
-  <div class="card mt">
+  <div class="card mt" data-block="finance">
     <h3>${ico('finance')} 理财学习 <span class="cs">结合今日时政热点</span></h3>
     <div id="financeNews"><div class="muted small" style="padding:8px 0">正在匹配今日理财相关热点…</div></div>
     <div class="grow-sources" style="margin-top:14px;border-top:1px solid var(--border);padding-top:12px">
@@ -5131,7 +5131,7 @@ function renderGrow(){
         <span class="gcl-arrow">${ico('chev')}</span></a>`).join('')}
     </div>
   </div>
-  <div class="card mt">
+  <div class="card mt" data-block="tip">
     <h3>${ico('bulb')} 每日一句理财干货</h3>
     <div class="box">${FINANCE_TIP}</div>
     <div class="nc-highlights" style="margin-top:12px"><span class="nh-icon">${ico('bulb')}</span><div><b>行动建议</b><ul><li>记账一周，找出「拿铁因子」</li><li>设定自动转账，先储蓄后消费</li><li>了解自己的风险承受能力</li></ul></div></div>
@@ -5205,7 +5205,8 @@ function render(){
   view.innerHTML=html;
   paintIcons(view);
   bindView(view);
-  if(state.view==='home'){startSbClock();applyHomeOrder();initHomeDrag();}
+  if(state.view==='home')startSbClock();
+  applyBlockOrder(state.view);initBlockDrag(state.view);
   window.scrollTo(0,0);
 }
 

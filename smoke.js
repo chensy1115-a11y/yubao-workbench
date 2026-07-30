@@ -60,6 +60,7 @@ const sandbox = {
   Date, Math, JSON, RegExp, Array, Object, String, Number, Boolean,
   parseInt, parseFloat, isNaN, decodeURIComponent, encodeURIComponent,
   alert(){}, confirm(){return true;}, prompt(){return '';},
+  CSS:{escape:s=>String(s).replace(/["\\]/g,'\\$&')},
 };
 sandbox.window = sandbox;
 sandbox.globalThis = sandbox;
