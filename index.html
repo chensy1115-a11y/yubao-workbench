@@ -182,16 +182,6 @@ textarea{resize:vertical;width:100%} input[type=number]{width:120px}
 .hot-card:hover{border-color:var(--primary)}
 .hot-head{display:flex;align-items:center;justify-content:space-between;gap:10px;cursor:pointer}
 .hot-toggle{margin-top:8px;font-size:12px;color:var(--primary-strong);font-weight:600;text-align:right;user-select:none}
-/* 平台热榜快捷按钮 */
-.hot-link-btn{display:flex;align-items:center;gap:10px;padding:14px 16px;border-radius:var(--radius-sm);
-  border:1.5px solid var(--border);background:var(--card);text-decoration:none;color:var(--text);
-  transition:all .18s;cursor:pointer}
-.hot-link-btn:hover{border-color:var(--accent);background:var(--accent-soft);transform:translateY(-1px);
-  box-shadow:0 4px 12px rgba(46,125,50,.12)}
-.hl-icon{flex:0 0 22px;display:flex;align-items:center;justify-content:center;color:var(--accent)}
-.hl-icon svg{width:20px;height:20px}
-.hl-text{flex:1;font-size:14px;font-weight:700}
-.hl-arrow{color:var(--text-3);font-weight:700;font-size:16px}
 .sub-h{font-size:13px;font-weight:700;color:var(--primary-strong)}
 .box{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;font-size:13px;color:var(--text-2);white-space:pre-wrap;line-height:1.6}
 
@@ -295,7 +285,6 @@ h3 svg{width:18px;height:18px;vertical-align:-3px;margin-right:5px}
   .fr .btn:not(.sm){width:100%;padding:12px 16px;font-size:15px;justify-content:center}
   .card{padding:14px;margin-bottom:14px}
   .kpi-box{padding:14px}
-  .hot-link-btn{padding:14px;font-size:14px}
   .tabs .tab{padding:9px 12px;font-size:12px}
 }
 .overlay{position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:39;display:none}
@@ -4735,28 +4724,6 @@ function renderVideos(){
   </div>`).join('');
   return `
   <div class="card">
-    <h3>平台热榜 <span class="cs">一键跳转查看当下热门</span></h3>
-    <p class="small muted" style="margin-bottom:12px">点击下方按钮直接打开对应平台热榜/热搜页面，快速获取最新爆款灵感。</p>
-    <div class="hot-links" style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px">
-      <a href="https://www.douyin.com/hot" target="_blank" rel="noopener" class="hot-link-btn" data-platform="抖音">
-        <span class="hl-icon">${ico('fire')||''}</span><span class="hl-text">抖音热榜</span><span class="hl-arrow">→</span>
-      </a>
-      <a href="https://www.xiaohongshu.com/explore" target="_blank" rel="noopener" class="hot-link-btn" data-platform="小红书">
-        <span class="hl-icon">${ico('star')||''}</span><span class="hl-text">小红书热搜</span><span class="hl-arrow">→</span>
-      </a>
-      <a href="https://www.bilibili.com/v/popular/rank/all" target="_blank" rel="noopener" class="hot-link-btn" data-platform="B站">
-        <span class="hl-icon">${ico('play')||''}</span><span class="hl-text">B站热门</span><span class="hl-arrow">→</span>
-      </a>
-      <a href="https://www.tiktok.com/discover" target="_blank" rel="noopener" class="hot-link-btn" data-platform="TikTok">
-        <span class="hl-icon">${ico('globe')||''}</span><span class="hl-text">TikTok Trending</span><span class="hl-arrow">→</span>
-      </a>
-    </div>
-  </div>
-  <div class="card">
-    <h3>赛道定位 <span class="cs">活人感的大龄女青年</span></h3>
-    <p class="small muted">内容方向：独居、女性自我提升、学习、理财、相亲。真实、松弛、不说教，用"活人感"建立信任。</p>
-  </div>
-  <div class="card mt">
     <h3>为你匹配的真实爆款 <span class="cs">女性成长 · 独居 · 相亲 · 搞钱 · 实时</span></h3>
     <div id="liveHot"><div class="muted small" style="padding:8px 0">正在拉取真实热榜…</div></div>
   </div>
