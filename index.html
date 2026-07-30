@@ -120,6 +120,11 @@ button{font-family:inherit}
 .badge{width:22px;height:22px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;margin-left:auto}
 .ci.done .badge{background:var(--primary);border-color:var(--primary)} .ci.done .badge svg{width:13px;height:13px;color:#fff}
 .countdown{background:linear-gradient(135deg,var(--primary),#8be05a);color:#fff;border-radius:var(--radius);padding:20px;position:relative;overflow:hidden}
+.summary-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.sm-item{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px 10px;text-align:center}
+.sm-num{font-size:24px;font-weight:800;color:var(--text);line-height:1.1}
+.sm-unit{font-size:13px;font-weight:600;color:var(--text-3)}
+.sm-lbl{font-size:12px;color:var(--text-3);margin-top:6px}
 .countdown .cd-days{font-size:44px;font-weight:800;line-height:1} .countdown .cd-l{font-size:13px;opacity:.92;margin-top:6px}
 .countdown .cd-n{font-size:15px;font-weight:700;margin-top:4px}
 .countdown .plane{position:absolute;right:14px;top:14px;opacity:.35} .countdown .plane svg{width:54px;height:54px}
@@ -272,6 +277,7 @@ details.day>summary .cnt{margin-left:auto;font-size:11px;color:var(--text-3);fon
   .menu-toggle svg{width:20px;height:20px}
   .g2,.g3,.g4,.kanban{grid-template-columns:1fr}
   .checkin-wall{grid-template-columns:repeat(2,1fr)}
+  .summary-grid{grid-template-columns:repeat(2,1fr)}
   .view{padding:16px}
   .fr .field{flex:1 1 100%;min-width:0!important}
   .fr .btn:not(.sm){width:100%;padding:12px 16px;font-size:15px;justify-content:center}
@@ -851,8 +857,11 @@ function renderHome(){
   const today=D.today();
   const q=todayQuote();
   const ym=today.slice(0,7);
-  // 本月副业收入
+  // 本月各项汇总
   const monthSideInc=DATA.sideHustle.iso.concat(DATA.sideHustle.media,DATA.sideHustle.other).filter(r=>r.date&&r.date.slice(0,7)===ym).reduce((s,r)=>s+(+r.income||0),0);
+  const monthStudyMin=DATA.english.filter(r=>r.date&&r.date.slice(0,7)===ym).reduce((s,r)=>s+engMins(r),0);
+  const monthExCount=DATA.exercise.filter(r=>r.date&&r.date.slice(0,7)===ym).length;
+  const monthBooks=DATA.reading.filter(r=>r.status==='done'&&r.doneDate&&r.doneDate.slice(0,7)===ym).length;
   // 旅行倒计时（最近一次设定的旅行）
   const trips=DATA.travel.trips.slice().filter(t=>t.date).sort((a,b)=>a.date.localeCompare(b.date));
   const next=trips.find(t=>D.daysBetween(today,t.date)>=0);
@@ -888,6 +897,21 @@ function renderHome(){
   <div class="card mt jump" data-jump="travel">
     <h3>旅行倒计时 <span class="enter">进入 ›</span></h3>
     ${travelHtml}
+  </div>
+  <div class="card mt">
+    <h3>本月小结 <span class="cs">${ym} · 月度汇总</span></h3>
+    <div class="summary-grid">
+      <div class="sm-item"><div class="sm-num">${monthStudyMin}<span class="sm-unit"> 分钟</span></div><div class="sm-lbl">学习时长</div></div>
+      <div class="sm-item"><div class="sm-num">${monthExCount}<span class="sm-unit"> 次</span></div><div class="sm-lbl">运动次数</div></div>
+      <div class="sm-item"><div class="sm-num">${monthBooks}<span class="sm-unit"> 本</span></div><div class="sm-lbl">读完书目</div></div>
+      <div class="sm-item"><div class="sm-num">¥${monthSideInc.toFixed(0)}</div><div class="sm-lbl">副业收入</div></div>
+    </div>
+  </div>
+  <div class="card mt">
+    <h3>目标进度</h3>
+    ${goalBlock('本月副业收入目标',monthSideInc,DATA.goals.sideMonth,'元','sideMonth')}
+    ${goalBlock('年度读书目标',DATA.reading.filter(r=>r.status==='done').length,DATA.goals.readingYear,'本','readingYear')}
+    ${goalBlock('本周学习时长目标',DATA.english.filter(r=>D.thisWeekDays().includes(r.date)).reduce((s,r)=>s+engMins(r),0),DATA.goals.engWeek,'分钟','engWeek')}
   </div>`;
 }
 
