@@ -68,10 +68,6 @@ button{font-family:inherit}
 .nav-item .ico{width:22px;height:22px;flex:0 0 22px;display:flex;align-items:center;justify-content:center}
 .nav-item .ico svg{width:22px;height:22px}
 .nav-item .nav-label{flex:1}
-.nav-item .drag-grip{flex:0 0 auto;width:20px;text-align:center;color:var(--text-3);font-size:16px;opacity:0;transition:opacity .2s;cursor:grab;padding:2px 4px;border-radius:4px}
-.nav-item:hover .drag-grip{opacity:.6}
-.nav-item .drag-grip:hover{opacity:1;background:var(--bg)}
-.nav-item.dragging{opacity:.35;box-shadow:none}
 .nav-item.drag-over{border-top:3px solid var(--primary);margin-top:-1px}
 .side-foot{border-top:1px solid var(--border);padding-top:12px;display:flex;flex-direction:column;gap:8px}
 .theme-btn{display:flex;align-items:center;gap:10px;justify-content:center;padding:9px;border-radius:var(--radius-sm);
@@ -135,6 +131,13 @@ button{font-family:inherit}
 .countdown .cd-days{font-size:44px;font-weight:800;line-height:1} .countdown .cd-l{font-size:13px;opacity:.92;margin-top:6px}
 .countdown .cd-n{font-size:15px;font-weight:700;margin-top:4px}
 .countdown .plane{position:absolute;right:14px;top:14px;opacity:.35} .countdown .plane svg{width:54px;height:54px}
+/* ── 首页区块长按拖拽 ── */
+.home-blocks .card{cursor:default;transition:box-shadow .2s,border-color .2s}
+.home-blocks .card.dragging{opacity:.3;box-shadow:none}
+.home-blocks .card.drag-over{border:2px dashed var(--primary);transform:translateY(2px)}
+body.home-dragging{overscroll-behavior:none;user-select:none}
+body.home-dragging .home-blocks .card{touch-action:none}
+.home-blocks .card .drag-clone{box-shadow:0 14px 34px rgba(60,120,40,.28);border-radius:var(--radius);background:var(--card)}
 /* 旅游规划：紧凑行内列表 */
 .trip-list{display:flex;flex-direction:column;gap:6px;margin-bottom:4px}
 .trip-row{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:var(--bg);cursor:pointer;transition:border-color .2s}
@@ -573,7 +576,7 @@ if('speechSynthesis' in window){
    ============================================================ */
 const KEY='yubao_workbench_v1';
 const DEFAULT={
-  version:1, settings:{theme:'system',engLevel:'b1'}, checkins:{},
+  version:1, settings:{theme:'system',engLevel:'b1',homeOrder:['today','wall','travel','summary']}, checkins:{},
   sideHustle:{iso:[],media:[],other:[]},
   english:[], reading:[], exercise:[],
   mediaPlan:[], videos:[], favHot:[], goals:{readingYear:12, sideMonth:0, engWeek:0},
@@ -851,7 +854,7 @@ function engMins(r){return (+r.minutes||0)||((+r.listening||0)+(+r.reading||0)+(
 /* ============================================================
    导航与页面定义
    ============================================================ */
-let MODULES=[
+const MODULES=[
   {id:'grow',name:'自我成长',ico:'grow'},
   {id:'english',name:'英语学习',ico:'en'},
   {id:'reading',name:'在读书目',ico:'reading'},
@@ -862,105 +865,94 @@ let MODULES=[
   {id:'videos',name:'爆款视频',ico:'videos'},
   {id:'review',name:'每日复盘',ico:'review'}
 ];
-/* 应用用户自定义顺序 */
-function applyModuleOrder(){
-  const order=DATA.settings.moduleOrder;
-  if(Array.isArray(order)&&order.length===MODULES.length){
-    const map=Object.fromEntries(MODULES.map((m,i)=>[m.id,i]));
-    const sorted=order.map(id=>MODULES[map[id]]).filter(Boolean);
-    if(sorted.length===MODULES.length) MODULES=sorted;
-  }
-}
-applyModuleOrder();
 const CHECKIN_MODS=MODULES.map(m=>m.id);
 let state={view:'home',sideTab:'iso'};
 
 function buildNav(){
   const nav=document.getElementById('nav');
   let html=`<div class="nav-item" data-view="home"><span class="ico">${ico('home')}</span>工作台</div>`;
-  MODULES.forEach((m,i)=>{
-    html+=`<div class="nav-item" data-view="${m.id}" data-index="${i}" draggable="true"><span class="ico drag-handle">${ico(m.ico)}</span><span class="nav-label">${m.name}</span><span class="drag-grip" title="长按拖拽排序">⠿</span></div>`;
+  MODULES.forEach((m)=>{
+    html+=`<div class="nav-item" data-view="${m.id}"><span class="ico">${ico(m.ico)}</span><span class="nav-label">${m.name}</span></div>`;
   });
   nav.innerHTML=html;
-  nav.querySelectorAll('.nav-item').forEach(it=>it.onclick=(e)=>{
-    if(e.target.closest('.drag-grip')) return;
+  nav.querySelectorAll('.nav-item').forEach(it=>it.onclick=()=>{
     setView(it.dataset.view);closeSidebar();
   });
-  /* 拖拽排序 */
-  let dragSrc=null;
-  nav.querySelectorAll('.nav-item[draggable]').forEach(item=>{
-    item.addEventListener('dragstart',e=>{
-      dragSrc=item;item.classList.add('dragging');e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',item.dataset.index);
-    });
-    item.addEventListener('dragend',()=>{item.classList.remove('dragging');nav.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('drag-over'));});
-    item.addEventListener('dragover',e=>{e.preventDefault();e.dataTransfer.dropEffect='move';if(item!==dragSrc)item.classList.add('drag-over');});
-    item.addEventListener('dragleave',()=>item.classList.remove('drag-over'));
-    item.addEventListener('drop',e=>{
-      e.preventDefault();item.classList.remove('drag-over');
-      if(!dragSrc||dragSrc===item)return;
-      const from=+dragSrc.dataset.index,to=+item.dataset.index;
-      if(from===to)return;
-      const moved=MODULES.splice(from,1)[0];
-      MODULES.splice(to,0,moved);
-      DATA.settings.moduleOrder=MODULES.map(m=>m.id);save();
-      buildNav();
-      if(state.view) setView(state.view);
-    });
-  });
-  /* 触摸设备长按拖拽 */
-  let touchTimer=null,touchItem=null,clone=null,touchStartY=0;
-  nav.querySelectorAll('.nav-item[draggable]').forEach(item=>{
-    item.addEventListener('touchstart',e=>{
-      touchTimer=setTimeout(()=>{
-        touchItem=item;
-        clone=item.cloneNode(true);
+}
+
+/* 首页区块长按拖拽排序（桌面鼠标 + 移动端触摸通用） */
+function applyHomeOrder(){
+  const wrap=document.getElementById('homeBlocks');if(!wrap)return;
+  const order=DATA.settings.homeOrder;
+  if(!Array.isArray(order))return;
+  const map={};
+  wrap.querySelectorAll('.card[data-block]').forEach(c=>map[c.dataset.block]=c);
+  order.forEach(id=>{ if(map[id]) wrap.appendChild(map[id]); });
+}
+function initHomeDrag(){
+  const wrap=document.getElementById('homeBlocks');if(!wrap)return;
+  const cards=()=>Array.from(wrap.querySelectorAll('.card[data-block]'));
+  let pressTimer=null,dragging=false,clone=null,srcCard=null,justDragged=false;
+  cards().forEach(card=>{
+    card.addEventListener('pointerdown',e=>{
+      if(e.button!==undefined&&e.button!==0)return;
+      pressTimer=setTimeout(()=>{
+        dragging=true;srcCard=card;justDragged=true;
+        card.classList.add('dragging');
+        document.body.classList.add('home-dragging');
+        clone=card.cloneNode(true);
+        clone.classList.add('drag-clone');
         clone.style.position='fixed';clone.style.zIndex='9999';
-        clone.style.width=item.offsetWidth+'px';clone.style.opacity='0.9';
-        clone.style.boxShadow='0 8px 24px rgba(0,0,0,.2)';
-        clone.style.pointerEvents='none';clone.classList.add('dragging');
+        clone.style.width=card.offsetWidth+'px';clone.style.margin='0';
+        clone.style.pointerEvents='none';
         document.body.appendChild(clone);
-        touchStartY=e.touches[0].clientY;
-        item.classList.add('dragging');
-        const t=e.touches[0];
-        clone.style.left=(t.clientX-item.offsetWidth/2)+'px';
-        clone.style.top=(t.clientY-item.offsetHeight/2)+'px';
+        moveClone(e.clientX,e.clientY);
       },400);
-    },{passive:true});
-    item.addEventListener('touchmove',e=>{
-      if(!clone)return;
-      e.preventDefault();
-      const t=e.touches[0];
-      clone.style.left=(t.clientX-item.offsetWidth/2)+'px';
-      clone.style.top=(t.clientY-item.offsetHeight/2)+'px';
-      const below=document.elementFromPoint(t.clientX,t.clientY);
-      nav.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('drag-over'));
-      const target=below?.closest('.nav-item[draggable]');
-      if(target&&target!==touchItem)target.classList.add('drag-over');
-    },{passive:false});
-    item.addEventListener('touchend',()=>{
-      clearTimeout(touchTimer);
-      if(!touchItem)return;
-      const below=document.elementFromPoint(
-        clone?parseFloat(clone.style.left)+touchItem.offsetWidth/2:0,
-        clone?parseFloat(clone.style.top)+touchItem.offsetHeight/2:0
-      );
-      const target=below?.closest('.nav-item[draggable]');
-      if(target&&target!==touchItem){
-        const from=+touchItem.dataset.index,to=+target.dataset.index;
-        if(from!==to){
-          const moved=MODULES.splice(from,1)[0];
-          MODULES.splice(to,0,moved);
-          DATA.settings.moduleOrder=MODULES.map(m=>m.id);save();
-          buildNav();
-          if(state.view)setView(state.view);
-        }
-      }
-      touchItem.classList.remove('dragging');
-      nav.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('drag-over'));
-      if(clone){clone.remove();clone=null;}
-      touchItem=null;
     });
+    card.addEventListener('pointermove',e=>{
+      if(!dragging)return;
+      e.preventDefault();
+      moveClone(e.clientX,e.clientY);
+      const below=document.elementFromPoint(e.clientX,e.clientY);
+      cards().forEach(c=>c.classList.remove('drag-over'));
+      const tgt=below&&below.closest('.card[data-block]');
+      if(tgt&&tgt!==card)tgt.classList.add('drag-over');
+    });
+    card.addEventListener('pointerup',e=>{
+      clearTimeout(pressTimer);
+      if(!dragging)return;
+      dragging=false;
+      document.body.classList.remove('home-dragging');
+      const below=document.elementFromPoint(e.clientX,e.clientY);
+      const tgt=below&&below.closest('.card[data-block]');
+      cards().forEach(c=>c.classList.remove('drag-over'));
+      if(tgt&&tgt!==card){
+        const order=cards().map(c=>c.dataset.block);
+        const si=order.indexOf(card.dataset.block),ti=order.indexOf(tgt.dataset.block);
+        const arr=DATA.settings.homeOrder.slice();
+        arr.splice(si,1);arr.splice(ti,0,card.dataset.block);
+        DATA.settings.homeOrder=arr;save();
+        applyHomeOrder();
+      }
+      if(clone){clone.remove();clone=null;}
+      card.classList.remove('dragging');
+    });
+    card.addEventListener('pointercancel',()=>{
+      clearTimeout(pressTimer);
+      dragging=false;
+      document.body.classList.remove('home-dragging');
+      if(clone){clone.remove();clone=null;}
+      card.classList.remove('dragging');
+      cards().forEach(c=>c.classList.remove('drag-over'));
+    });
+    /* 拖拽后抑制误触发的 click（如旅游卡片的跳转） */
+    card.addEventListener('click',e=>{
+      if(justDragged){justDragged=false;e.stopPropagation();e.preventDefault();}
+    },true);
   });
+  function moveClone(x,y){
+    if(clone){clone.style.left=(x-clone.offsetWidth/2)+'px';clone.style.top=(y-clone.offsetHeight/2)+'px';}
+  }
 }
 
 function setView(v){
@@ -1008,19 +1000,20 @@ function renderHome(){
         :`<div class="countdown" style="background:var(--bg);color:var(--text-2)"><div class="cd-n">还没有旅行计划</div><div class="cd-l">去「旅游规划」添加吧 ✦</div></div>`;
 
   return `
-  <div class="card">
+  <div class="home-blocks" id="homeBlocks">
+  <div class="card" data-block="today">
     <h3>今日能量 <span class="cs">每日自动轮换</span></h3>
     <div class="energy"><div class="qm">"</div><div><div class="zh">${q.zh}</div><div class="en">${q.en}</div></div></div>
   </div>
-  <div class="card mt">
+  <div class="card mt" data-block="wall">
     <h3>弹性打卡墙</h3>
     <div class="checkin-wall">${checkinHtml}</div>
   </div>
-  <div class="card mt jump" data-jump="travel">
+  <div class="card mt jump" data-jump="travel" data-block="travel">
     <h3>旅行倒计时 <span class="enter">进入 ›</span></h3>
     ${travelHtml}
   </div>
-  <div class="card mt">
+  <div class="card mt" data-block="summary">
     <h3>本月小结 <span class="cs">${ym} · 月度汇总</span></h3>
     <div class="summary-grid">
       <div class="sm-item"><div class="sm-num">${monthStudyMin}<span class="sm-unit"> 分钟</span></div><div class="sm-lbl">学习时长</div></div>
@@ -1028,6 +1021,7 @@ function renderHome(){
       <div class="sm-item"><div class="sm-num">${monthBooks}<span class="sm-unit"> 本</span></div><div class="sm-lbl">读完书目</div></div>
       <div class="sm-item"><div class="sm-num">¥${monthSideInc.toFixed(0)}</div><div class="sm-lbl">副业收入</div></div>
     </div>
+  </div>
   </div>`;
 }
 
@@ -5211,7 +5205,7 @@ function render(){
   view.innerHTML=html;
   paintIcons(view);
   bindView(view);
-  if(state.view==='home')startSbClock();
+  if(state.view==='home'){startSbClock();applyHomeOrder();initHomeDrag();}
   window.scrollTo(0,0);
 }
 
