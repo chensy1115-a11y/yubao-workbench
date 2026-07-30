@@ -67,6 +67,12 @@ button{font-family:inherit}
 .nav-item.active{background:var(--primary);color:#fff}
 .nav-item .ico{width:22px;height:22px;flex:0 0 22px;display:flex;align-items:center;justify-content:center}
 .nav-item .ico svg{width:22px;height:22px}
+.nav-item .nav-label{flex:1}
+.nav-item .drag-grip{flex:0 0 auto;width:20px;text-align:center;color:var(--text-3);font-size:16px;opacity:0;transition:opacity .2s;cursor:grab;padding:2px 4px;border-radius:4px}
+.nav-item:hover .drag-grip{opacity:.6}
+.nav-item .drag-grip:hover{opacity:1;background:var(--bg)}
+.nav-item.dragging{opacity:.35;box-shadow:none}
+.nav-item.drag-over{border-top:3px solid var(--primary);margin-top:-1px}
 .side-foot{border-top:1px solid var(--border);padding-top:12px;display:flex;flex-direction:column;gap:8px}
 .theme-btn{display:flex;align-items:center;gap:10px;justify-content:center;padding:9px;border-radius:var(--radius-sm);
   border:1px solid var(--border);background:var(--bg);color:var(--text-2);cursor:pointer;font-size:13px}
@@ -303,28 +309,29 @@ h3 svg{width:18px;height:18px;vertical-align:-3px;margin-right:5px}
 .prog{height:10px;background:var(--accent-soft,#E8F5E9);border-radius:6px;overflow:hidden;margin:6px 0}.prog-bar{height:100%;background:var(--accent,#2E7D32);border-radius:6px;transition:width .35s}
 /* ── 每日单词打卡（可爱风） ── */
 .dw-header{display:flex;align-items:center;gap:8px;margin-bottom:6px}
-.dw-header .dw-title{font-size:20px;font-weight:800;color:#2196F3;letter-spacing:.5px}
+.dw-header svg{width:26px;height:26px;flex-shrink:0}
+.dw-header .dw-title{font-size:18px;font-weight:800;color:#2196F3;letter-spacing:.5px}
 .dw-tag{display:inline-flex;align-items:center;gap:4px;background:linear-gradient(135deg,#FFF8E1,#FFECB3);color:#F57C00;font-size:13px;font-weight:600;padding:6px 16px;border-radius:20px;margin-bottom:12px;border:1px solid #FFE082}
 .dw-gradient-bar{height:10px;border-radius:10px;background:linear-gradient(90deg,#42A5F5,#66BB6A,#FFCA28);margin-bottom:8px;overflow:hidden}
 .dw-gradient-bar .dw-fill{height:100%;border-radius:10px;background:rgba(255,255,255,.45);transition:width .4s ease}
 .dw-counter{font-size:15px;color:var(--text-2);margin-bottom:14px}
 .dw-counter b{color:#2E7D32;font-size:17px}
 .word-grid{display:flex;flex-direction:column;gap:14px}
-.word-card{background:var(--bg,#fff);border:2px dashed #D7CCC8;border-radius:18px;padding:16px 18px;cursor:pointer;transition:border-color .25s,box-shadow .25s;position:relative;display:flex;align-items:flex-start;gap:14px}
+.word-card{background:var(--bg,#fff);border:2px dashed #D7CCC8;border-radius:16px;padding:14px 16px;cursor:pointer;transition:border-color .25s,box-shadow .25s;position:relative;display:flex;align-items:flex-start;gap:10px}
 .word-card:hover{border-color:#A1887F;box-shadow:0 4px 16px rgba(0,0,0,.06)}
 .word-card.learned{background:linear-gradient(135deg,#E8F5E9,#F1F8E9);border-color:#81C784;border-style:dashed}
 .word-card.learned .word-w{text-decoration:none;opacity:.65}
-.word-spk{flex:0 0 auto;width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#E3F2FD,#BBDEFB);color:#1565C0;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;border:none;box-shadow:0 2px 8px rgba(33,150,243,.15)}
+.word-spk{flex:0 0 auto;width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#E3F2FD,#BBDEFB);color:#1565C0;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;border:none;box-shadow:0 2px 6px rgba(33,150,243,.12)}
 .word-spk svg{width:22px;height:22px}
 .word-spk:active{transform:scale(.88)}
 .word-body{flex:1;min-width:0}
-.word-w{font-size:21px;font-weight:800;color:#1976D2;letter-spacing:.3px}
+.word-w{font-size:19px;font-weight:800;color:#1976D2;letter-spacing:.3px}
 .word-pos{font-size:12px;font-weight:500;color:#78909C;margin-left:6px}
 .word-ph{font-size:13px;font-weight:500;color:#90A4AE;margin-left:7px;font-style:italic}
 .word-meaning{font-size:15px;color:#546E7A;margin-top:1px}
 .word-ex{font-size:14px;color:#37474F;margin-top:8px;line-height:1.55}
 .word-zh{font-size:13px;color:#78909C;margin-top:3px;line-height:1.5}
-.word-paw{flex:0 0 auto;width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#66BB6A,#43A047);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:22px;border:none;box-shadow:0 3px 10px rgba(76,175,80,.25);transition:transform .2s,box-shadow .2s;align-self:center}
+.word-paw{flex:0 0 auto;width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#66BB6A,#43A047);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;border:none;box-shadow:0 2px 8px rgba(76,175,80,.2);transition:transform .2s,box-shadow .2s;align-self:center}
 .word-paw:hover{transform:scale(1.08);box-shadow:0 4px 14px rgba(76,175,80,.35)}
 .word-paw.done{background:linear-gradient(135deg,#A5D6A7,#81C784)}
 .word-paw.done::after{content:'✓';font-size:18px;font-weight:700}
@@ -353,7 +360,7 @@ h3 svg{width:18px;height:18px;vertical-align:-3px;margin-right:5px}
 .flip-acts{display:flex;gap:10px;justify-content:center;margin-top:12px}
 .flip-acts .word-master{padding:6px 16px;font-size:13px}
 .flip-acts .word-wrong{font-size:13px}
-@media(max-width:860px){.word-grid{flex-direction:column}.flip-grid{flex-direction:column}.word-card{padding:14px 16px}.word-w{font-size:19px}}
+@media(max-width:860px){.word-grid{flex-direction:column;gap:10px}.flip-grid{flex-direction:column}.word-card{padding:12px 14px;gap:8px}.word-w{font-size:18px}.word-spk{width:34px;height:34px}.word-spk svg{width:18px;height:18px}.word-paw{width:32px;height:32px}.word-paw svg{width:18px;height:18px}}
 
 /* 云端同步状态横幅（连接/未连接/离线 明显区分） */
 .sync-banner{display:none;align-items:center;gap:8px;padding:9px 16px;font-size:13px;font-weight:600;border-bottom:1px solid var(--border)}
@@ -843,7 +850,7 @@ function engMins(r){return (+r.minutes||0)||((+r.listening||0)+(+r.reading||0)+(
 /* ============================================================
    导航与页面定义
    ============================================================ */
-const MODULES=[
+let MODULES=[
   {id:'grow',name:'自我成长',ico:'grow'},
   {id:'english',name:'英语学习',ico:'en'},
   {id:'reading',name:'在读书目',ico:'reading'},
@@ -854,6 +861,16 @@ const MODULES=[
   {id:'videos',name:'爆款视频',ico:'videos'},
   {id:'review',name:'每日复盘',ico:'review'}
 ];
+/* 应用用户自定义顺序 */
+function applyModuleOrder(){
+  const order=DATA.settings.moduleOrder;
+  if(Array.isArray(order)&&order.length===MODULES.length){
+    const map=Object.fromEntries(MODULES.map((m,i)=>[m.id,i]));
+    const sorted=order.map(id=>MODULES[map[id]]).filter(Boolean);
+    if(sorted.length===MODULES.length) MODULES=sorted;
+  }
+}
+applyModuleOrder();
 const CHECKIN_MODS=MODULES.map(m=>m.id);
 let state={view:'home',sideTab:'iso'};
 
@@ -861,10 +878,88 @@ function buildNav(){
   const nav=document.getElementById('nav');
   let html=`<div class="nav-item" data-view="home"><span class="ico">${ico('home')}</span>工作台</div>`;
   MODULES.forEach((m,i)=>{
-    html+=`<div class="nav-item" data-view="${m.id}"><span class="ico">${ico(m.ico)}</span>${m.name}</div>`;
+    html+=`<div class="nav-item" data-view="${m.id}" data-index="${i}" draggable="true"><span class="ico drag-handle">${ico(m.ico)}</span><span class="nav-label">${m.name}</span><span class="drag-grip" title="长按拖拽排序">⠿</span></div>`;
   });
   nav.innerHTML=html;
-  nav.querySelectorAll('.nav-item').forEach(it=>it.onclick=()=>{setView(it.dataset.view);closeSidebar();});
+  nav.querySelectorAll('.nav-item').forEach(it=>it.onclick=(e)=>{
+    if(e.target.closest('.drag-grip')) return;
+    setView(it.dataset.view);closeSidebar();
+  });
+  /* 拖拽排序 */
+  let dragSrc=null;
+  nav.querySelectorAll('.nav-item[draggable]').forEach(item=>{
+    item.addEventListener('dragstart',e=>{
+      dragSrc=item;item.classList.add('dragging');e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',item.dataset.index);
+    });
+    item.addEventListener('dragend',()=>{item.classList.remove('dragging');nav.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('drag-over'));});
+    item.addEventListener('dragover',e=>{e.preventDefault();e.dataTransfer.dropEffect='move';if(item!==dragSrc)item.classList.add('drag-over');});
+    item.addEventListener('dragleave',()=>item.classList.remove('drag-over'));
+    item.addEventListener('drop',e=>{
+      e.preventDefault();item.classList.remove('drag-over');
+      if(!dragSrc||dragSrc===item)return;
+      const from=+dragSrc.dataset.index,to=+item.dataset.index;
+      if(from===to)return;
+      const moved=MODULES.splice(from,1)[0];
+      MODULES.splice(to,0,moved);
+      DATA.settings.moduleOrder=MODULES.map(m=>m.id);save();
+      buildNav();
+      if(state.view) setView(state.view);
+    });
+  });
+  /* 触摸设备长按拖拽 */
+  let touchTimer=null,touchItem=null,clone=null,touchStartY=0;
+  nav.querySelectorAll('.nav-item[draggable]').forEach(item=>{
+    item.addEventListener('touchstart',e=>{
+      touchTimer=setTimeout(()=>{
+        touchItem=item;
+        clone=item.cloneNode(true);
+        clone.style.position='fixed';clone.style.zIndex='9999';
+        clone.style.width=item.offsetWidth+'px';clone.style.opacity='0.9';
+        clone.style.boxShadow='0 8px 24px rgba(0,0,0,.2)';
+        clone.style.pointerEvents='none';clone.classList.add('dragging');
+        document.body.appendChild(clone);
+        touchStartY=e.touches[0].clientY;
+        item.classList.add('dragging');
+        const t=e.touches[0];
+        clone.style.left=(t.clientX-item.offsetWidth/2)+'px';
+        clone.style.top=(t.clientY-item.offsetHeight/2)+'px';
+      },400);
+    },{passive:true});
+    item.addEventListener('touchmove',e=>{
+      if(!clone)return;
+      e.preventDefault();
+      const t=e.touches[0];
+      clone.style.left=(t.clientX-item.offsetWidth/2)+'px';
+      clone.style.top=(t.clientY-item.offsetHeight/2)+'px';
+      const below=document.elementFromPoint(t.clientX,t.clientY);
+      nav.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('drag-over'));
+      const target=below?.closest('.nav-item[draggable]');
+      if(target&&target!==touchItem)target.classList.add('drag-over');
+    },{passive:false});
+    item.addEventListener('touchend',()=>{
+      clearTimeout(touchTimer);
+      if(!touchItem)return;
+      const below=document.elementFromPoint(
+        clone?parseFloat(clone.style.left)+touchItem.offsetWidth/2:0,
+        clone?parseFloat(clone.style.top)+touchItem.offsetHeight/2:0
+      );
+      const target=below?.closest('.nav-item[draggable]');
+      if(target&&target!==touchItem){
+        const from=+touchItem.dataset.index,to=+target.dataset.index;
+        if(from!==to){
+          const moved=MODULES.splice(from,1)[0];
+          MODULES.splice(to,0,moved);
+          DATA.settings.moduleOrder=MODULES.map(m=>m.id);save();
+          buildNav();
+          if(state.view)setView(state.view);
+        }
+      }
+      touchItem.classList.remove('dragging');
+      nav.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('drag-over'));
+      if(clone){clone.remove();clone=null;}
+      touchItem=null;
+    });
+  });
 }
 
 function setView(v){
@@ -899,10 +994,9 @@ function renderHome(){
     const m=MODULES.find(x=>x.id===id);
     if(!m) return '';
     const done=getCheckin(today,id);
-    const extra=id==='side'?`<span class="ci-inc">¥${monthSideInc.toFixed(0)}</span>`:'';
     return `<div class="ci ${done?'done':''}" data-check="${id}">
       <span class="ci-ico">${ico(m.ico)}</span><span class="ci-n">${m.name}</span>
-      <span class="ci-right">${extra}
+      <span class="ci-right">
         <span class="ci-st">${done?'已完成':'待完成'}</span>
         <span class="badge">${done?ico('check'):''}</span>
       </span></div>`;
