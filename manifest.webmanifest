@@ -1,16 +1,16 @@
 {
-  "name": "雨宝的工作台",
-  "short_name": "雨宝的工作台",
-  "description": "全能自律工作台：英语、阅读、锻炼、副业、自媒体、爆款视频、旅游、复盘",
-  "start_url": "./index.html",
-  "scope": "./",
+  "name": "雨宝工作台",
+  "short_name": "雨宝",
+  "description": "全能自律工作台：计划、复盘、阅读、副业、旅行、英语学习、自我成长。单文件本地优先，可选云端同步，不消耗任何 AI 平台积分。",
+  "lang": "zh-CN",
+  "start_url": ".",
+  "scope": ".",
   "display": "standalone",
-  "orientation": "portrait",
+  "orientation": "portrait-primary",
   "background_color": "#eef5ee",
   "theme_color": "#52C41A",
   "icons": [
     { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
   ]
 }

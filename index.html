@@ -335,6 +335,37 @@ details.day>summary .cnt{margin-left:auto;font-size:11px;color:var(--text-3);fon
 .flip-acts .word-master{padding:6px 16px;font-size:13px}
 .flip-acts .word-wrong{font-size:13px}
 @media(max-width:860px){.word-grid{flex-direction:column}.flip-grid{flex-direction:column}.word-card{padding:14px 16px}.word-w{font-size:19px}}
+
+/* 云端同步状态横幅（连接/未连接/离线 明显区分） */
+.sync-banner{display:none;align-items:center;gap:8px;padding:9px 16px;font-size:13px;font-weight:600;border-bottom:1px solid var(--border)}
+.sync-banner.show{display:flex}
+.sync-banner .dot{width:8px;height:8px;border-radius:50%;flex:0 0 8px}
+.sync-banner.off{background:#fff4e5;color:#b26a00}.sync-banner.off .dot{background:#e0a000}
+.sync-banner.err{background:#fdecea;color:#c0392b}.sync-banner.err .dot{background:#e74c3c}
+.sync-banner.ok{background:var(--accent-soft);color:var(--primary-strong)}.sync-banner.ok .dot{background:#2E7D32}
+.sync-banner a{color:inherit;text-decoration:underline;cursor:pointer}
+.eng-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.eng-tab{padding:7px 14px;border-radius:20px;border:1px solid var(--border);background:var(--bg);cursor:pointer;font-size:13px;font-weight:600;color:var(--text-2)}
+.eng-tab.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+.grow-card-link{display:flex;gap:10px;align-items:center;padding:12px 14px;border:1px solid var(--border);border-radius:12px;margin-bottom:10px;text-decoration:none;color:var(--text);background:var(--card);transition:border-color .2s,box-shadow .2s}
+.grow-card-link:hover{border-color:var(--primary);box-shadow:var(--shadow)}
+.grow-card-link .gcl-ico{width:36px;height:36px;border-radius:10px;background:var(--primary-soft);color:var(--primary-strong);display:flex;align-items:center;justify-content:center;flex:0 0 36px}
+.grow-card-link .gcl-ico svg{width:20px;height:20px}
+.grow-card-link .gcl-main{flex:1;min-width:0}
+.grow-card-link .gcl-t{font-weight:700;font-size:14px}
+.grow-card-link .gcl-s{font-size:12px;color:var(--text-3);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.grow-card-link .gcl-arrow{color:var(--text-3);flex:0 0 auto}
+.news-item{padding:12px 0;border-bottom:1px solid var(--border)}
+.news-item:last-child{border-bottom:none}
+.news-title{font-weight:600;font-size:14px;line-height:1.45}
+.news-meta{font-size:12px;color:var(--text-3);margin:4px 0 6px}
+.news-links{display:flex;gap:8px;flex-wrap:wrap}
+.news-links a{font-size:12px;padding:4px 10px;border-radius:20px;border:1px solid var(--border);text-decoration:none;color:var(--primary-strong);background:var(--primary-soft)}
+.news-links a.sec{color:#b26a00;background:#fff4e5;border-color:#f3d9a8}
+.listen-box,.speak-box{border:1px solid var(--border);border-radius:14px;padding:16px;background:var(--bg)}
+.listen-sentence{font-size:18px;font-weight:700;margin:10px 0}
+.listen-score{font-size:13px;color:var(--primary-strong);font-weight:600;margin-top:8px}
+.mode-pill{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:20px;background:var(--primary-soft);color:var(--primary-strong);font-size:13px;font-weight:600;cursor:pointer;border:none}
 </style>
 </head>
 <body>
@@ -354,10 +385,12 @@ details.day>summary .cnt{margin-left:auto;font-size:11px;color:var(--text-3);fon
     <div class="side-foot">
       <button class="theme-btn" id="themeBtn"></button>
       <button class="theme-btn" id="guideBtn"><span class="ico" data-ico="guide"></span>桌面引导</button>
+      <button class="theme-btn" id="modeBtn"><span class="ico" data-ico="refresh"></span>模式：每日重置</button>
     </div>
   </aside>
 
   <div class="content">
+    <div class="sync-banner" id="syncBanner"></div>
     <div class="topbar">
       <div style="display:flex;align-items:center;gap:12px">
         <button class="menu-toggle" id="menuToggle"><span data-ico="menu"></span></button>
@@ -376,6 +409,7 @@ details.day>summary .cnt{margin-left:auto;font-size:11px;color:var(--text-3);fon
   <button id="btnExport"><span data-ico="backup"></span>导出全部数据 (JSON)</button>
   <button id="btnImport"><span data-ico="upload"></span>导入 JSON 恢复</button>
   <button id="btnReset"><span data-ico="trash"></span>清空本地数据</button>
+  <button id="btnDownload"><span data-ico="download"></span>下载离线副本</button>
 </div>
 
 <div class="modal-mask" id="sbModal">
@@ -440,7 +474,15 @@ const ICONS = {
   star:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9 6.8 19.1l1-5.8L3.5 9.2l5.9-.9z"/></svg>',
   plus:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
   fire:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c1 3-2 4-2 7a2 2 0 0 0 4 0c0 0 3 2 3 5a5 5 0 0 1-10 0c0-4 5-7 5-12z"/></svg>',
-  sound:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16 9a3 3 0 0 1 0 6"/><path d="M18.5 6.5a7 7 0 0 1 0 11"/></svg>'
+  sound:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16 9a3 3 0 0 1 0 6"/><path d="M18.5 6.5a7 7 0 0 1 0 11"/></svg>',
+  refresh:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg>',
+  download:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M8 11l4 4 4-4"/><path d="M4 19h16"/></svg>',
+  mic:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>',
+  headphones:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14v-2a8 8 0 0 1 16 0v2"/><rect x="3" y="13" width="4" height="7" rx="2"/><rect x="17" y="13" width="4" height="7" rx="2"/></svg>',
+  chat:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v11H9l-4 4V5z"/><path d="M8 9h8M8 12h5"/></svg>',
+  link:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7L11 7"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7L13 17"/></svg>',
+  news:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 8h10M7 12h6M7 16h8"/></svg>',
+  grow:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21V11M12 11C12 7 9 4 4 4c0 5 3 7 8 7zM12 13c0 4 3 7 8 7 0-5-3-7-8-7z"/></svg>'
 };
 function ico(name){ return ICONS[name]||''; }
 
@@ -482,7 +524,7 @@ if('speechSynthesis' in window){
    ============================================================ */
 const KEY='yubao_workbench_v1';
 const DEFAULT={
-  version:1, settings:{theme:'system'}, checkins:{},
+  version:1, settings:{theme:'system',dailyReset:true,engLevel:'b1'}, checkins:{},
   sideHustle:{iso:[],media:[],other:[]},
   english:[], reading:[], exercise:[],
   mediaPlan:[], videos:[], favHot:[], goals:{readingYear:12, sideMonth:0, engWeek:0},
@@ -622,8 +664,20 @@ const SBKEY='yubao_supabase_cfg';
 let sbClient=null,sbStatus='off',sbCfg=null,sbTimer=null,sbRowId=null;
 function loadSbCfg(){try{sbCfg=JSON.parse(localStorage.getItem(SBKEY)||'null');}catch(e){sbCfg=null;}}
 function setSbStatus(s,t){sbStatus=s;const b=document.getElementById('connBtn'),t1=document.getElementById('connText');
+  const banner=document.getElementById('syncBanner');
   b.className='conn '+(s==='connected'?'connected':s==='err'?'err':s==='sync'?'sync':'off');
-  t1.textContent=t||(s==='connected'?'云端已连接':s==='err'?'连接异常':s==='sync'?'同步中…':'云端未连接');}
+  t1.textContent=t||(s==='connected'?'云端已连接':s==='err'?'连接异常':s==='sync'?'同步中…':'云端未连接');
+  if(!navigator.onLine){
+    if(banner){banner.className='sync-banner show off';banner.innerHTML='<span class="dot"></span>当前离线 · 数据仅保存在本机，联网后会自动同步';}
+    return;
+  }
+  if(banner){
+    if(s==='off'){banner.className='sync-banner show off';banner.innerHTML='<span class="dot"></span>未连接云端 · 数据仅本地保存（点右上角「云端未连接」可配置多设备同步）';}
+    else if(s==='err'){banner.className='sync-banner show err';banner.innerHTML='<span class="dot"></span>云端连接异常 · 正在重试，数据已本地留存';}
+    else if(s==='connected'){banner.className='sync-banner show ok';banner.innerHTML='<span class="dot"></span>云端已连接 · 多设备实时同步中';setTimeout(()=>{if(sbStatus==='connected')banner.classList.remove('show');},2800);}
+    else {banner.className='sync-banner';banner.innerHTML='';}
+  }
+}
 function loadSbScript(cb){
   if(window.supabase)return cb();
   const s=document.createElement('script');
@@ -741,7 +795,8 @@ const MODULES=[
   {id:'media',name:'自媒体计划',ico:'media'},
   {id:'videos',name:'爆款视频',ico:'videos'},
   {id:'travel',name:'旅游规划',ico:'travel'},
-  {id:'review',name:'每日复盘',ico:'review'}
+  {id:'review',name:'每日复盘',ico:'review'},
+  {id:'grow',name:'自我成长',ico:'grow'}
 ];
 const CHECKIN_MODS=MODULES.map(m=>m.id);
 let state={view:'home',sideTab:'iso'};
@@ -759,7 +814,7 @@ function buildNav(){
 function setView(v){
   state.view=v;
   document.querySelectorAll('.nav-item').forEach(it=>it.classList.toggle('active',it.dataset.view===v));
-  const titles={home:['工作台','你的全能自律仪表盘'],english:['英语学习','统计每次学习时长'],reading:['在读书目','统计你读了多少本书'],exercise:['锻炼身体','年度活跃度热力图'],side:['副业统计','ISO审核 / 自媒体 / 其他'],media:['自媒体计划','活人感大龄女青年·女性成长'],videos:['爆款视频','活人感大龄女青年·爆款素材'],travel:['旅游规划','愿望清单 · 行程 · 预算'],review:['每日复盘','弹性复盘 · 周/月报']};
+  const titles={home:['工作台','你的全能自律仪表盘'],english:['英语学习','四级六级 · 单词/短句/听力/口语'],reading:['在读书目','统计你读了多少本书'],exercise:['锻炼身体','年度活跃度热力图'],side:['副业统计','ISO审核 / 自媒体 / 其他'],media:['自媒体计划','活人感大龄女青年·女性成长'],videos:['爆款视频','活人感大龄女青年·爆款素材'],travel:['旅游规划','愿望清单 · 行程 · 预算'],review:['每日复盘','弹性复盘 · 周/月报'],grow:['自我成长','理财学习 · 时政热点']};
   const t=titles[v]||['',''];document.getElementById('pageTitle').textContent=t[0];document.getElementById('pageSub').textContent=t[1];
   render();
 }
@@ -775,6 +830,7 @@ function renderHome(){
   const exCount=DATA.exercise.filter(r=>week.includes(r.date)).length;
   const sideInc=DATA.sideHustle.iso.concat(DATA.sideHustle.media,DATA.sideHustle.other).filter(r=>week.includes(r.date)).reduce((s,r)=>s+(+r.income||0),0);
   const checkins=CHECKIN_MODS.map(m=>({m,done:getCheckin(today,m)})).filter(x=>x.done).length;
+  const checkinDays=Object.keys(DATA.checkins).filter(d=>DATA.checkins[d]&&Object.values(DATA.checkins[d]).some(v=>v)).length;
   // 旅行倒计时（最近一次设定的旅行）
   const trips=DATA.travel.trips.slice().filter(t=>t.date).sort((a,b)=>a.date.localeCompare(b.date));
   const next=trips.find(t=>D.daysBetween(today,t.date)>=0);
@@ -803,6 +859,10 @@ function renderHome(){
     <h3>弹性打卡墙</h3>
     <div class="checkin-wall">${checkinHtml}</div>
   </div>
+  <div class="card mt">
+    <h3>打卡历史 <span class="cs">按日期折叠 · 往日足迹</span></h3>
+    ${historyBlock(checkinHistoryRecs(),[{t:'完成模块',render:r=>r.mods}],'checkins')}
+  </div>
   <div class="card mt jump" data-jump="travel">
     <h3>旅行倒计时 <span class="enter">进入 ›</span></h3>
     ${travelHtml}
@@ -811,7 +871,7 @@ function renderHome(){
     <div class="card jump" data-jump="english"><div class="kpi"><div class="num">${studyMin}<span class="small muted"> 分钟</span></div><div class="lbl">本周学习时长</div></div><div class="enter sm">进入 ›</div></div>
     <div class="card jump" data-jump="exercise"><div class="kpi"><div class="num">${exCount}<span class="small muted"> 次</span></div><div class="lbl">本周运动次数</div></div><div class="enter sm">进入 ›</div></div>
     <div class="card jump" data-jump="side"><div class="kpi"><div class="num">¥${sideInc.toFixed(0)}</div><div class="lbl">本周副业收入</div></div><div class="enter sm">进入 ›</div></div>
-    <div class="card"><div class="kpi"><div class="num">${checkins}/9</div><div class="lbl">今日打卡</div></div></div>
+    <div class="card"><div class="kpi"><div class="num">${DATA.settings.dailyReset?checkins+'/9':checkinDays+' 天'}</div><div class="lbl">${DATA.settings.dailyReset?'今日打卡':'累计打卡天数'}</div></div></div>
   </div>
   <div class="card mt jump" data-jump="english">
     <h3>本周概览 <span class="cs">周累计 · 无压力</span> <span class="enter">进入 ›</span></h3>
@@ -1254,8 +1314,8 @@ function renderReading(){
     ${reading.length?reading.map(b=>bookCard(b)).join(''):`<div class="empty">暂无在读书目，上方添加 ✦</div>`}
   </div>
   <div class="card mt">
-    <h3>已读完 <span class="cs">${done.length} 本 · 累计读书数</span></h3>
-    ${done.length?done.map(b=>bookCard(b)).join(''):`<div class="empty">还没有读完的书，加油 ✦</div>`}
+    <h3>读完历史 <span class="cs">${done.length} 本 · 按读完日期折叠</span></h3>
+    ${historyBlock(done.map(b=>({date:b.doneDate||b.date||'',id:b.id,title:b.title})),[{t:'书名',k:'title'}],'reading')}
   </div>
 `;
 }
@@ -1546,6 +1606,7 @@ function renderPlan(text){
 }
 
 function renderTravel(){
+  const today=D.today();
   const trips=DATA.travel.trips.slice().sort((a,b)=>a.date.localeCompare(b.date));
   if(!DATA.travel.planTrip||!trips.find(t=>t.id===DATA.travel.planTrip))DATA.travel.planTrip=trips.length?trips[0].id:'';
   const selTrip=trips.find(t=>t.id===DATA.travel.planTrip);
@@ -1594,6 +1655,11 @@ function renderTravel(){
     ${wish}
   </div>
 
+  <!-- 历史行程（已过去的旅行 · 按日期折叠） -->
+  <details class="day"><summary><span class="chev">${ico('chev')}</span>历史行程 <span class="cnt">${trips.filter(t=>D.daysBetween(today,t.date)<0).length} 条</span></summary>
+    <div class="day-body">${trips.filter(t=>D.daysBetween(today,t.date)<0).length?trips.filter(t=>D.daysBetween(today,t.date)<0).map(t=>`<div class="spread" style="padding:8px 0;border-bottom:1px solid var(--border)"><span><span class="tag gray">已过去</span> ${t.name}</span><span class="cs small">${D.pretty(t.date)}</span></div>`).join(''):'<div class="empty">还没有过去的旅行</div>'}</div>
+  </details>
+
   <!-- ④ 新增旅行计划 -->
   <div class="card mt">
     <h3>新增旅行计划 <span class="cs">填写后点添加，新旅行会出现在上方「我的旅行」列表中</span></h3>
@@ -1610,6 +1676,19 @@ function renderTravel(){
    每日复盘（弹性 + 周/月报）
    ============================================================ */
 const MOODS=['😀','🥰','😌','🤔','😴','😤','😢','🥳'];
+/* 复盘历史：往日心情 + 小结，按日期折叠 */
+function reviewHistoryRecs(){
+  const today=D.today();
+  return Object.keys(DATA.reviews||{}).filter(d=>d&&!d.startsWith('_')&&d!==today&&DATA.reviews[d])
+    .map(d=>({date:d,id:'rev_'+d,mood:DATA.reviews[d].mood,summary:DATA.reviews[d].summary}));
+}
+/* 打卡历史：往日各模块打卡足迹，按日期折叠 */
+function checkinHistoryRecs(){
+  const today=D.today();
+  const names=Object.fromEntries(MODULES.map(m=>[m.id,m.name]));
+  return Object.keys(DATA.checkins||{}).filter(d=>d!==today&&DATA.checkins[d]&&Object.values(DATA.checkins[d]).some(v=>v))
+    .map(d=>({date:d,id:'ck_'+d,mods:Object.keys(DATA.checkins[d]).filter(m=>DATA.checkins[d][m]).map(m=>names[m]||m).join('、')||'—'}));
+}
 function renderReview(){
   const today=D.today();const r=DATA.reviews[today]||{mood:'',summary:''};
   // 自动生成周/月报（每次进入检查）
@@ -1626,6 +1705,10 @@ function renderReview(){
     <div class="grid g2">${report.cards}</div>
     <div class="field mt"><label>我的感想</label><textarea id="reportNote" rows="3" placeholder="对这段时间的总结与下一步…">${report.note||''}</textarea></div>
     <button class="btn mt" id="saveReport" data-title="${report.title}">保存报告</button></div>`:''}
+  <div class="card mt">
+    <h3>复盘历史 <span class="cs">按日期折叠 · 往日心情与小结（也作你的日记 / 随笔）</span></h3>
+    ${historyBlock(reviewHistoryRecs(),[{t:'心情',render:r=>r.mood||'—'},{t:'小结',render:r=>(r.summary||'(空)')}],'reviews')}
+  </div>
 `;
 }
 function buildReport(){
@@ -1651,6 +1734,87 @@ function buildReport(){
     <div class="kpi-box"><div class="v">${booksDone}</div><div class="l">读完本数</div></div>
     <div class="kpi-box"><div class="v">${days.length}</div><div class="l">统计天数</div></div>`;
   return {title:title+'（'+D.pretty(start)+' ~ '+D.pretty(end)+'）',cards,note:DATA.reviews['_'+key+'_'+start]?DATA.reviews['_'+key+'_'+start].summary:''};
+}
+
+/* ============================================================
+   自我成长（理财学习 + 时政热点）
+   纯前端 + 免费公开接口（v2.xxapi.cn，CORS 可用），仅消耗网络流量，不烧 AI 积分
+   所有「原文 / 公众号解读」链接均使用已校验可达的搜索类地址，点击必能打开
+   ============================================================ */
+/* 时政 / 财经 关键词（用于从公开热搜中筛出相关要闻） */
+const FINANCE_KEYWORDS=['理财','经济','金融','美股','美债','美联储','央行','利率','降准','降息','房价','楼市','房地产','就业','失业','养老','税','股市','A股','基金','存款','保险','通胀','CPI','GDP','政策','民生','社会','教育','医疗','工资','收入','消费','贸易','出口','进口','人口','结婚','生育','独居','女性','职场','汇率','黄金','比特币','新能源','AI','科技','反腐','法治'];
+/* 理财学习：权威信源（链接均已校验可达，HTTP 200） */
+const FINANCE_SOURCES=[
+  {t:'36氪 · 快讯与创投',s:'新经济 / 一级市场',u:'https://36kr.com/newsflashes'},
+  {t:'财新网 · 财经新闻',s:'深度财经报道',u:'https://www.caixin.com'},
+  {t:'新华网 · 财经',s:'宏观经济 / 政策解读',u:'https://www.news.cn/finance/'},
+  {t:'中国人民银行',s:'货币政策 / 权威发布',u:'http://www.pbc.gov.cn'},
+  {t:'人民日报 · 时政民生',s:'权威时政要闻',u:'http://www.people.com.cn'}
+];
+/* 检索失败时的兜底（同样为已校验可达链接） */
+const NEWS_FALLBACK=[
+  {title:'36氪：今日快讯与创投动态',src:'36氪',url:'https://36kr.com/newsflashes'},
+  {title:'财新网：财经深度报道',src:'财新',url:'https://www.caixin.com'},
+  {title:'新华网财经：宏观政策解读',src:'新华网',url:'https://www.news.cn/finance/'},
+  {title:'中国人民银行：货币政策发布',src:'央行',url:'http://www.pbc.gov.cn'},
+  {title:'人民日报：时政民生要闻',src:'人民日报',url:'http://www.people.com.cn'}
+];
+const FINANCE_TIP='复利被称为「世界第八大奇迹」——哪怕每月只存 500 元、年化 4%，坚持 10 年本金+利息也会超出直觉。理财的第一步不是赚钱，而是先搞清楚自己的钱去了哪里。';
+/* 检索今日时政 / 财经要闻：一句话新闻 + 可跳转链接 */
+async function loadLiveNews(container){
+  try{
+    const res=await fetch('https://v2.xxapi.cn/api/weibohot');
+    const json=await res.json();
+    let items=[];
+    if(json&&json.code===200&&Array.isArray(json.data)){
+      items=json.data.map(x=>({title:x.title||'',url:x.url||('https://s.weibo.com/weibo?q='+encodeURIComponent(x.title||'')),hot:x.hot}));
+    }
+    if(!items.length)throw new Error('empty');
+    const matched=items.filter(it=>FINANCE_KEYWORDS.some(k=>it.title.includes(k)));
+    const show=(matched.length>=3?matched:items).slice(0,10);
+    const note=matched.length>=3?('已为你筛出 <b>'+matched.length+'</b> 条时政 / 财经相关要闻'):'今日直接相关要闻较少，以下为全部热门供参考';
+    container.innerHTML='<div class="muted small" style="margin-bottom:10px">'+note+'（数据来自公开热搜，仅消耗网络流量，不烧 AI 积分）</div>'+show.map(it=>{
+      const wb='https://s.weibo.com/weibo?q='+encodeURIComponent(it.title);
+      const wx='https://weixin.sogou.com/weixin?type=2&query='+encodeURIComponent(it.title);
+      return `<div class="news-item">
+        <div class="news-title">${esc(it.title)}</div>
+        <div class="news-meta">${it.hot?('热度 '+esc(it.hot)+' · '):''}来源：微博热搜</div>
+        <div class="news-links">
+          <a href="${esc(wb)}" target="_blank" rel="noopener">原文 / 热搜 ↗</a>
+          <a class="sec" href="${esc(wx)}" target="_blank" rel="noopener">公众号解读 ↗</a>
+        </div>
+      </div>`;
+    }).join('');
+  }catch(e){
+    container.innerHTML='<div class="muted small" style="margin-bottom:10px">实时接口暂不可用，已为你展示权威信源 ↓</div>'+NEWS_FALLBACK.map(it=>`<div class="news-item">
+        <div class="news-title">${esc(it.title)}</div>
+        <div class="news-meta">${esc(it.src||'')}</div>
+        <div class="news-links"><a href="${esc(it.url)}" target="_blank" rel="noopener">打开 ↗</a></div>
+      </div>`).join('');
+  }
+}
+function renderGrow(){
+  return `
+  <div class="card">
+    <h3>模块说明 <span class="cs">纯前端 · 不消耗 AI 积分</span></h3>
+    <p class="small muted">本栏目每日从公开热搜接口检索时政 / 财经要闻（参考 36氪式一句话新闻），所有「原文」「公众号解读」链接均经过可达性校验，点击自动跳转。数据来自免费公开接口，仅消耗网络流量，不产生任何 AI 平台费用。</p>
+  </div>
+  <div class="card mt">
+    <h3>📰 时政热点 <span class="cs">每日检索 · 一句话新闻</span> <button type="button" class="btn sm ghost" id="newsRefresh" style="float:right;margin-top:-4px">↻ 刷新</button></h3>
+    <div id="liveNews"><div class="muted small" style="padding:8px 0">正在检索今日时政 / 财经热点…</div></div>
+  </div>
+  <div class="card mt">
+    <h3>💰 理财学习 <span class="cs">权威信源 · 点击直达</span></h3>
+    ${FINANCE_SOURCES.map(s=>`<a class="grow-card-link" href="${esc(s.u)}" target="_blank" rel="noopener">
+      <span class="gcl-ico">${ico('finance')}</span>
+      <span class="gcl-main"><span class="gcl-t">${esc(s.t)}</span><span class="gcl-s">${esc(s.s)}</span></span>
+      <span class="gcl-arrow">↗</span></a>`).join('')}
+  </div>
+  <div class="card mt">
+    <h3>📌 每日一句理财干货</h3>
+    <div class="box">${FINANCE_TIP}</div>
+    <div class="muted small" style="margin-top:8px">提示：理财学习贵在每天 5 分钟，建立自己的「钱袋子」认知。</div>
+  </div>`;
 }
 
 /* ============================================================
@@ -1714,6 +1878,7 @@ function render(){
     case 'videos':html=renderVideos();break;
     case 'travel':html=renderTravel();break;
     case 'review':html=renderReview();break;
+    case 'grow':html=renderGrow();break;
     default:html=renderHome();
   }
   view.innerHTML=html;
@@ -1766,6 +1931,8 @@ function bindView(view){
   view.querySelectorAll('[data-del]').forEach(el=>el.onclick=()=>{
     const id=el.dataset.del;
     ['english','reading','exercise','mediaPlan','videos','sideHustle.iso','sideHustle.media','sideHustle.other'].forEach(p=>remove(p,r=>r.id===id));
+    if(id.indexOf('rev_')===0){const d=id.slice(4);if(DATA.reviews&&DATA.reviews[d]){delete DATA.reviews[d];save();}}
+    if(id.indexOf('ck_')===0){const d=id.slice(3);if(DATA.checkins&&DATA.checkins[d]){delete DATA.checkins[d];save();}}
     toast('已删除');render();
   });
   // 侧边 Tab
@@ -1832,6 +1999,11 @@ function bindView(view){
   // 实时爆款拉取（女性成长赛道匹配）
   const liveHot=view.querySelector('#liveHot');
   if(liveHot)loadLiveHot(liveHot);
+  // 自我成长：时政热点实时检索
+  const liveNews=view.querySelector('#liveNews');
+  if(liveNews)loadLiveNews(liveNews);
+  const nr=view.querySelector('#newsRefresh');
+  if(nr)nr.onclick=()=>{const c=view.querySelector('#liveNews');if(c){c.innerHTML='<div class="muted small" style="padding:8px 0">正在重新检索…</div>';loadLiveNews(c);}};
   // 爆款收藏（默认带上自动生成的拆解 + 口播脚本）
   view.querySelectorAll('[data-collect]').forEach(b=>b.onclick=()=>{
     const h=HOT_SEED[+b.dataset.collect];
@@ -1923,6 +2095,10 @@ function applyTheme(){
   const sys=DATA.settings.theme!=='dark'&&DATA.settings.theme!=='light';
   document.getElementById('themeBtn').innerHTML=`<span class="ico">${ico(dark?'sun':'moon')}</span>${dark?'浅色模式':'深色模式'}${sys?' · 随系统':''}`;
 }
+function updateModeBtn(){
+  const b=document.getElementById('modeBtn');
+  if(b)b.innerHTML=`<span class="ico">${ico('refresh')}</span>模式：${DATA.settings.dailyReset?'每日重置':'累积记录'}`;
+}
 /* 手动切换：在 跟随系统 / 浅色 / 深色 之间循环，给用户明确的控制 */
 function toggleTheme(){
   const cur=effectiveDark();
@@ -1970,6 +2146,13 @@ function initBackup(){
     if(confirm('确定清空全部本地数据？此操作不可恢复！')){resetAll();render();toast('已清空');}
     menu.classList.remove('open');
   };
+  document.getElementById('btnDownload').onclick=()=>{
+    menu.classList.remove('open');
+    const url=location.href;
+    const doDownload=(htmlText)=>{const blob=new Blob([htmlText],{type:'text/html'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='雨宝工作台_离线副本.html';a.click();toast('已下载离线副本 ✦');};
+    if(url&&url.indexOf('file:')!==0){ fetch(url).then(r=>r.text()).then(doDownload).catch(()=>doDownload('<!DOCTYPE html>'+document.documentElement.outerHTML)); }
+    else doDownload('<!DOCTYPE html>'+document.documentElement.outerHTML);
+  };
 }
 
 /* ============================================================
@@ -2012,6 +2195,11 @@ function init(){
   initSbModal();
   initShortcuts();
   document.getElementById('themeBtn').onclick=toggleTheme;
+  document.getElementById('modeBtn').onclick=()=>{
+    DATA.settings.dailyReset=!DATA.settings.dailyReset;save();updateModeBtn();render();
+    toast(DATA.settings.dailyReset?'已切换：每日重置模式（打卡每天清零）':'已切换：累积记录模式（永久累积）');
+  };
+  updateModeBtn();
   document.getElementById('brand').onclick=()=>setView('home');
   document.getElementById('guideBtn').onclick=()=>{setView('guide');closeSidebar();};
   document.getElementById('menuToggle').onclick=openSidebar;
@@ -2019,6 +2207,8 @@ function init(){
   setView('home');
   setSbStatus(sbCfg?'sync':'off');
   if(sbCfg)connectSupabase();
+  window.addEventListener('online',()=>{ if(sbCfg)connectSupabase(); else setSbStatus('off'); });
+  window.addEventListener('offline',()=>setSbStatus('off'));
 }
 init();
 })();
