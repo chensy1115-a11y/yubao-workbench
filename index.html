@@ -138,6 +138,14 @@ button{font-family:inherit}
 body.home-dragging{overscroll-behavior:none;user-select:none}
 body.home-dragging #view [data-block]{touch-action:none}
 #view [data-block].drag-clone{box-shadow:0 14px 34px rgba(60,120,40,.28);border-radius:var(--radius);background:var(--card)}
+/* 首页数据备份卡片 */
+.backup-card{background:linear-gradient(180deg,var(--primary-soft),var(--card))}
+.backup-card h3{display:flex;align-items:center;gap:8px}
+.backup-card h3 svg{width:22px;height:22px;flex:0 0 22px}
+.backup-actions{display:flex;gap:10px;flex-wrap:wrap}
+.backup-actions .btn{display:inline-flex;align-items:center;gap:8px}
+.backup-actions .btn svg{width:18px;height:18px;flex:0 0 18px}
+@media(max-width:860px){.backup-actions{flex-direction:column}.backup-actions .btn{width:100%;justify-content:center}}
 /* 旅游规划：紧凑行内列表 */
 .trip-list{display:flex;flex-direction:column;gap:6px;margin-bottom:4px}
 .trip-row{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:var(--bg);cursor:pointer;transition:border-color .2s}
@@ -1021,6 +1029,14 @@ function renderHome(){
       <div class="sm-item"><div class="sm-num">${monthExCount}<span class="sm-unit"> 次</span></div><div class="sm-lbl">运动次数</div></div>
       <div class="sm-item"><div class="sm-num">${monthBooks}<span class="sm-unit"> 本</span></div><div class="sm-lbl">读完书目</div></div>
       <div class="sm-item"><div class="sm-num">¥${monthSideInc.toFixed(0)}</div><div class="sm-lbl">副业收入</div></div>
+    </div>
+  </div>
+  <div class="card mt backup-card" data-block="backup">
+    <h3>${ico('backup')} 数据备份 <span class="cs">无网络 / 无 VPN 也能用</span></h3>
+    <p class="small muted" style="margin-bottom:12px">云端同步依赖网络，建议定期导出一份 JSON 作为本地保险。换设备、或同步失败时用「导入」一键恢复。</p>
+    <div class="backup-actions">
+      <button class="btn" id="homeExport">${ico('backup')} 导出全部数据 (JSON)</button>
+      <button class="btn ghost" id="homeImport">${ico('upload')} 导入 JSON 恢复</button>
     </div>
   </div>`;
 }
@@ -5390,6 +5406,9 @@ function bindView(view){
     const note=view.querySelector('#reportNote').value;const t=saveRep.dataset.title||'复盘报告';
     DATA.reviews['_last_report']={summary:note,title:t};save();toast('报告已保存');
   };
+  // 首页数据备份入口（无网络 / 无 VPN 也能用的兜底）
+  const he=view.querySelector('#homeExport'); if(he)he.onclick=doExport;
+  const hi=view.querySelector('#homeImport'); if(hi)hi.onclick=doImport;
 }
 
 /* ============================================================
@@ -5451,16 +5470,18 @@ function closeSidebar(){document.getElementById('sidebar').classList.remove('ope
 /* ============================================================
    备份菜单
    ============================================================ */
+function doExport(){
+  const blob=new Blob([exportJSON()],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='雨宝工作台数据_'+D.today()+'.json';a.click();
+  toast('已导出 JSON');
+}
+function doImport(){ document.getElementById('fileInput').click(); }
 function initBackup(){
   const fab=document.getElementById('fab'),menu=document.getElementById('fabMenu');
   fab.onclick=()=>menu.classList.toggle('open');
   document.addEventListener('click',e=>{if(!fab.contains(e.target)&&!menu.contains(e.target))menu.classList.remove('open');});
-  document.getElementById('btnExport').onclick=()=>{
-    const blob=new Blob([exportJSON()],{type:'application/json'});
-    const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='雨宝工作台数据_'+D.today()+'.json';a.click();
-    menu.classList.remove('open');toast('已导出 JSON');
-  };
-  document.getElementById('btnImport').onclick=()=>{document.getElementById('fileInput').click();menu.classList.remove('open');};
+  document.getElementById('btnExport').onclick=()=>{doExport();menu.classList.remove('open');};
+  document.getElementById('btnImport').onclick=()=>{doImport();menu.classList.remove('open');};
   document.getElementById('fileInput').onchange=e=>{
     const f=e.target.files[0];if(!f)return;const rd=new FileReader();
     rd.onload=()=>{try{importJSON(rd.result);render();toast('数据已恢复');}catch(err){toast('文件格式错误');}};
