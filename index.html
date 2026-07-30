@@ -109,15 +109,16 @@ button{font-family:inherit}
 .kpi{display:flex;flex-direction:column;gap:2px}
 .kpi .num{font-size:26px;font-weight:800;color:var(--primary-strong);font-variant-numeric:tabular-nums}
 .kpi .lbl{font-size:12px;color:var(--text-3)}
-.checkin-wall{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
-.ci{display:flex;align-items:center;gap:10px;padding:12px;border:1px solid var(--border);border-radius:var(--radius-sm);
+.checkin-wall{display:grid;grid-template-columns:1fr;gap:12px}
+.ci{display:flex;align-items:center;gap:12px;padding:14px 16px;border:1px solid var(--border);border-radius:var(--radius-sm);
   cursor:pointer;transition:all .15s;background:var(--card)}
-.ci:hover{border-color:var(--primary)} .ci .ci-ico{width:28px;height:28px;flex:0 0 28px;display:flex;align-items:center;justify-content:center;color:var(--text-3)}
-.ci .ci-ico svg{width:26px;height:26px} .ci .ci-n{font-size:13px;font-weight:600}
-.ci .ci-inc{margin-left:auto;font-size:12px;font-weight:700;color:var(--primary-strong)}
-.ci .ci-st{margin-left:auto;font-size:11px;color:var(--text-3)}
+.ci:hover{border-color:var(--primary)} .ci .ci-ico{width:30px;height:30px;flex:0 0 30px;display:flex;align-items:center;justify-content:center;color:var(--primary)}
+.ci .ci-ico svg{width:26px;height:26px} .ci .ci-n{font-size:15px;font-weight:700;flex:1}
+.ci .ci-right{display:flex;align-items:center;gap:12px;margin-left:auto}
+.ci .ci-inc{font-size:14px;font-weight:800;color:var(--primary-strong)}
+.ci .ci-st{font-size:12px;color:var(--text-3);min-width:48px;text-align:right}
 .ci.done{background:var(--primary-soft);border-color:var(--primary)} .ci.done .ci-st{color:var(--primary-strong);font-weight:700}
-.badge{width:22px;height:22px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;margin-left:auto}
+.badge{width:22px;height:22px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center}
 .ci.done .badge{background:var(--primary);border-color:var(--primary)} .ci.done .badge svg{width:13px;height:13px;color:#fff}
 .countdown{background:linear-gradient(135deg,var(--primary),#8be05a);color:#fff;border-radius:var(--radius);padding:20px;position:relative;overflow:hidden}
 .summary-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
@@ -168,6 +169,7 @@ textarea{resize:vertical;width:100%} input[type=number]{width:120px}
 .table tr:hover td{background:var(--bg)}
 .table .num{font-variant-numeric:tabular-nums;text-align:right}
 .tag{display:inline-block;font-size:11px;padding:2px 9px;border-radius:20px;background:var(--primary-soft);color:var(--primary-strong);font-weight:600}
+.tag svg{width:13px;height:13px;vertical-align:-2px;margin-right:3px}
 .tag.warn{background:var(--accent-soft);color:var(--accent)} .tag.gray{background:var(--bg);color:var(--text-3)}
 .empty{text-align:center;color:var(--text-3);padding:26px;font-size:13px}
 /* 行程规划按天展示 */
@@ -224,6 +226,16 @@ details.day>summary .cnt{margin-left:auto;font-size:11px;color:var(--text-3);fon
 .mood{font-size:26px;width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;
   cursor:pointer;border:2px solid var(--border);background:var(--bg);transition:all .15s}
 .mood.sel{border-color:var(--primary);background:var(--primary-soft);transform:scale(1.08)}
+.mood svg{width:28px;height:28px}
+/* 标题 / 要点 / 热链 内联 SVG 尺寸 */
+h3 svg{width:18px;height:18px;vertical-align:-3px;margin-right:5px}
+.nh-icon{display:inline-flex;align-items:center;color:var(--primary-strong)}
+.nh-icon svg{width:16px;height:16px;vertical-align:-3px;margin-right:5px}
+.hl-icon{display:inline-flex;align-items:center}
+.hl-icon svg{width:18px;height:18px}
+.word-paw svg{width:22px;height:22px}
+.btn svg{width:15px;height:15px;vertical-align:-2px;margin-right:4px}
+.btn.ghost svg{margin-right:2px}
 
 /* 悬浮备份 */
 .fab{position:fixed;right:24px;bottom:24px;z-index:60;width:56px;height:56px;border-radius:50%;border:none;cursor:pointer;
@@ -276,7 +288,7 @@ details.day>summary .cnt{margin-left:auto;font-size:11px;color:var(--text-3);fon
     border:1px solid var(--border);background:var(--card);cursor:pointer;color:var(--text-2)}
   .menu-toggle svg{width:20px;height:20px}
   .g2,.g3,.g4,.kanban{grid-template-columns:1fr}
-  .checkin-wall{grid-template-columns:repeat(2,1fr)}
+  .checkin-wall{grid-template-columns:1fr}
   .summary-grid{grid-template-columns:repeat(2,1fr)}
   .view{padding:16px}
   .fr .field{flex:1 1 100%;min-width:0!important}
@@ -373,6 +385,7 @@ details.day>summary .cnt{margin-left:auto;font-size:11px;color:var(--text-3);fon
 .grow-card-link .gcl-t{font-weight:700;font-size:14px}
 .grow-card-link .gcl-s{font-size:12px;color:var(--text-3);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .grow-card-link .gcl-arrow{color:var(--text-3);flex:0 0 auto}
+.grow-card-link .gcl-arrow svg{width:16px;height:16px}
 /* ---- 自我成长：结构化新闻卡片（参考晓的成长工作台风格） ---- */
 .news-card{border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:14px;background:var(--card);transition:border-color .2s,box-shadow .2s}
 .news-card:hover{border-color:var(--primary);box-shadow:var(--shadow)}
@@ -513,7 +526,15 @@ const ICONS = {
   chat:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v11H9l-4 4V5z"/><path d="M8 9h8M8 12h5"/></svg>',
   link:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7L11 7"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7L13 17"/></svg>',
   news:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 8h10M7 12h6M7 16h8"/></svg>',
-  grow:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21V11M12 11C12 7 9 4 4 4c0 5 3 7 8 7zM12 13c0 4 3 7 8 7 0-5-3-7-8-7z"/></svg>'
+  grow:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21V11M12 11C12 7 9 4 4 4c0 5 3 7 8 7zM12 13c0 4 3 7 8 7 0-5-3-7-8-7z"/></svg>',
+  paw:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6.5" cy="10" r="1.6"/><circle cx="10" cy="7" r="1.6"/><circle cx="14" cy="7" r="1.6"/><circle cx="17.5" cy="10" r="1.6"/><path d="M12 12c-3 0-5 2-5 4a5 5 0 0 0 10 0c0-2-2-4-5-4z"/></svg>',
+  bulb:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2V17h5v-1.1c0-.8.4-1.5 1-2A6 6 0 0 0 12 3z"/></svg>',
+  pencil:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M14 5l4 4"/></svg>',
+  luggage:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="7" width="12" height="13" rx="2"/><path d="M9 7V4h6v3M9 11v6M15 11v6"/></svg>',
+  notebook:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h11a2 2 0 0 1 2 2v14H7a2 2 0 0 1-2-2z"/><path d="M5 4v14M9 8h6M9 12h6"/></svg>',
+  play:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M10 9l5 3-5 3z" fill="currentColor" stroke="none"/></svg>',
+  globe:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18 14 14 0 0 1 0-18z"/></svg>',
+  x:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>'
 };
 function ico(name){ return ICONS[name]||''; }
 
@@ -891,9 +912,11 @@ function renderHome(){
     const done=getCheckin(today,id);
     const extra=id==='side'?`<span class="ci-inc">¥${monthSideInc.toFixed(0)}</span>`:'';
     return `<div class="ci ${done?'done':''}" data-check="${id}">
-      <span class="ci-ico">${ico(m.ico)}</span><span class="ci-n">${m.name}</span>${extra}
-      <span class="badge">${done?ico('check'):''}</span>
-      <span class="ci-st">${done?'已完成':'待完成'}</span></div>`;
+      <span class="ci-ico">${ico(m.ico)}</span><span class="ci-n">${m.name}</span>
+      <span class="ci-right">${extra}
+        <span class="ci-st">${done?'已完成':'待完成'}</span>
+        <span class="badge">${done?ico('check'):''}</span>
+      </span></div>`;
   }).join('');
 
   const travelHtml = next?`<div class="countdown"><div class="plane">${ico('plane')}</div>
@@ -4349,21 +4372,21 @@ function renderDailyWords(){
         <div class="word-w">${w.w} <span class="word-pos">${w.pos}</span> <span class="word-ph">${w.ph||''}</span></div>
         <div class="word-meaning">${w.cn}</div>
         <div class="word-ex">${w.ex}<div class="word-zh">${w.zh}</div></div>
-        <div class="word-acts"><span class="word-wrong ${isW?'on':''}" data-wrong="${w.gi}">${isW?'❌ 已在错词本':'没记住？点这'}</span></div>
+        <div class="word-acts"><span class="word-wrong ${isW?'on':''}" data-wrong="${w.gi}">${isW?'已加入错词本':'没记住？点这'}</span></div>
       </div>
-      <button type="button" class="word-paw ${isL?'done':''}" data-wordtoggle="${w.gi}" title="${isL?'已掌握':'学会了点这里'}" aria-label="打卡">${isL?'':'🐾'}</button>
+      <button type="button" class="word-paw ${isL?'done':''}" data-wordtoggle="${w.gi}" title="${isL?'已掌握':'学会了点这里'}" aria-label="打卡">${isL?'':ico('paw')}</button>
     </div>`;
   }).join('');
   return `<div class="card daily-words">
-    <div class="dw-header">📚 <span class="dw-title">每日单词</span></div>
-    <div class="dw-tag">先跟读，学会了点小猫爪 🐾</div>
+    <div class="dw-header">${ico('reading')}<span class="dw-title">每日单词</span></div>
+    <div class="dw-tag">先跟读，学会了点右侧爪印</div>
     <div class="dw-gradient-bar"><div class="dw-fill" style="width:${pct}%"></div></div>
-    <div class="dw-counter">已学会 <b>${learned}/${total}</b> &nbsp; 🔥 连续打卡 <b>${streak}</b> 天</div>
+    <div class="dw-counter">已学会 <b>${learned}/${total}</b> &nbsp; ${ico('fire')} 连续打卡 <b>${streak}</b> 天</div>
     <div class="word-grid">${cards}</div>
     ${allDone
-      ? `<div class="dw-done">🎉 今日 ${total} 词全部掌握，打卡完成！明天见～</div>`
+      ? `<div class="dw-done">今日 ${total} 词全部掌握，打卡完成！明天见～</div>`
       : `<button type="button" class="btn sm dw-all" data-daycheck>一键完成今日打卡（全部标记已会）</button>`}
-    <div class="muted small" style="margin-top:10px;color:#90A4AE">点击 🔊 听美式发音；点击 🐾 标记「已会」；记不住就点「没记住」收进错词本。</div>
+    <div class="muted small" style="margin-top:10px;color:#90A4AE">点击喇叭图标听美式发音；点击爪印标记「已会」；记不住就点「没记住」收进错词本。</div>
   </div>`;
 }
 /* 已学单词集合（跨日期去重） */
@@ -4386,9 +4409,9 @@ function renderWrongWords(){
       </div>
       <span class="word-master" data-review-master="${x.gi}">✓ 已掌握</span>
     </div>`).join('')}</div>`
-    : `<div class="empty" style="padding:24px;text-align:center;color:#90A4AE">还没有错词，继续保持 💪</div>`;
+    : `<div class="empty" style="padding:24px;text-align:center;color:#90A4AE">还没有错词，继续保持</div>`;
   return `<div class="card">
-    <h3>📒 错词本 <span class="cs">${items.length} 个待巩固</span></h3>
+    <h3>${ico('notebook')} 错词本 <span class="cs">${items.length} 个待巩固</span></h3>
     ${inner}
   </div>`;
 }
@@ -4400,7 +4423,7 @@ function reviewItems(){
 }
 function renderReviewWords(){
   const items=reviewItems();
-  if(!items.length) return `<div class="card"><h3>🔄 复习打卡</h3><div class="empty" style="padding:24px;text-align:center;color:#90A4AE">先学几天单词，再来复习吧 ✦</div></div>`;
+  if(!items.length) return `<div class="card"><h3>${ico('refresh')} 复习打卡</h3><div class="empty" style="padding:24px;text-align:center;color:#90A4AE">先学几天单词，再来复习吧 ✦</div></div>`;
   const cards=items.map(w=>{
     const gi=B1_WORDS.indexOf(w);
     return `<div class="flip" data-flip="${gi}">
@@ -4420,7 +4443,7 @@ function renderReviewWords(){
     </div>`;
   }).join('');
   return `<div class="card">
-    <h3>🔄 复习打卡 <span class="cs">${items.length} 张 · 看中文回想英文</span></h3>
+    <h3>${ico('refresh')} 复习打卡 <span class="cs">${items.length} 张 · 看中文回想英文</span></h3>
     <div class="flip-grid">${cards}</div>
     <div class="muted small" style="margin-top:10px;color:#90A4AE">点卡片翻面看英文并听发音；「记住了」移出错词本，「还不会」加入错词本。</div>
   </div>`;
@@ -4499,7 +4522,7 @@ function bookCard(b){
     <div class="book-ico">${ico('reading')}</div>
     <div class="book-main"><div class="book-title">${b.title||'(未命名)'}</div><div class="book-meta">${done?'已读完':'在读中'}${b.date?' · 添加于 '+D.pretty(b.date):''}</div></div>
     <div class="book-acts">
-      <span class="tag ${done?'':'primary'}" data-booktoggle="${b.id}">${done?'↩ 改为在读':'✓ 标记读完'}</span>
+      <span class="tag ${done?'':'primary'}" data-booktoggle="${b.id}">${done?ico('refresh')+' 改为在读':ico('check')+' 标记读完'}</span>
       <span class="del" data-del="${b.id}">删除</span>
     </div>
   </div>`;
@@ -4662,7 +4685,7 @@ function toggleFav(item){
   const arr=DATA.favHot||(DATA.favHot=[]);
   const i=arr.findIndex(x=>x.title===item.title&&x.url===item.url);
   if(i>=0){arr.splice(i,1);toast('已取消收藏');}
-  else{arr.push({title:item.title,url:item.url,src:item.src,hot:item.hot,t:D.today()});toast('已收藏 ⭐');}
+  else{arr.push({title:item.title,url:item.url,src:item.src,hot:item.hot,t:D.today()});toast('已收藏');}
   save();render();
 }
 function renderFavHot(){
@@ -4689,7 +4712,7 @@ async function loadLiveHot(container){
     const show=matched.length?matched:items.slice(0,12);
     const note=matched.length?('为你匹配到 <b>'+matched.length+'</b> 条「女性成长·独居·相亲·搞钱」相关爆款'):'今日匹配你赛道的内容较少，以下是全部热门供参考';
     const list=show.slice(0,15);
-    container.innerHTML='<div class="muted small" style="margin-bottom:10px">'+note+'</div>'+list.map((it,idx)=>{const faved=(DATA.favHot||[]).some(f=>f.title===it.title&&f.url===it.url);return '<div class="hot-card"><div class="hot-head"><div style="font-weight:700">'+esc(it.title)+'</div><span class="tag warn">'+it.src+'</span></div><div class="muted small" style="margin:4px 0 8px">热度 '+fmtHot(it.hot)+'</div><div class="fr" style="gap:8px;margin-top:6px"><a class="btn sm" href="'+esc(it.url)+'" target="_blank" rel="noopener">跳转观看 →</a><button class="btn sm ghost fav-btn" data-favidx="'+idx+'">'+(faved?'⭐ 已收藏':'☆ 收藏')+'</button></div></div>';}).join('');
+    container.innerHTML='<div class="muted small" style="margin-bottom:10px">'+note+'</div>'+list.map((it,idx)=>{const faved=(DATA.favHot||[]).some(f=>f.title===it.title&&f.url===it.url);return '<div class="hot-card"><div class="hot-head"><div style="font-weight:700">'+esc(it.title)+'</div><span class="tag warn">'+it.src+'</span></div><div class="muted small" style="margin:4px 0 8px">热度 '+fmtHot(it.hot)+'</div><div class="fr" style="gap:8px;margin-top:6px"><a class="btn sm" href="'+esc(it.url)+'" target="_blank" rel="noopener">跳转观看 →</a><button class="btn sm ghost fav-btn" data-favidx="'+idx+'">'+(faved?ico('star')+' 已收藏':'☆ 收藏')+'</button></div></div>';}).join('');
     container.querySelectorAll('.fav-btn').forEach(b=>b.onclick=()=>{toggleFav(list[+b.dataset.favidx]);});
   }catch(e){
     container.innerHTML='<div class="muted small" style="margin-bottom:10px">实时接口暂不可用，已为你展示往期灵感 ↓</div>'+HOT_SEED.map(h=>'<div class="hot-card"><div class="hot-head"><div style="font-weight:700">'+esc(h.title)+'</div><span class="tag warn">'+h.hot+'</span></div><div class="muted small" style="margin:4px 0 8px">赛道：'+esc(h.src)+'</div><a class="btn sm" href="https://www.douyin.com/search/'+encodeURIComponent(h.title)+'" target="_blank" rel="noopener">搜索相关 →</a></div>').join('');
@@ -4790,7 +4813,7 @@ function renderTravel(){
   const planEditHtml = hasPlan ? '' : `<div class="field" style="margin-bottom:10px"><label>逐日安排（粘贴整段，自动按「第X天」拆分）</label>
       <textarea id="planText" data-plan rows="6" placeholder="例如：&#10;第一天 抵达巴黎，入住左岸酒店，傍晚塞纳河游船&#10;第二天 卢浮宫 · 香榭丽舍 · 凯旋门&#10;第三天 凡尔赛宫一日游">${selTrip?(selTrip.plan||''):''}</textarea></div>`;
   const planPreviewHtml = hasPlan
-    ? `<div id="planPreview">${renderPlan(selTrip.plan)}</div><div style="margin-top:8px;text-align:right"><button class="btn sm ghost" id="planEditBtn">✎ 编辑行程</button></div>`
+    ? `<div id="planPreview">${renderPlan(selTrip.plan)}</div><div style="margin-top:8px;text-align:right"><button class="btn sm ghost" id="planEditBtn">${ico('pencil')} 编辑行程</button></div>`
     : `<div id="planPreview">${selTrip?renderPlan(selTrip.plan):'<div class="empty">请先在上方选择一次旅行</div>'}</div>`;
 
   // 旅行列表（紧凑行内展示）
@@ -4812,7 +4835,7 @@ function renderTravel(){
   return `
   <!-- ═══ 旅游规划 + 行程安排（同框） ═══ -->
   <div class="card">
-    <h3>🧳 旅游规划 <span class="cs">旅行与行程一站式管理</span></h3>
+    <h3>${ico('luggage')} 旅游规划 <span class="cs">旅行与行程一站式管理</span></h3>
 
     <!-- 旅行列表 -->
     <div class="trip-list">${tripsHtml}</div>
@@ -4856,7 +4879,17 @@ function renderTravel(){
 /* ============================================================
    每日复盘（弹性 + 周/月报）
    ============================================================ */
-const MOODS=['😀','🥰','😌','🤔','😴','😤','😢','🥳'];
+const MOODS=[
+ {k:'happy',label:'开心',svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="10" r="1.4" fill="currentColor" stroke="none"/><circle cx="15" cy="10" r="1.4" fill="currentColor" stroke="none"/><path d="M8 14c1.5-2 6.5-2 8 0"/></svg>'},
+ {k:'love',label:'喜欢',svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 9.5c-.9-1.1-2.7-.3-2.7.9 0 1.1 2.7 2.8 2.7 2.8s2.7-1.7 2.7-2.8c0-1.2-1.8-2-2.7-.9z" fill="currentColor" stroke="none"/><path d="M15.5 9.5c-.9-1.1-2.7-.3-2.7.9 0 1.1 2.7 2.8 2.7 2.8s2.7-1.7 2.7-2.8c0-1.2-1.8-2-2.7-.9z" fill="currentColor" stroke="none"/><path d="M8 16c1.5-1.5 6.5-1.5 8 0"/></svg>'},
+ {k:'calm',label:'平静',svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 10h2M14 10h2"/><path d="M9 15c1-1 5-1 6 0"/></svg>'},
+ {k:'think',label:'思考',svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="10" r="1.4" fill="currentColor" stroke="none"/><circle cx="15" cy="10" r="1.4" fill="currentColor" stroke="none"/><path d="M10 15c.6.8 2 .8 2.6 0"/><circle cx="17.5" cy="6.5" r="1"/></svg>'},
+ {k:'sleepy',label:'疲惫',svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 10c1-1 3-1 4 0M12 10c1-1 3-1 4 0"/><path d="M10 15h4"/></svg>'},
+ {k:'angry',label:'生气',svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 9l3 2M17 9l-3 2"/><path d="M8 15c1.5 1.5 6.5 1.5 8 0"/></svg>'},
+ {k:'sad',label:'难过',svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="10" r="1.4" fill="currentColor" stroke="none"/><circle cx="15" cy="10" r="1.4" fill="currentColor" stroke="none"/><path d="M8 14c1.5 2 6.5 2 8 0"/></svg>'},
+ {k:'party',label:'庆祝',svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="10" r="1.4" fill="currentColor" stroke="none"/><circle cx="15" cy="10" r="1.4" fill="currentColor" stroke="none"/><path d="M8 14c1.5-2 6.5-2 8 0"/><path d="M18 4l.9 1.8L21 6.8l-1.6 1.1.5 1.9-1.8-.9-1.8.9.5-1.9L15.4 6.8l2.3-1z" fill="currentColor" stroke="none"/></svg>'}
+];
+const MOOD_LABEL={happy:'开心',love:'喜欢',calm:'平静',think:'思考',sleepy:'疲惫',angry:'生气',sad:'难过',party:'庆祝'};
 /* 复盘历史：往日心情 + 小结，按日期折叠 */
 function reviewHistoryRecs(){
   const today=D.today();
@@ -4878,7 +4911,7 @@ function renderReview(){
   <div class="card">
     <h3>今日复盘 <span class="cs">${D.pretty(today)}</span></h3>
     <div class="field" style="margin-bottom:12px"><label>今天心情</label><div class="moods" id="moods">
-      ${MOODS.map(m=>`<div class="mood ${r.mood===m?'sel':''}" data-mood="${m}">${m}</div>`).join('')}</div></div>
+      ${MOODS.map(m=>`<div class="mood ${r.mood===m.k?'sel':''}" data-mood="${m.k}" title="${m.label}">${m.svg}</div>`).join('')}</div></div>
     <div class="field"><label>今日小结</label><textarea id="reviewSummary" rows="4" placeholder="今天做了什么、感受如何、明天想做什么…">${r.summary||''}</textarea></div>
     <div class="muted small" style="margin-top:8px">输入即时自动保存，关闭后再次打开不会消失 ✦</div>
   </div>
@@ -4888,7 +4921,7 @@ function renderReview(){
     <button class="btn mt" id="saveReport" data-title="${report.title}">保存报告</button></div>`:''}
   <div class="card mt">
     <h3>复盘历史 <span class="cs">按日期折叠 · 往日心情与小结（也作你的日记 / 随笔）</span></h3>
-    ${historyBlock(reviewHistoryRecs(),[{t:'心情',render:r=>r.mood||'—'},{t:'小结',render:r=>(r.summary||'(空)')}],'reviews')}
+    ${historyBlock(reviewHistoryRecs(),[{t:'心情',render:r=>MOOD_LABEL[r.mood]||'—'},{t:'小结',render:r=>(r.summary||'(空)')}],'reviews')}
   </div>
 `;
 }
@@ -4941,6 +4974,19 @@ const NEWS_FALLBACK=[
   {title:'人民日报：时政民生要闻',src:'人民日报',url:'http://www.people.com.cn'}
 ];
 const FINANCE_TIP='复利被称为「世界第八大奇迹」——哪怕每月只存 500 元、年化 4%，坚持 10 年本金+利息也会超出直觉。理财的第一步不是赚钱，而是先搞清楚自己的钱去了哪里。';
+/* 理财学习：结合当日时政热点的"为什么和你的钱有关"解读 */
+function financeExplain(title){
+  const map=[
+    [/房价|楼市|房地产|买房|置换|房贷/, '房价与利率走势直接影响你的资产净值和置换成本，值得长期跟踪。'],
+    [/利率|降准|降息|央行|货币|LPR/, '利率变动影响存款收益、房贷月供与理财回报，和钱袋子直接相关。'],
+    [/养老|保险|税|社保|退休/, '养老与税务政策决定长期现金流，提前规划更从容。'],
+    [/股市|A股|基金|美股|美债|比特币|黄金|通胀|理财|金融|经济|投资/, '市场波动影响你的投资组合与购买力，保持关注、分散配置更稳妥。'],
+    [/就业|失业|工资|收入|消费|物价|CPI/, '就业与收入预期影响消费与储蓄节奏，是家庭财务的晴雨表。'],
+    [/汇率|人民币|美元|出口|进口|贸易/, '汇率波动影响海淘、留学与外币资产，有相关安排要留意。']
+  ];
+  for(const [re,txt] of map){ if(re.test(title)) return txt; }
+  return '这条与宏观经济或民生政策相关，建议结合自身理财、职业规划，思考它可能带来的影响。';
+}
 /* 检索今日时政 / 财经要闻：结构化新闻卡片（含摘要亮点） */
 async function loadLiveNews(container){
   try{
@@ -4963,44 +5009,76 @@ async function loadLiveNews(container){
         <div class="nc-meta">${it.hot?'热度 <b>'+esc(it.hot)+'</b> · ':''}来源：微博热搜 ${tagHtml}</div>
         <div class="nc-body">
           <p class="nc-summary">该话题当前在微博引发广泛关注${it.hot?('，热度值达 '+it.hot):''}。点击下方按钮可阅读原文报道或查看公众号深度解读，帮助你快速掌握事件脉络与多方观点。</p>
-          <div class="nc-highlights"><span class="nh-icon">💡</span><div><b>核心要点</b><ul>${tags.map(t=>`<li>关注「${t}」相关动态与政策走向</li>`).join('')}<li>结合自身理财 / 职业规划思考影响</li></ul></div></div>
-          <div class="nc-tip"><span class="nh-icon">💡</span> 通过多源对比阅读（原文+公众号解读），建立独立判断力，避免单一信息源的偏差。</div>
+          <div class="nc-highlights"><span class="nh-icon">${ico('bulb')}</span><div><b>核心要点</b><ul>${tags.map(t=>`<li>关注「${t}」相关动态与政策走向</li>`).join('')}<li>结合自身理财 / 职业规划思考影响</li></ul></div></div>
+          <div class="nc-tip"><span class="nh-icon">${ico('bulb')}</span> 通过多源对比阅读（原文+公众号解读），建立独立判断力，避免单一信息源的偏差。</div>
         </div>
         <div class="nc-actions">
-          <a href="${esc(wb)}" target="_blank" rel="noopener" class="btn sm">🔗 原文阅读</a>
-          <a href="${esc(wx)}" target="_blank" rel="noopener" class="btn sm ghost">${tags[0]||'热点'}解读 ↗</a>
+          <a href="${esc(wb)}" target="_blank" rel="noopener" class="btn sm">${ico('link')} 原文阅读</a>
+          <a href="${esc(wx)}" target="_blank" rel="noopener" class="btn sm ghost">${tags[0]||'热点'}解读 ${ico('chev')}</a>
         </div>
       </article>`;
     }).join('');
+    // 理财学习：用当日与"钱"相关的话题，给出"为什么和你的钱有关"的解读
+    const fc=document.getElementById('financeNews');
+    if(fc){
+      if(matched.length){
+        fc.innerHTML=matched.slice(0,8).map((it,idx)=>{
+          const wb='https://s.weibo.com/weibo?q='+encodeURIComponent(it.title);
+          const wx='https://weixin.sogou.com/weixin?type=2&query='+encodeURIComponent(it.title);
+          const tags=FINANCE_KEYWORDS.filter(k=>it.title.includes(k)).slice(0,3);
+          const tagHtml=tags.length?`<div class="news-tags">${tags.map(t=>`<span class="ntag">${esc(t)}</span>`).join('')}</div>`:'';
+          return `<article class="news-card">
+            <div class="nc-head"><span class="nc-num">${String(idx+1).padStart(2,'0')}</span><h4 class="nc-title">${esc(it.title)}</h4></div>
+            <div class="nc-meta">来源：微博热搜 ${tagHtml}</div>
+            <div class="nc-body">
+              <p class="nc-summary">${financeExplain(it.title)}</p>
+              <div class="nc-highlights"><span class="nh-icon">${ico('bulb')}</span><div><b>关注点</b><ul>${tags.map(t=>`<li>「${t}」相关动态与政策走向</li>`).join('')}<li>结合自身理财 / 职业规划思考影响</li></ul></div></div>
+            </div>
+            <div class="nc-actions">
+              <a href="${esc(wb)}" target="_blank" rel="noopener" class="btn sm">${ico('link')} 原文阅读</a>
+              <a href="${esc(wx)}" target="_blank" rel="noopener" class="btn sm ghost">${tags[0]||'热点'}解读 ${ico('chev')}</a>
+            </div>
+          </article>`;
+        }).join('');
+      }else{
+        fc.innerHTML='<div class="muted small" style="padding:8px 0">今日微博热搜暂无强相关的理财话题，可看下方权威信源保持跟踪。</div>';
+      }
+    }
   }catch(e){
     container.innerHTML='<div class="muted small" style="padding:12px 0">实时接口暂不可用，已为你展示权威信源 ↓</div>'+NEWS_FALLBACK.map((it,idx)=>`<article class="news-card">
         <div class="nc-head"><span class="nc-num">${String(idx+1).padStart(2,'0')}</span><h4 class="nc-title">${esc(it.title)}</h4></div>
         <div class="nc-meta">来源：${esc(it.src||'')}</div>
         <div class="nc-body">
           <p class="nc-summary">权威信源持续更新，建议每日访问获取最新财经动态与政策解读。</p>
-          <div class="nc-highlights"><span class="nh-icon">💡</span><div><b>推荐理由</b><ul><li>长期跟踪可培养财经敏感度</li><li>辅助个人投资与消费决策</li></ul></div></div>
+          <div class="nc-highlights"><span class="nh-icon">${ico('bulb')}</span><div><b>推荐理由</b><ul><li>长期跟踪可培养财经敏感度</li><li>辅助个人投资与消费决策</li></ul></div></div>
         </div>
-        <div class="nc-actions"><a href="${esc(it.url)}" target="_blank" rel="noopener" class="btn sm">🔗 打开信源</a></div>
+        <div class="nc-actions"><a href="${esc(it.url)}" target="_blank" rel="noopener" class="btn sm">${ico('link')} 打开信源</a></div>
       </article>`).join('');
+    const fc=document.getElementById('financeNews');
+    if(fc)fc.innerHTML='<div class="muted small" style="padding:8px 0">实时接口暂不可用，可看下方权威信源保持跟踪。</div>';
   }
 }
 function renderGrow(){
   return `
   <div class="card">
-    <h3>📰 时政热点 <span class="cs">每日检索 · 结构化要闻</span> <button type="button" class="btn sm ghost" id="newsRefresh" style="float:right;margin-top:-4px">↻ 刷新推送</button></h3>
+    <h3>${ico('news')} 时政热点 <span class="cs">每日检索 · 结构化要闻</span> <button type="button" class="btn sm ghost" id="newsRefresh" style="float:right;margin-top:-4px">${ico('refresh')} 刷新推送</button></h3>
     <div id="liveNews"><div class="muted small" style="padding:8px 0">正在检索今日时政 / 财经热点…</div></div>
   </div>
   <div class="card mt">
-    <h3>💰 理财学习 <span class="cs">权威信源 · 点击直达</span></h3>
-    ${FINANCE_SOURCES.map(s=>`<a class="grow-card-link" href="${esc(s.u)}" target="_blank" rel="noopener">
-      <span class="gcl-ico">${ico('finance')}</span>
-      <span class="gcl-main"><span class="gcl-t">${esc(s.t)}</span><span class="gcl-s">${esc(s.s)}</span></span>
-      <span class="gcl-arrow">↗</span></a>`).join('')}
+    <h3>${ico('finance')} 理财学习 <span class="cs">结合今日时政热点</span></h3>
+    <div id="financeNews"><div class="muted small" style="padding:8px 0">正在匹配今日理财相关热点…</div></div>
+    <div class="grow-sources" style="margin-top:14px;border-top:1px solid var(--border);padding-top:12px">
+      <div class="muted small" style="margin-bottom:8px">权威信源（点击直达，长期跟踪）</div>
+      ${FINANCE_SOURCES.map(s=>`<a class="grow-card-link" href="${esc(s.u)}" target="_blank" rel="noopener">
+        <span class="gcl-ico">${ico('finance')}</span>
+        <span class="gcl-main"><span class="gcl-t">${esc(s.t)}</span><span class="gcl-s">${esc(s.s)}</span></span>
+        <span class="gcl-arrow">${ico('chev')}</span></a>`).join('')}
+    </div>
   </div>
   <div class="card mt">
-    <h3>📌 每日一句理财干货</h3>
+    <h3>${ico('bulb')} 每日一句理财干货</h3>
     <div class="box">${FINANCE_TIP}</div>
-    <div class="nc-highlights" style="margin-top:12px"><span class="nh-icon">💡</span><div><b>行动建议</b><ul><li>记账一周，找出「拿铁因子」</li><li>设定自动转账，先储蓄后消费</li><li>了解自己的风险承受能力</li></ul></div></div>
+    <div class="nc-highlights" style="margin-top:12px"><span class="nh-icon">${ico('bulb')}</span><div><b>行动建议</b><ul><li>记账一周，找出「拿铁因子」</li><li>设定自动转账，先储蓄后消费</li><li>了解自己的风险承受能力</li></ul></div></div>
   </div>`;
 }
 
@@ -5168,7 +5246,7 @@ function bindView(view){
   view.querySelectorAll('[data-daycheck]').forEach(b=>b.onclick=()=>{
     const date=D.today(); const set=todayWordSet();
     DATA.engWords.done[date]=set.map(w=>w.gi);
-    save();toast('今日打卡完成 🎉');render();
+    save();toast('今日打卡完成');render();
   });
   // 错词本：加入 / 移出（每日卡片与复习卡片共用）
   view.querySelectorAll('[data-wrong]').forEach(b=>b.onclick=e=>{e.stopPropagation();
@@ -5187,7 +5265,7 @@ function bindView(view){
   // 复习：记住了 → 移出错词本
   view.querySelectorAll('[data-review-master]').forEach(b=>b.onclick=e=>{e.stopPropagation();
     const gi=+b.dataset.reviewMaster; const w=DATA.engWords.wrong||(DATA.engWords.wrong=[]); const i=w.indexOf(gi);
-    if(i>=0){w.splice(i,1);save();toast('已从错词本移除 🎉');render();}
+    if(i>=0){w.splice(i,1);save();toast('已从错词本移除');render();}
   });
   // 实时爆款拉取（女性成长赛道匹配）
   const liveHot=view.querySelector('#liveHot');
