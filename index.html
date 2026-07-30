@@ -906,12 +906,6 @@ function renderHome(){
       <div class="sm-item"><div class="sm-num">${monthBooks}<span class="sm-unit"> 本</span></div><div class="sm-lbl">读完书目</div></div>
       <div class="sm-item"><div class="sm-num">¥${monthSideInc.toFixed(0)}</div><div class="sm-lbl">副业收入</div></div>
     </div>
-  </div>
-  <div class="card mt">
-    <h3>目标进度</h3>
-    ${goalBlock('本月副业收入目标',monthSideInc,DATA.goals.sideMonth,'元','sideMonth')}
-    ${goalBlock('年度读书目标',DATA.reading.filter(r=>r.status==='done').length,DATA.goals.readingYear,'本','readingYear')}
-    ${goalBlock('本周学习时长目标',DATA.english.filter(r=>D.thisWeekDays().includes(r.date)).reduce((s,r)=>s+engMins(r),0),DATA.goals.engWeek,'分钟','engWeek')}
   </div>`;
 }
 
