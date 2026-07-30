@@ -109,11 +109,12 @@ button{font-family:inherit}
 .kpi{display:flex;flex-direction:column;gap:2px}
 .kpi .num{font-size:26px;font-weight:800;color:var(--primary-strong);font-variant-numeric:tabular-nums}
 .kpi .lbl{font-size:12px;color:var(--text-3)}
-.checkin-wall{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.checkin-wall{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
 .ci{display:flex;align-items:center;gap:10px;padding:12px;border:1px solid var(--border);border-radius:var(--radius-sm);
   cursor:pointer;transition:all .15s;background:var(--card)}
 .ci:hover{border-color:var(--primary)} .ci .ci-ico{width:28px;height:28px;flex:0 0 28px;display:flex;align-items:center;justify-content:center;color:var(--text-3)}
 .ci .ci-ico svg{width:26px;height:26px} .ci .ci-n{font-size:13px;font-weight:600}
+.ci .ci-inc{margin-left:auto;font-size:12px;font-weight:700;color:var(--primary-strong)}
 .ci .ci-st{margin-left:auto;font-size:11px;color:var(--text-3)}
 .ci.done{background:var(--primary-soft);border-color:var(--primary)} .ci.done .ci-st{color:var(--primary-strong);font-weight:700}
 .badge{width:22px;height:22px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;margin-left:auto}
@@ -849,26 +850,27 @@ function setView(v){
 function renderHome(){
   const today=D.today();
   const q=todayQuote();
-  const week=D.thisWeekDays();
-  const studyMin=DATA.english.filter(r=>week.includes(r.date)).reduce((s,r)=>s+engMins(r),0);
-  const exCount=DATA.exercise.filter(r=>week.includes(r.date)).length;
-  const sideInc=DATA.sideHustle.iso.concat(DATA.sideHustle.media,DATA.sideHustle.other).filter(r=>week.includes(r.date)).reduce((s,r)=>s+(+r.income||0),0);
-  const checkins=CHECKIN_MODS.map(m=>({m,done:getCheckin(today,m)})).filter(x=>x.done).length;
-  const checkinDays=Object.keys(DATA.checkins).filter(d=>DATA.checkins[d]&&Object.values(DATA.checkins[d]).some(v=>v)).length;
+  const ym=today.slice(0,7);
+  // 本月副业收入
+  const monthSideInc=DATA.sideHustle.iso.concat(DATA.sideHustle.media,DATA.sideHustle.other).filter(r=>r.date&&r.date.slice(0,7)===ym).reduce((s,r)=>s+(+r.income||0),0);
   // 旅行倒计时（最近一次设定的旅行）
   const trips=DATA.travel.trips.slice().filter(t=>t.date).sort((a,b)=>a.date.localeCompare(b.date));
   const next=trips.find(t=>D.daysBetween(today,t.date)>=0);
   const cdDays=next?D.daysBetween(today,next.date):-1;
 
-  const checkinHtml=MODULES.map(m=>{
-    const done=getCheckin(today,m.id);
-    return `<div class="ci ${done?'done':''}" data-check="${m.id}">
-      <span class="ci-ico">${ico(m.ico)}</span><span class="ci-n">${m.name}</span>
+  // 打卡墙只保留 4 项：英语学习、在读书目、锻炼身体、副业统计
+  const WALL_MODS=['english','reading','exercise','side'];
+  const wallMap={english:'english',reading:'reading',exercise:'exercise',side:'side'};
+  const checkinHtml=WALL_MODS.map(id=>{
+    const m=MODULES.find(x=>x.id===id);
+    if(!m) return '';
+    const done=getCheckin(today,id);
+    const extra=id==='side'?`<span class="ci-inc">¥${monthSideInc.toFixed(0)}</span>`:'';
+    return `<div class="ci ${done?'done':''}" data-check="${id}">
+      <span class="ci-ico">${ico(m.ico)}</span><span class="ci-n">${m.name}</span>${extra}
       <span class="badge">${done?ico('check'):''}</span>
       <span class="ci-st">${done?'已完成':'待完成'}</span></div>`;
   }).join('');
-
-  const weekStudyByDay=week.map(d=>DATA.english.filter(r=>r.date===d).reduce((s,r)=>s+engMins(r),0));
 
   const travelHtml = next?`<div class="countdown"><div class="plane">${ico('plane')}</div>
         <div class="cd-days">${cdDays}</div><div class="cd-l">天后出发</div><div class="cd-n">${next.name}</div></div>`
@@ -886,17 +888,6 @@ function renderHome(){
   <div class="card mt jump" data-jump="travel">
     <h3>旅行倒计时 <span class="enter">进入 ›</span></h3>
     ${travelHtml}
-  </div>
-  <div class="grid g4 mt">
-    <div class="card jump" data-jump="english"><div class="kpi"><div class="num">${studyMin}<span class="small muted"> 分钟</span></div><div class="lbl">本周学习时长</div></div><div class="enter sm">进入 ›</div></div>
-    <div class="card jump" data-jump="exercise"><div class="kpi"><div class="num">${exCount}<span class="small muted"> 次</span></div><div class="lbl">本周运动次数</div></div><div class="enter sm">进入 ›</div></div>
-    <div class="card jump" data-jump="side"><div class="kpi"><div class="num">¥${sideInc.toFixed(0)}</div><div class="lbl">本周副业收入</div></div><div class="enter sm">进入 ›</div></div>
-    <div class="card"><div class="kpi"><div class="num">${checkinDays+' 天'}</div><div class="lbl">累计打卡天数</div></div></div>
-  </div>
-  <div class="card mt jump" data-jump="english">
-    <h3>本周概览 <span class="cs">周累计 · 无压力</span> <span class="enter">进入 ›</span></h3>
-    ${Charts.bar(week.map((d,i)=>({label:D.weekday(d).slice(1),value:weekStudyByDay[i]})),{height:200})}
-    <div class="muted small" style="margin-top:8px">近 7 天每日学习分钟数（周一→周日）</div>
   </div>`;
 }
 
