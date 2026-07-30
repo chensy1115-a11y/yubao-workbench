@@ -614,6 +614,8 @@ function saveReview(date,r){DATA.reviews[date]=r;save();}
 function exportJSON(){return JSON.stringify(DATA,null,2);}
 function importJSON(text){const p=JSON.parse(text);DATA=deepMerge(JSON.parse(JSON.stringify(DEFAULT)),p);save();}
 function resetAll(){DATA=JSON.parse(JSON.stringify(DEFAULT));save();}
+/* 本地是否从未录入任何内容（与 DEFAULT 结构完全一致） */
+function isLocalEmpty(){try{return JSON.stringify(DATA)===JSON.stringify(DEFAULT);}catch(e){return false;}}
 
 /* ============================================================
    纯 SVG 图表（无外部依赖）
@@ -728,21 +730,34 @@ function connectSupabase(){
       sbClient.from('yubao_data').select('payload,updated_at').eq('id',rowId).maybeSingle()
       .then(({data,error})=>{
         if(error){setSbStatus('err',error.message.slice(0,20));return;}
+        const localHasData=!isLocalEmpty();
         if(data&&data.payload){
-          try{importJSON(JSON.stringify(data.payload));render();}catch(e){}
+          if(!localHasData){
+            // 本地空白设备：从云端拉取（覆盖空白本地，安全）
+            try{importJSON(JSON.stringify(data.payload));render();}catch(e){}
+          }else{
+            // 本地已有数据：优先保留本地，立即上传覆盖云端，绝不用云端旧/空数据覆盖本地
+            scheduleSync();
+          }
           finishConnect();
         }else{
-          // 本空间为空：尝试从旧公共行 'me' 迁移（仅首次，避免朋友误读你的数据）
-          sbClient.from('yubao_data').select('payload,updated_at').eq('id','me').maybeSingle()
-          .then(({data:m})=>{
-            if(m&&m.payload){
-              try{importJSON(JSON.stringify(m.payload));render();}catch(e){}
-              sbClient.from('yubao_data').upsert({id:rowId,payload:DATA,updated_at:new Date().toISOString()})
-               .then(()=>{ sbClient.from('yubao_data').delete().eq('id','me').then(()=>{}).catch(()=>{}); toast('已迁移旧云端数据并隔离'); })
-               .catch(()=>{});
-            }
+          // 本空间为空：先把本地数据播种到云端（备份优先，绝不用空覆盖本地）
+          scheduleSync();
+          // 仅当本地也是空白时，才尝试从旧公共行 'me' 迁移，避免迁移数据覆盖本地已有内容
+          if(!localHasData){
             finishConnect();
-          }).catch(()=>finishConnect());
+          }else{
+            sbClient.from('yubao_data').select('payload,updated_at').eq('id','me').maybeSingle()
+            .then(({data:m})=>{
+              if(m&&m.payload){
+                try{importJSON(JSON.stringify(m.payload));render();}catch(e){}
+                sbClient.from('yubao_data').upsert({id:rowId,payload:DATA,updated_at:new Date().toISOString()})
+                 .then(()=>{ sbClient.from('yubao_data').delete().eq('id','me').then(()=>{}).catch(()=>{}); toast('已迁移旧云端数据并隔离'); })
+                 .catch(()=>{});
+              }
+              finishConnect();
+            }).catch(()=>finishConnect());
+          }
         }
       }).catch(e=>setSbStatus('err',e.message.slice(0,20)));
     }).catch(e=>setSbStatus('err','密钥处理失败'));
