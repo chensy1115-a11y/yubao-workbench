@@ -5027,23 +5027,31 @@ function buildReport(){
    纯前端 + 免费公开接口（v2.xxapi.cn，CORS 可用），仅消耗网络流量，不烧 AI 积分
    所有「原文 / 公众号解读」链接均使用已校验可达的搜索类地址，点击必能打开
    ============================================================ */
-/* 时政 / 财经 关键词（用于从公开热搜中筛出相关要闻） */
-const FINANCE_KEYWORDS=['理财','经济','金融','美股','美债','美联储','央行','利率','降准','降息','房价','楼市','房地产','就业','失业','养老','税','股市','A股','基金','存款','保险','通胀','CPI','GDP','政策','民生','社会','教育','医疗','工资','收入','消费','贸易','出口','进口','人口','结婚','生育','独居','女性','职场','汇率','黄金','比特币','新能源','AI','科技','反腐','法治'];
-/* 理财学习：权威信源（链接均已校验可达，HTTP 200） */
-const FINANCE_SOURCES=[
-  {t:'36氪 · 快讯与创投',s:'新经济 / 一级市场',u:'https://36kr.com/newsflashes'},
-  {t:'财新网 · 财经新闻',s:'深度财经报道',u:'https://www.caixin.com'},
-  {t:'新华网 · 财经',s:'宏观经济 / 政策解读',u:'https://www.news.cn/finance/'},
-  {t:'中国人民银行',s:'货币政策 / 权威发布',u:'http://www.pbc.gov.cn'},
-  {t:'人民日报 · 时政民生',s:'权威时政要闻',u:'http://www.people.com.cn'}
+/* 时政 / 财经 / 国际 / 科技 正面关键词（从公开热搜中筛出正经要闻） */
+const NEWS_KEYWORDS=[
+  /* 财经金融 */ '理财','经济','金融','美股','美债','美联储','央行','利率','降准','降息',
+  '房价','楼市','房地产','股市','A股','港股','基金','存款','保险','通胀','CPI','GDP',
+  '汇率','黄金','比特币','养老金','社保','税收','财政','国债','贷款','房贷','营收',
+  '利润','裁员','涨薪','工资','收入','消费','贸易','出口','进口','外资','并购','IPO',
+  '独角兽','创投','融资','估值','市值','破产','违约','债务','补贴','反垄断','平台经济',
+  /* 时政民生 */ '政策','法规','法律','法治','反腐','监察','两会','人大','政协','国务院',
+  '教育部','卫健委','工信部','发改委','公安部','最高法','最高检','民生','就业','失业',
+  '养老','医疗','教育','住房','社保','医保','户籍','城镇化','乡村振兴','粮食','农业',
+  /* 国际 */ '外交','中美','中欧','中俄','联合国','欧盟','北约','制裁','关税','地缘',
+  '战争','冲突','军援','峰会','访华','出访','一带一路','东盟','APEC','G20','金砖',
+  /* 科技 */ 'AI','人工智能','芯片','半导体','新能源','电池','光伏','航天','卫星',
+  '5G','6G','量子','大模型','自动驾驶','机器人','算力','云计算','网络安全'
 ];
-/* 检索失败时的兜底（同样为已校验可达链接） */
-const NEWS_FALLBACK=[
-  {title:'36氪：今日快讯与创投动态',src:'36氪',url:'https://36kr.com/newsflashes'},
-  {title:'财新网：财经深度报道',src:'财新',url:'https://www.caixin.com'},
-  {title:'新华网财经：宏观政策解读',src:'新华网',url:'https://www.news.cn/finance/'},
-  {title:'中国人民银行：货币政策发布',src:'央行',url:'http://www.pbc.gov.cn'},
-  {title:'人民日报：时政民生要闻',src:'人民日报',url:'http://www.people.com.cn'}
+/* 娱乐八卦负面关键词（命中即排除） */
+const GOSSIP_BLOCKLIST=[
+  '明星','艺人','偶像','演员','歌手','爱豆','绯闻','恋情','分手','结婚','离婚','官宣',
+  '爆料','出轨','整容','塌房','粉丝','打榜','热搜第一','综艺','选秀','真人秀','剧集',
+  '电视剧','电影上映','票房','导演','编剧','演唱会','巡演','代言','广告','红毯',
+  '走秀','时装周','颜值','生图','路透','杀青','开机','定档','番位','CP','嗑糖','甜宠',
+  '老公','老婆','男友','女友','前男','前女','复合','互关','取关','点赞','回应','否认',
+  '澄清','道歉','翻车','人设','立人设','崩人设','营销','炒作','买热搜','控评','洗白',
+  '内娱','韩流','日综','网红','直播带货','带货','主播','MCN','短剧','微短剧','爽文',
+  '霸总','甜宠','古偶','现偶','耽改','姐弟恋','年龄差','姐弟','状态','生图','氛围感'
 ];
 const FINANCE_TIP='复利被称为「世界第八大奇迹」——哪怕每月只存 500 元、年化 4%，坚持 10 年本金+利息也会超出直觉。理财的第一步不是赚钱，而是先搞清楚自己的钱去了哪里。';
 /* 理财学习：结合当日时政热点的"为什么和你的钱有关"解读 */
@@ -5059,7 +5067,7 @@ function financeExplain(title){
   for(const [re,txt] of map){ if(re.test(title)) return txt; }
   return '这条与宏观经济或民生政策相关，建议结合自身理财、职业规划，思考它可能带来的影响。';
 }
-/* 检索今日时政 / 财经要闻：结构化新闻卡片（含摘要亮点） */
+/* 检索今日时政 / 财经 / 国际 / 科技要闻：结构化新闻卡片（过滤娱乐八卦） */
 async function loadLiveNews(container){
   try{
     const res=await fetch('https://v2.xxapi.cn/api/weibohot');
@@ -5069,12 +5077,35 @@ async function loadLiveNews(container){
       items=json.data.map(x=>({title:x.title||'',url:x.url||('https://s.weibo.com/weibo?q='+encodeURIComponent(x.title||'')),hot:x.hot}));
     }
     if(!items.length)throw new Error('empty');
-    const matched=items.filter(it=>FINANCE_KEYWORDS.some(k=>it.title.includes(k)));
-    const show=(matched.length>=3?matched:items).slice(0,10);
+    /* 第一步：排除娱乐八卦 */
+    const serious=items.filter(it=>{
+      const t=it.title;
+      if(GOSSIP_BLOCKLIST.some(b=>t.includes(b))) return false;
+      return true;
+    });
+    /* 第二步：只保留时政/财经/国际/科技相关 */
+    const matched=serious.filter(it=>NEWS_KEYWORDS.some(k=>it.title.includes(k)));
+    /* 只展示正经新闻，宁缺毋滥（最多8条） */
+    const show=matched.slice(0,8);
+    if(!show.length){
+      container.innerHTML=`<div class="muted" style="padding:16px 0;text-align:center">
+        <p style="margin-bottom:10px">📰 今日热搜暂无时政/财经/国际/科技类正经要闻</p>
+        <p class="small">微博热搜以娱乐内容为主，建议直接访问以下权威信源获取每日要闻：</p>
+        <div style="margin-top:12px;display:flex;flex-direction:column;gap:8px">
+          <a href="https://www.news.cn/" target="_blank" rel="noopener" class="btn sm" style="width:100%;justify-content:center">新华网 · 时政要闻</a>
+          <a href="https://www.caixin.com/" target="_blank" rel="noopener" class="btn sm ghost" style="width:100%;justify-content:center">财新网 · 财经深度报道</a>
+          <a href="https://36kr.com/newsflashes" target="_blank" rel="noopener" class="btn sm ghost" style="width:100%;justify-content:center">36氪 · 科技创投快讯</a>
+          <a href="http://www.pbc.gov.cn/" target="_blank" rel="noopener" class="btn sm ghost" style="width:100%;justify-content:center">中国人民银行 · 货币政策</a>
+        </div>
+      </div>`;
+      const fc=document.getElementById('financeNews');
+      if(fc)fc.innerHTML='<div class="muted small" style="padding:8px 0">今日暂无匹配的理财相关热点，建议访问上方权威信源。</div>';
+      return;
+    }
     container.innerHTML=show.map((it,idx)=>{
       const wb='https://s.weibo.com/weibo?q='+encodeURIComponent(it.title);
       const wx='https://weixin.sogou.com/weixin?type=2&query='+encodeURIComponent(it.title);
-      const tags=FINANCE_KEYWORDS.filter(k=>it.title.includes(k)).slice(0,3);
+      const tags=NEWS_KEYWORDS.filter(k=>it.title.includes(k)).slice(0,3);
       const tagHtml=tags.length?`<div class="news-tags">${tags.map(t=>`<span class="ntag">${esc(t)}</span>`).join('')}</div>`:'';
       return `<article class="news-card" data-idx="${idx}">
         <div class="nc-head"><span class="nc-num">${String(idx+1).padStart(2,'0')}</span><h4 class="nc-title">${esc(it.title)}</h4></div>
@@ -5097,7 +5128,7 @@ async function loadLiveNews(container){
         fc.innerHTML=matched.slice(0,8).map((it,idx)=>{
           const wb='https://s.weibo.com/weibo?q='+encodeURIComponent(it.title);
           const wx='https://weixin.sogou.com/weixin?type=2&query='+encodeURIComponent(it.title);
-          const tags=FINANCE_KEYWORDS.filter(k=>it.title.includes(k)).slice(0,3);
+          const tags=NEWS_KEYWORDS.filter(k=>it.title.includes(k)).slice(0,3);
           const tagHtml=tags.length?`<div class="news-tags">${tags.map(t=>`<span class="ntag">${esc(t)}</span>`).join('')}</div>`:'';
           return `<article class="news-card">
             <div class="nc-head"><span class="nc-num">${String(idx+1).padStart(2,'0')}</span><h4 class="nc-title">${esc(it.title)}</h4></div>
@@ -5113,21 +5144,22 @@ async function loadLiveNews(container){
           </article>`;
         }).join('');
       }else{
-        fc.innerHTML='<div class="muted small" style="padding:8px 0">今日微博热搜暂无强相关的理财话题，可看下方权威信源保持跟踪。</div>';
+        fc.innerHTML='<div class="muted small" style="padding:8px 0">今日暂无匹配的理财相关热点。</div>';
       }
     }
   }catch(e){
-    container.innerHTML='<div class="muted small" style="padding:12px 0">实时接口暂不可用，已为你展示权威信源 ↓</div>'+NEWS_FALLBACK.map((it,idx)=>`<article class="news-card">
-        <div class="nc-head"><span class="nc-num">${String(idx+1).padStart(2,'0')}</span><h4 class="nc-title">${esc(it.title)}</h4></div>
-        <div class="nc-meta">来源：${esc(it.src||'')}</div>
-        <div class="nc-body">
-          <p class="nc-summary">权威信源持续更新，建议每日访问获取最新财经动态与政策解读。</p>
-          <div class="nc-highlights"><span class="nh-icon">${ico('bulb')}</span><div><b>推荐理由</b><ul><li>长期跟踪可培养财经敏感度</li><li>辅助个人投资与消费决策</li></ul></div></div>
-        </div>
-        <div class="nc-actions"><a href="${esc(it.url)}" target="_blank" rel="noopener" class="btn sm">${ico('link')} 打开信源</a></div>
-      </article>`).join('');
+    container.innerHTML=`<div class="muted" style="padding:16px 0;text-align:center">
+      <p style="margin-bottom:10px">📡 实时接口暂不可用</p>
+      <p class="small">建议直接访问以下权威信源获取每日要闻：</p>
+      <div style="margin-top:12px;display:flex;flex-direction:column;gap:8px">
+        <a href="https://www.news.cn/" target="_blank" rel="noopener" class="btn sm" style="width:100%;justify-content:center">新华网 · 时政要闻</a>
+        <a href="https://www.caixin.com/" target="_blank" rel="noopener" class="btn sm ghost" style="width:100%;justify-content:center">财新网 · 财经深度报道</a>
+        <a href="https://36kr.com/newsflashes" target="_blank" rel="noopener" class="btn sm ghost" style="width:100%;justify-content:center">36氪 · 科技创投快讯</a>
+        <a href="http://www.pbc.gov.cn/" target="_blank" rel="noopener" class="btn sm ghost" style="width:100%;justify-content:center">中国人民银行 · 货币政策</a>
+      </div>
+    </div>`;
     const fc=document.getElementById('financeNews');
-    if(fc)fc.innerHTML='<div class="muted small" style="padding:8px 0">实时接口暂不可用，可看下方权威信源保持跟踪。</div>';
+    if(fc)fc.innerHTML='<div class="muted small" style="padding:8px 0">接口暂不可用，建议访问上方权威信源。</div>';
   }
 }
 function renderGrow(){
@@ -5139,13 +5171,6 @@ function renderGrow(){
   <div class="card mt" data-block="finance">
     <h3>${ico('finance')} 理财学习 <span class="cs">结合今日时政热点</span></h3>
     <div id="financeNews"><div class="muted small" style="padding:8px 0">正在匹配今日理财相关热点…</div></div>
-    <div class="grow-sources" style="margin-top:14px;border-top:1px solid var(--border);padding-top:12px">
-      <div class="muted small" style="margin-bottom:8px">权威信源（点击直达，长期跟踪）</div>
-      ${FINANCE_SOURCES.map(s=>`<a class="grow-card-link" href="${esc(s.u)}" target="_blank" rel="noopener">
-        <span class="gcl-ico">${ico('finance')}</span>
-        <span class="gcl-main"><span class="gcl-t">${esc(s.t)}</span><span class="gcl-s">${esc(s.s)}</span></span>
-        <span class="gcl-arrow">${ico('chev')}</span></a>`).join('')}
-    </div>
   </div>
   <div class="card mt" data-block="tip">
     <h3>${ico('bulb')} 每日一句理财干货</h3>
