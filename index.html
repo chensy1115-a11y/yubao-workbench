@@ -419,6 +419,56 @@ h3 svg{width:18px;height:18px;vertical-align:-3px;margin-right:5px}
 .listen-sentence{font-size:18px;font-weight:700;margin:10px 0}
 .listen-score{font-size:13px;color:var(--primary-strong);font-weight:600;margin-top:8px}
 .mode-pill{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:20px;background:var(--primary-soft);color:var(--primary-strong);font-size:13px;font-weight:600;cursor:pointer;border:none}
+
+/* ── 导航角标 ── */
+.nav-badge{display:none;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--danger);color:#fff;font-size:11px;line-height:18px;text-align:center;margin-left:auto}
+.link{color:var(--primary-strong);cursor:pointer;font-weight:600}
+.link:hover{text-decoration:underline}
+
+/* ── 日历聚合视图 ── */
+.cal-head{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.cal-title{font-size:16px;font-weight:700;flex:1;text-align:center}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-top:6px}
+.cal-dh{text-align:center;font-size:12px;color:var(--text-3);padding:4px 0}
+.cal-cell{min-height:52px;border:1px solid var(--border);border-radius:10px;padding:6px 4px;background:var(--card);cursor:pointer;display:flex;flex-direction:column;gap:4px;transition:border-color .15s,box-shadow .15s}
+.cal-cell.empty{background:transparent;border:none;cursor:default}
+.cal-cell:hover{border-color:var(--primary)}
+.cal-cell.today{border-color:var(--primary);background:var(--primary-soft)}
+.cal-cell.sel{box-shadow:0 0 0 2px var(--primary) inset}
+.cal-num{font-size:13px;font-weight:600;color:var(--text)}
+.cal-dots{display:flex;flex-wrap:wrap;gap:3px}
+.dot{width:14px;height:14px;border-radius:4px;display:inline-flex;align-items:center;justify-content:center;font-size:10px;line-height:1;color:#fff}
+.dot.travel{background:var(--primary-soft);color:var(--primary-strong)}
+.dot.check{background:#2E7D32}
+.dot.review{background:#F39C12}
+.dot.inbox{background:#E91E63}
+.cal-legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:12px;font-size:12px;color:var(--text-2)}
+.cal-legend .dot{margin-right:4px;vertical-align:middle}
+.ev{display:flex;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)}
+.ev:last-child{border-bottom:none}
+.ev-ico{width:20px;text-align:center;flex-shrink:0}
+.ev-ico.travel{color:var(--primary-strong)}
+.ev-ico.check{color:#2E7D32}
+.ev-ico.review{color:#F39C12}
+.ev-ico.inbox{color:#E91E63}
+
+/* ── 随手记 / 待办 ── */
+.note-item{display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-bottom:1px solid var(--border)}
+.note-item:last-child{border-bottom:none}
+.note-body{flex:1;min-width:0}
+.note-text{font-size:15px;color:var(--text);word-break:break-word}
+.note-item.done .note-text{text-decoration:line-through;color:var(--text-3)}
+.note-due{font-size:12px;color:var(--primary-strong);margin-top:4px}
+.note-due.over{color:#E53935}
+.note-time{font-size:11px;color:var(--text-3);margin-top:2px}
+.chk input{width:18px;height:18px;accent-color:var(--primary);margin-top:3px;cursor:pointer}
+
+/* ── 二维码 / 扫码 ── */
+.qr-box{display:flex;flex-wrap:wrap;gap:14px;justify-content:center;padding:10px 0;background:#fff;border-radius:12px}
+.qr-svg svg{width:200px;height:200px;max-width:100%;display:block}
+.qr-frame{display:flex;flex-direction:column;align-items:center;gap:6px}
+.qr-frame-no{font-size:12px;color:var(--text-2);font-weight:600}
+.scan-status{font-size:13px;color:var(--text-2);text-align:center;padding:10px 0;min-height:20px}
 </style>
 </head>
 <body>
@@ -462,6 +512,9 @@ h3 svg{width:18px;height:18px;vertical-align:-3px;margin-right:5px}
   <button id="btnImport"><span data-ico="upload"></span>导入 JSON 恢复</button>
   <button id="btnReset"><span data-ico="trash"></span>清空本地数据</button>
   <button id="btnDownload"><span data-ico="download"></span>下载离线副本</button>
+  <button id="btnNote"><span data-ico="inbox"></span>快速记录（随手记）</button>
+  <button id="btnQr"><span data-ico="qrcode"></span>生成分享二维码</button>
+  <button id="btnScan"><span data-ico="scan"></span>扫码导入</button>
 </div>
 
 <div class="modal-mask" id="sbModal">
@@ -487,9 +540,47 @@ h3 svg{width:18px;height:18px;vertical-align:-3px;margin-right:5px}
   </div>
 </div>
 
+<div class="modal-mask" id="noteModal">
+  <div class="modal">
+    <h3>快速记录 <span class="cs">随手记 · 跨模块</span></h3>
+    <div class="field"><label>内容</label><textarea id="noteText" rows="3" placeholder="随时记录一个想法或待办…"></textarea></div>
+    <div class="field"><label>截止日（可选）</label><input type="date" id="noteDue"></div>
+    <div class="actions"><button class="btn ghost" id="noteCancel">取消</button><button class="btn" id="noteSave">保存</button></div>
+  </div>
+</div>
+
+<div class="modal-mask" id="qrModal">
+  <div class="modal">
+    <h3>分享二维码 <span class="cs">手机扫码即可导入这份数据</span></h3>
+    <div class="qr-box" id="qrBox"></div>
+    <div class="hint" id="qrHint"></div>
+    <div class="actions">
+      <button class="btn ghost" id="qrCopy">复制 JSON 文本</button>
+      <button class="btn ghost" id="qrClose">关闭</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-mask" id="scanModal">
+  <div class="modal">
+    <h3>扫码导入 <span class="cs">对准包含备份数据的二维码</span></h3>
+    <video id="scanVideo" playsinline style="width:100%;border-radius:12px;background:#000;display:none"></video>
+    <div class="scan-status" id="scanStatus">点击下方「开始扫描」并允许摄像头权限</div>
+    <div class="field" style="margin-top:10px"><label>或粘贴 JSON 文本导入（适合数据较大的情况）</label><textarea id="scanPaste" rows="3" placeholder="把导出的 JSON 粘贴到这里"></textarea></div>
+    <div class="actions">
+      <button class="btn ghost" id="scanStart">开始扫描</button>
+      <button class="btn ghost" id="scanStop" style="display:none">停止</button>
+      <button class="btn" id="scanImport">导入粘贴内容</button>
+      <button class="btn ghost" id="scanClose">关闭</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 <input type="file" id="fileInput" accept="application/json" style="display:none" />
 
+<script src="vendor/qrcode.js"></script>
+<script src="vendor/jsQR.js"></script>
 <script>
 /* ============================================================
    雨宝工作台 — 单文件 SPA（LocalStorage + 可选 Supabase 同步）
@@ -546,7 +637,11 @@ const ICONS = {
   notebook:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h11a2 2 0 0 1 2 2v14H7a2 2 0 0 1-2-2z"/><path d="M5 4v14M9 8h6M9 12h6"/></svg>',
   play:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M10 9l5 3-5 3z" fill="currentColor" stroke="none"/></svg>',
   globe:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18 14 14 0 0 1 0-18z"/></svg>',
-  x:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>'
+  x:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+  calendar:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>',
+  inbox:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h5l2 3h4l2-3h5"/><path d="M5 5h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z"/></svg>',
+  scan:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7V5a1 1 0 0 1 1-1h2M20 7V5a1 1 0 0 0-1-1h-2M4 17v2a1 1 0 0 0 1 1h2M20 17v2a1 1 0 0 1-1 1h-2"/><path d="M3 12h18"/></svg>',
+  qrcode:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3M21 14v7h-7v-3"/></svg>'
 };
 function ico(name){ return ICONS[name]||''; }
 
@@ -594,7 +689,8 @@ const DEFAULT={
   mediaPlan:[], videos:[], favHot:[], goals:{readingYear:12, sideMonth:0, engWeek:0},
   engWords:{done:{},wrong:[]},
   travel:{trips:[],wishlist:[],itineraries:[],rates:{},plan:''},
-  reviews:{}
+  reviews:{},
+  inbox:[]
 };
 function deepMerge(base,over){
   if(Array.isArray(base)) return Array.isArray(over)?over:base;
@@ -862,6 +958,9 @@ function historyBlock(records,cols,path){
 /* 表单字段辅助 */
 function fDate(def){return `<div class="field"><label>日期</label><input type="date" name="date" value="${def}"></div>`;}
 function engMins(r){return (+r.minutes||0)||((+r.listening||0)+(+r.reading||0)+(+r.speaking||0));}
+function esc(s){return (s==null?'':String(s)).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function b64encode(str){return btoa(unescape(encodeURIComponent(str)));}
+function b64decode(str){return decodeURIComponent(escape(atob(str)));}
 
 /* ============================================================
    导航与页面定义
@@ -875,21 +974,32 @@ const MODULES=[
   {id:'side',name:'副业统计',ico:'side'},
   {id:'media',name:'自媒体计划',ico:'media'},
   {id:'videos',name:'爆款视频',ico:'videos'},
-  {id:'review',name:'每日复盘',ico:'review'}
+  {id:'review',name:'每日复盘',ico:'review'},
+  {id:'calendar',name:'日历聚合',ico:'calendar'},
+  {id:'inbox',name:'随手记',ico:'inbox'}
 ];
 const CHECKIN_MODS=MODULES.map(m=>m.id);
 let state={view:'home',sideTab:'iso'};
+let calMonth=new Date();   // 日历当前查看的月份
+let calSel=null;           // 日历选中的日期 yyyy-mm-dd
 
 function buildNav(){
   const nav=document.getElementById('nav');
   let html=`<div class="nav-item" data-view="home"><span class="ico">${ico('home')}</span>工作台</div>`;
   MODULES.forEach((m)=>{
-    html+=`<div class="nav-item" data-view="${m.id}"><span class="ico">${ico(m.ico)}</span><span class="nav-label">${m.name}</span></div>`;
+    const badge=m.id==='inbox'?'<span class="nav-badge" id="inboxBadge"></span>':'';
+    html+=`<div class="nav-item" data-view="${m.id}"><span class="ico">${ico(m.ico)}</span><span class="nav-label">${m.name}</span>${badge}</div>`;
   });
   nav.innerHTML=html;
   nav.querySelectorAll('.nav-item').forEach(it=>it.onclick=()=>{
     setView(it.dataset.view);closeSidebar();
   });
+}
+function updateInboxBadge(){
+  const b=document.getElementById('inboxBadge');if(!b)return;
+  const n=(DATA.inbox||[]).filter(i=>!i.done).length;
+  b.textContent=n?n:'';
+  b.style.display=n?'inline-block':'none';
 }
 
 /* 页面区块长按拖拽排序（桌面鼠标 + 移动端触摸通用，作用于 #view 下所有 [data-block]） */
@@ -972,7 +1082,7 @@ function initBlockDrag(view){
 function setView(v){
   state.view=v;
   document.querySelectorAll('.nav-item').forEach(it=>it.classList.toggle('active',it.dataset.view===v));
-  const titles={home:['工作台','你的全能自律仪表盘'],english:['英语学习','四级六级 · 单词/短句/听力/口语'],reading:['在读书目','统计你读了多少本书'],exercise:['锻炼身体','年度活跃度热力图'],side:['副业统计','ISO审核 / 自媒体 / 其他'],media:['自媒体计划','活人感大龄女青年·女性成长'],videos:['爆款视频','活人感大龄女青年·爆款素材'],travel:['旅游规划','愿望清单 · 行程 · 预算'],review:['每日复盘','弹性复盘 · 周/月报'],grow:['自我成长','理财学习 · 时政热点']};
+  const titles={home:['工作台','你的全能自律仪表盘'],english:['英语学习','四级六级 · 单词/短句/听力/口语'],reading:['在读书目','统计你读了多少本书'],exercise:['锻炼身体','年度活跃度热力图'],side:['副业统计','ISO审核 / 自媒体 / 其他'],media:['自媒体计划','活人感大龄女青年·女性成长'],videos:['爆款视频','活人感大龄女青年·爆款素材'],travel:['旅游规划','愿望清单 · 行程 · 预算'],review:['每日复盘','弹性复盘 · 周/月报'],grow:['自我成长','理财学习 · 时政热点'],calendar:['日历聚合','旅行 / 复盘 / 打卡日期集中看'],inbox:['随手记','跨模块待办 · 随时记录']};
   const t=titles[v]||['',''];document.getElementById('pageTitle').textContent=t[0];document.getElementById('pageSub').textContent=t[1];
   render();
 }
@@ -5027,6 +5137,98 @@ function buildReport(){
 }
 
 /* ============================================================
+   日历聚合视图（旅行 / 打卡 / 复盘 / 待办到期 日期集中看）
+   ============================================================ */
+function buildMonthMaps(){
+  const travelMap={};
+  (DATA.travel.trips||[]).forEach(t=>{ if(t.date){ (travelMap[t.date]=travelMap[t.date]||[]).push(t.name||'旅行'); } });
+  const ckMap={};
+  Object.keys(DATA.checkins||{}).forEach(d=>{ const mods=Object.keys(DATA.checkins[d]).filter(m=>DATA.checkins[d][m]); if(mods.length)(ckMap[d]=mods); });
+  const revMap={};
+  Object.keys(DATA.reviews||{}).forEach(d=>{ if(d&&DATA.reviews[d]&&(DATA.reviews[d].mood||(DATA.reviews[d].summary||'').trim())) revMap[d]={mood:DATA.reviews[d].mood,summary:DATA.reviews[d].summary||''}; });
+  const inboxMap={};
+  (DATA.inbox||[]).forEach(it=>{ if(it.due&&!it.done){ (inboxMap[it.due]=inboxMap[it.due]||[]).push(it.text||'待办'); } });
+  return {travelMap,ckMap,revMap,inboxMap};
+}
+function renderCalendar(){
+  const y=calMonth.getFullYear(), m=calMonth.getMonth();
+  const today=D.today();
+  const first=new Date(y,m,1), startDow=(first.getDay()+6)%7;
+  const daysInMonth=new Date(y,m+1,0).getDate();
+  const {travelMap,ckMap,revMap,inboxMap}=buildMonthMaps();
+  const dows=['一','二','三','四','五','六','日'];
+  let cells='';
+  for(let i=0;i<startDow;i++) cells+='<div class="cal-cell empty"></div>';
+  for(let d=1;d<=daysInMonth;d++){
+    const ds=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const ev=[];
+    if(travelMap[ds]) ev.push(`<span class="dot travel" title="${esc(travelMap[ds].join('、'))}">✈</span>`);
+    if(ckMap[ds]) ev.push(`<span class="dot check" title="打卡 ${ckMap[ds].length} 项"></span>`);
+    if(revMap[ds]) ev.push(`<span class="dot review" title="已复盘"></span>`);
+    if(inboxMap[ds]) ev.push(`<span class="dot inbox" title="${esc(inboxMap[ds].join('、'))}"></span>`);
+    const isToday=ds===today, isSel=ds===calSel;
+    cells+=`<div class="cal-cell ${isToday?'today':''} ${isSel?'sel':''}" data-cal-day="${ds}">
+      <div class="cal-num">${d}</div><div class="cal-dots">${ev.join('')}</div></div>`;
+  }
+  let detail='';
+  if(calSel){
+    const td=travelMap[calSel]||[], ck=ckMap[calSel]||[], rv=revMap[calSel], ib=inboxMap[calSel]||[];
+    const rows=[];
+    if(td.length)rows.push(`<div class="ev"><span class="ev-ico travel">✈</span><div><b>旅行</b>：${esc(td.join('、'))} <span class="link" data-jump="travel">查看 ›</span></div></div>`);
+    if(ck.length)rows.push(`<div class="ev"><span class="ev-ico check">●</span><div><b>打卡</b>：${ck.length} 项（${esc(ck.join('、'))}）</div></div>`);
+    if(rv)rows.push(`<div class="ev"><span class="ev-ico review">●</span><div><b>复盘</b>：${esc(rv.summary?rv.summary.slice(0,40):'已记录')}</div></div>`);
+    if(ib.length)rows.push(`<div class="ev"><span class="ev-ico inbox">●</span><div><b>待办到期</b>：${esc(ib.join('、'))} <span class="link" data-jump="inbox">查看 ›</span></div></div>`);
+    detail=`<div class="card mt" data-block="detail"><h3>${D.pretty(calSel)} <span class="cs">当日汇总</span></h3>${rows.length?rows.join(''):'<div class="empty">这一天没有记录</div>'}</div>`;
+  }
+  return `
+  <div class="card" data-block="cal">
+    <div class="cal-head">
+      <button class="btn sm ghost" data-cal-prev>‹</button>
+      <div class="cal-title">${y} 年 ${m+1} 月</div>
+      <button class="btn sm ghost" data-cal-next>›</button>
+      <button class="btn sm" data-cal-today>今天</button>
+    </div>
+    <div class="cal-grid cal-dow">${dows.map(d=>`<div class="cal-dh">${d}</div>`).join('')}</div>
+    <div class="cal-grid">${cells}</div>
+    <div class="cal-legend"><span><span class="dot travel">✈</span>旅行</span><span><span class="dot check"></span>打卡</span><span><span class="dot review"></span>复盘</span><span><span class="dot inbox"></span>待办到期</span></div>
+  </div>
+  ${detail}`;
+}
+
+/* ============================================================
+   跨模块随手记 / 待办 Inbox
+   ============================================================ */
+function renderInbox(){
+  const items=DATA.inbox||[];
+  const active=items.filter(i=>!i.done).sort((a,b)=>(a.due||'9999').localeCompare(b.due||'9999'));
+  const done=items.filter(i=>i.done).reverse();
+  const itemHtml=(it)=>`<div class="note-item ${it.done?'done':''}">
+    <label class="chk"><input type="checkbox" ${it.done?'checked':''} data-inbox-toggle="${it.id}"><span></span></label>
+    <div class="note-body">
+      <div class="note-text">${esc(it.text)}</div>
+      ${it.due?`<div class="note-due ${D.daysBetween(D.today(),it.due)<0?'over':''}">截止 ${D.pretty(it.due)}</div>`:''}
+      ${it.created?`<div class="note-time">${esc(it.created)}</div>`:''}
+    </div>
+    <button class="btn sm danger" data-inbox-del="${it.id}">删</button>
+  </div>`;
+  return `
+  <div class="card" data-block="add">
+    <h3>快速记录</h3>
+    <form class="fr" data-add="inbox" style="align-items:flex-end">
+      <div class="field" style="flex:1;min-width:200px"><label>想记点什么 / 待办</label><input name="text" placeholder="例如：周五前交水电费"></div>
+      <div class="field"><label>截止日(可选)</label><input type="date" name="due"></div>
+      <button class="btn" type="submit">添加</button>
+    </form>
+    <div class="hint">也可随时点右下角备份按钮 → 「快速记录」跨页随手记</div>
+  </div>
+  <div class="card mt" data-block="active">
+    <h3>待办 <span class="cs">${active.length} 条</span></h3>
+    ${active.length?active.map(itemHtml).join(''):'<div class="empty">暂无待办，记录点什么吧</div>'}
+  </div>
+  ${done.length?`<div class="card mt" data-block="done"><h3>已完成 <span class="cs">${done.length} 条</span></h3>${done.map(itemHtml).join('')}</div>`:''}`;
+}
+
+/* ============================================================
    自我成长（理财学习 + 时政热点）
    纯前端 + 免费公开接口（v2.xxapi.cn，CORS 可用），仅消耗网络流量，不烧 AI 积分
    所有「原文 / 公众号解读」链接均使用已校验可达的搜索类地址，点击必能打开
@@ -5268,6 +5470,8 @@ function render(){
     case 'travel':html=renderTravel();break;
     case 'review':html=renderReview();break;
     case 'grow':html=renderGrow();break;
+    case 'calendar':html=renderCalendar();break;
+    case 'inbox':html=renderInbox();break;
     default:html=renderHome();
   }
   view.innerHTML=html;
@@ -5275,6 +5479,7 @@ function render(){
   bindView(view);
   if(state.view==='home')startSbClock();
   applyBlockOrder(state.view);initBlockDrag(state.view);
+  updateInboxBadge();
   window.scrollTo(0,0);
 }
 
@@ -5309,6 +5514,7 @@ function bindView(view){
     else if(type==='sideOther'){push('sideHustle.other',o);toast('已记录其他副业');}
     else if(type==='mediaPlan'){push('mediaPlan',o);toast('已添加选题');}
     else if(type==='videos'){push('videos',o);toast('已保存爆款拆解');}
+    else if(type==='inbox'){const text=(o.text||'').trim();if(!text){toast('写点内容吧');return;}DATA.inbox=DATA.inbox||[];DATA.inbox.push({id:o.id,text,done:false,created:D.today()+' '+o._t,due:o.due||''});save();toast('已记录到随手记');}
     else if(type==='trip'){
       if(!o.date){toast('请填写出发日期');return;}
       o.id='t'+Date.now();o.plan='';DATA.travel.trips.push(o);save();toast('已添加旅行');
@@ -5458,6 +5664,14 @@ function bindView(view){
     const note=view.querySelector('#reportNote').value;const t=saveRep.dataset.title||'复盘报告';
     DATA.reviews['_last_report']={summary:note,title:t};save();toast('报告已保存');
   };
+  // 日历：切换月份 / 选中日
+  view.querySelectorAll('[data-cal-prev]').forEach(b=>b.onclick=()=>{calMonth=new Date(calMonth.getFullYear(),calMonth.getMonth()-1,1);render();});
+  view.querySelectorAll('[data-cal-next]').forEach(b=>b.onclick=()=>{calMonth=new Date(calMonth.getFullYear(),calMonth.getMonth()+1,1);render();});
+  view.querySelectorAll('[data-cal-today]').forEach(b=>b.onclick=()=>{calMonth=new Date();calSel=D.today();render();});
+  view.querySelectorAll('[data-cal-day]').forEach(c=>c.onclick=()=>{calSel=calSel===c.dataset.calDay?null:c.dataset.calDay;render();});
+  // 随手记：完成 / 删除
+  view.querySelectorAll('[data-inbox-toggle]').forEach(b=>b.onclick=e=>{const it=(DATA.inbox||[]).find(x=>x.id===b.dataset.inboxToggle);if(it){it.done=!it.done;save();render();}});
+  view.querySelectorAll('[data-inbox-del]').forEach(b=>b.onclick=()=>{(DATA.inbox=(DATA.inbox||[]).filter(x=>x.id!==b.dataset.inboxDel));save();render();});
   // 首页数据备份入口（无网络 / 无 VPN 也能用的兜底）
   const he=view.querySelector('#homeExport'); if(he)he.onclick=doExport;
   const hi=view.querySelector('#homeImport'); if(hi)hi.onclick=doImport;
@@ -5583,6 +5797,147 @@ function initShortcuts(){
 /* ============================================================
    初始化
    ============================================================ */
+/* ============================================================
+   扩展功能：随手记快速记录 / 二维码分享 / 扫码导入
+   ============================================================ */
+function copyText(t){
+  try{
+    if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t);return;}
+  }catch(e){}
+  const ta=document.createElement('textarea');ta.value=t;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();
+  try{document.execCommand('copy');}catch(e){} ta.remove();
+}
+function initExtras(){
+  const fabMenu=document.getElementById('fabMenu');
+  // 快速记录弹窗
+  const noteModal=document.getElementById('noteModal');
+  document.getElementById('btnNote').onclick=()=>{
+    document.getElementById('noteText').value='';document.getElementById('noteDue').value='';
+    noteModal.classList.add('open');fabMenu.classList.remove('open');
+    setTimeout(()=>document.getElementById('noteText').focus(),50);
+  };
+  document.getElementById('noteCancel').onclick=()=>noteModal.classList.remove('open');
+  document.getElementById('noteSave').onclick=()=>{
+    const text=document.getElementById('noteText').value.trim();
+    if(!text){toast('写点内容吧');return;}
+    DATA.inbox=DATA.inbox||[];
+    DATA.inbox.push({id:'n'+Date.now(),text,done:false,created:D.today()+' '+new Date().toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'}),due:document.getElementById('noteDue').value||''});
+    save();noteModal.classList.remove('open');toast('已记录到随手记');render();
+  };
+  noteModal.addEventListener('click',e=>{if(e.target===noteModal)noteModal.classList.remove('open');});
+
+  // 生成分享二维码
+  const qrModal=document.getElementById('qrModal');
+  const qrOverflow=(json,box,hint)=>{
+    box.innerHTML='<div class="empty">数据较大（约 '+(json.length/1024).toFixed(1)+' KB），单张二维码放不下</div>';
+    hint.innerHTML='请改用：①「导出全部数据」存文件；②下方「复制 JSON 文本」后在手机端「扫码导入」的粘贴框导入。';
+  };
+  document.getElementById('btnQr').onclick=()=>{
+    fabMenu.classList.remove('open');
+    const json=exportJSON();
+    const box=document.getElementById('qrBox'),hint=document.getElementById('qrHint');
+    const encoded=b64encode(json);
+    if(encoded.length<=2200){
+      try{
+        const qr=qrcode(0,'L');qr.addData(encoded);qr.make();
+        box.innerHTML='<div class="qr-svg">'+qr.createSvgTag({cellSize:4,margin:8,scalable:true})+'</div>';
+        hint.innerHTML='数据已编码为二维码（约 '+(encoded.length/1024).toFixed(1)+' KB）。手机扫码即可导入。';
+      }catch(e){ qrOverflow(json,box,hint); }
+    }else{
+      // 拆分为多张二维码，扫码时按顺序/无序集齐后自动拼接导入
+      const size=1800;const chunks=[];
+      for(let i=0;i<encoded.length;i+=size)chunks.push(encoded.slice(i,i+size));
+      const total=chunks.length;let frags='';let ok=true;
+      chunks.forEach((ch,i)=>{
+        const payload='YB1|'+(i+1)+'/'+total+'|'+ch;
+        try{const qr=qrcode(0,'L');qr.addData(payload);qr.make();frags+='<div class="qr-frame"><div class="qr-svg">'+qr.createSvgTag({cellSize:3,margin:6,scalable:true})+'</div><div class="qr-frame-no">第 '+(i+1)+' / '+total+' 张</div></div>';}
+        catch(e){ok=false;}
+      });
+      if(ok){box.innerHTML=frags;hint.innerHTML='数据约 '+(json.length/1024).toFixed(1)+' KB，已拆分为 <b>'+total+'</b> 张二维码。请用手机「扫码导入」依次扫描这 '+total+' 张（顺序不限，集齐自动导入）。';}
+      else qrOverflow(json,box,hint);
+    }
+    qrModal.classList.add('open');
+  };
+  document.getElementById('qrCopy').onclick=()=>{copyText(exportJSON());toast('已复制 JSON 文本');};
+  document.getElementById('qrClose').onclick=()=>qrModal.classList.remove('open');
+  qrModal.addEventListener('click',e=>{if(e.target===qrModal)qrModal.classList.remove('open');});
+
+  // 扫码导入
+  const scanModal=document.getElementById('scanModal');
+  document.getElementById('btnScan').onclick=()=>{
+    fabMenu.classList.remove('open');
+    scanBuf={};scanTotal=0;
+    document.getElementById('scanStatus').textContent='点击下方「开始扫描」并允许摄像头权限（需 https 或 localhost，file:// 无法使用）';
+    scanModal.classList.add('open');
+  };
+  document.getElementById('scanStart').onclick=startScan;
+  document.getElementById('scanStop').onclick=stopScan;
+  document.getElementById('scanClose').onclick=()=>{stopScan();scanModal.classList.remove('open');};
+  document.getElementById('scanImport').onclick=()=>{
+    const t=document.getElementById('scanPaste').value.trim();
+    if(!t){toast('先粘贴 JSON 文本');return;}
+    try{importJSON(t);stopScan();scanModal.classList.remove('open');render();toast('导入成功');}
+    catch(e){toast('JSON 格式错误');}
+  };
+  scanModal.addEventListener('click',e=>{if(e.target===scanModal){stopScan();scanModal.classList.remove('open');}});
+}
+let scanStream=null,scanRAF=null,scanBuf={},scanTotal=0;
+function startScan(){
+  const video=document.getElementById('scanVideo'),status=document.getElementById('scanStatus');
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){status.textContent='当前环境不支持摄像头（需 https 或 localhost）';return;}
+  status.textContent='正在请求摄像头权限…';
+  navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}}).then(stream=>{
+    scanStream=stream;video.srcObject=stream;video.style.display='block';video.play();
+    document.getElementById('scanStart').style.display='none';document.getElementById('scanStop').style.display='inline-block';
+    status.textContent='正在扫描… 把二维码对准摄像头';
+    const tick=()=>{
+      if(video.readyState>=2&&video.videoWidth){
+        const cv=document.createElement('canvas');cv.width=video.videoWidth;cv.height=video.videoHeight;
+        const ctx=cv.getContext('2d');ctx.drawImage(video,0,0,cv.width,cv.height);
+        const img=ctx.getImageData(0,0,cv.width,cv.height);
+        const res=(typeof jsQR==='function')?jsQR(img.data,cv.width,cv.height,{inversionAttempts:'attemptBoth'}):null;
+        if(res&&res.data){
+          const data=res.data;
+          // 多帧二维码：YB1|<i>/<n>|<chunk>
+          if(data.indexOf('YB1|')===0){
+            const m=data.match(/^YB1\|(\d+)\/(\d+)\|(.*)$/);
+            if(m){
+              const idx=+m[1],total=+m[2],chunk=m[3];
+              scanBuf[idx]=chunk;scanTotal=total;
+              const got=Object.keys(scanBuf).length;
+              status.textContent='已扫描 '+got+' / '+total+' 张，集齐自动导入…';
+              if(got===total){
+                const full=Object.keys(scanBuf).sort((a,b)=>a-b).map(k=>scanBuf[k]).join('');
+                try{const json=b64decode(full);importJSON(json);toast('扫码导入成功（'+total+' 张）');stopScan();document.getElementById('scanModal').classList.remove('open');render();scanBuf={};scanTotal=0;return;}
+                catch(e){status.textContent='二维码数据解析失败，请重新扫描';scanBuf={};scanTotal=0;}
+              }
+              return;
+            }
+          }
+          try{const json=b64decode(data);importJSON(json);toast('扫码导入成功');stopScan();document.getElementById('scanModal').classList.remove('open');render();return;}
+          catch(e){status.textContent='二维码内容不是有效的备份数据';}
+        }
+      }
+      scanRAF=requestAnimationFrame(tick);
+    };
+    scanRAF=requestAnimationFrame(tick);
+  }).catch(err=>{status.textContent='无法访问摄像头：'+(err&&err.message||err)+'（请检查权限或改用粘贴导入）';});
+}
+function stopScan(){
+  if(scanRAF)cancelAnimationFrame(scanRAF);scanRAF=null;
+  if(scanStream){scanStream.getTracks().forEach(t=>t.stop());scanStream=null;}
+  const v=document.getElementById('scanVideo');if(v){v.srcObject=null;v.style.display='none';}
+  const s=document.getElementById('scanStart'),st=document.getElementById('scanStop');
+  if(s)s.style.display='inline-block';if(st)st.style.display='none';
+}
+
+/* 离线支持：注册 Service Worker（仅 http(s)/localhost） */
+function registerSW(){
+  if('serviceWorker' in navigator && location.protocol.indexOf('http')===0){
+    window.addEventListener('load',()=>{ navigator.serviceWorker.register('sw.js').catch(()=>{}); });
+  }
+}
+
 function init(){
   loadSbCfg();
   applyTheme();
@@ -5592,12 +5947,14 @@ function init(){
   initBackup();
   initSbModal();
   initShortcuts();
+  initExtras();
   document.getElementById('themeBtn').onclick=toggleTheme;
   document.getElementById('brand').onclick=()=>setView('home');
   document.getElementById('guideBtn').onclick=()=>{setView('guide');closeSidebar();};
   document.getElementById('menuToggle').onclick=openSidebar;
   document.getElementById('overlay').onclick=closeSidebar;
   setView('home');
+  registerSW();
   setSbStatus(sbCfg?'sync':'off');
   if(sbCfg)connectSupabase();
   window.addEventListener('online',()=>{ if(sbCfg)connectSupabase(); else setSbStatus('off'); });

@@ -13,7 +13,7 @@ const marker = '})();';
 const idx = code.lastIndexOf(marker);
 if (idx < 0) { console.error('IIFE close not found'); process.exit(2); }
 code = code.slice(0, idx) +
-  '\nglobalThis.__T={B1_WORDS,todayWordSet,renderDailyWords,renderWrongWords,renderReviewWords,init};\n' +
+  '\nglobalThis.__T={B1_WORDS,todayWordSet,renderDailyWords,renderWrongWords,renderReviewWords,renderCalendar,renderInbox,init};\n' +
   code.slice(idx);
 
 // ---- DOM / browser stubs ----
@@ -104,5 +104,17 @@ console.log('renderDailyWords ok:', renderOK, '| ph rendered:', phInRender);
 let othersOK=true;
 try { T.renderWrongWords(); T.renderReviewWords(); } catch(e){ othersOK=false; console.error('other render ERROR:', e.message); }
 console.log('wrong/review render ok:', othersOK);
+
+// init() boots nav + extras + sw wiring (must not throw under stubs)
+let initOK=true;
+try { T.init(); } catch(e){ initOK=false; console.error('init ERROR:', e.message, e.stack.split('\n')[1]); }
+console.log('init ok:', initOK);
+
+// new module renders
+let calOK=true, inboxOK=true;
+try { T.renderCalendar(); } catch(e){ calOK=false; console.error('renderCalendar ERROR:', e.message); }
+try { T.renderInbox(); } catch(e){ inboxOK=false; console.error('renderInbox ERROR:', e.message); }
+console.log('renderCalendar ok:', calOK);
+console.log('renderInbox ok:', inboxOK);
 
 process.exit(0);
