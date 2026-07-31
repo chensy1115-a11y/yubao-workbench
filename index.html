@@ -588,7 +588,7 @@ if('speechSynthesis' in window){
    ============================================================ */
 const KEY='yubao_workbench_v1';
 const DEFAULT={
-  version:1, settings:{theme:'system',engLevel:'b1',xxapiKey:'',blockOrder:{home:['today','wall','travel','summary']}}, checkins:{},
+  version:1, settings:{theme:'system',engLevel:'b1',xxapiKey:'',blockOrder:{home:['today','wall','travel','summary','backup']}}, checkins:{},
   sideHustle:{iso:[],media:[],other:[]},
   english:[], reading:[], exercise:[],
   mediaPlan:[], videos:[], favHot:[], goals:{readingYear:12, sideMonth:0, engWeek:0},
@@ -845,7 +845,7 @@ function historyByDate(records){
 }
 function historyBlock(records,cols,path){
   const dates=historyByDate(records);
-  if(!dates.length)return `<div class="empty">暂无记录，从上方表单添加 ✦</div>`;
+  if(!dates.length)return `<div class="empty">暂无记录，从上方表单添加</div>`;
   let html='';
   dates.forEach(d=>{
     const items=records.filter(r=>r.date===d);
@@ -1011,7 +1011,7 @@ function renderHome(){
 
   const travelHtml = next?`<div class="countdown"><div class="plane">${ico('plane')}</div>
         <div class="cd-days">${cdDays}</div><div class="cd-l">天后出发</div><div class="cd-n">${next.name}</div></div>`
-        :`<div class="countdown" style="background:var(--bg);color:var(--text-2)"><div class="cd-n">还没有旅行计划</div><div class="cd-l">去「旅游规划」添加吧 ✦</div></div>`;
+        :`<div class="countdown" style="background:var(--bg);color:var(--text-2)"><div class="cd-n">还没有旅行计划</div><div class="cd-l">去「旅游规划」添加吧</div></div>`;
 
   return `
   <div class="card" data-block="today">
@@ -4521,7 +4521,7 @@ function reviewItems(){
 }
 function renderReviewWords(){
   const items=reviewItems();
-  if(!items.length) return `<div class="card" data-block="review"><h3>${ico('refresh')} 复习打卡</h3><div class="empty" style="padding:24px;text-align:center;color:#90A4AE">先学几天单词，再来复习吧 ✦</div></div>`;
+  if(!items.length) return `<div class="card" data-block="review"><h3>${ico('refresh')} 复习打卡</h3><div class="empty" style="padding:24px;text-align:center;color:#90A4AE">先学几天单词，再来复习吧</div></div>`;
   const cards=items.map(w=>{
     const gi=B1_WORDS.indexOf(w);
     return `<div class="flip" data-flip="${gi}">
@@ -4606,7 +4606,7 @@ function renderReading(){
   </div>
   <div class="card mt" data-block="reading">
     <h3>在读的书目 <span class="cs">${reading.length} 本</span></h3>
-    ${reading.length?reading.map(b=>bookCard(b)).join(''):`<div class="empty">暂无在读书目，上方添加 ✦</div>`}
+    ${reading.length?reading.map(b=>bookCard(b)).join(''):`<div class="empty">暂无在读书目，上方添加</div>`}
   </div>
   <div class="card mt" data-block="done">
     <h3>读完历史 <span class="cs">${done.length} 本 · 按读完日期折叠</span></h3>
@@ -4901,7 +4901,7 @@ function renderTravel(){
       <span class="trip-name">${t.name}</span>
       <span class="trip-info">${D.pretty(t.date)} · ${days>=0?`还有 ${days} 天`:'已过期'} · ¥${(+est).toFixed(0)}${arranged}</span>
       <span class="trip-actions"><button class="btn sm ghost" data-edittrip="${t.id}">编辑</button><button class="btn sm danger" data-deltrip="${t.id}">删除</button></span></div>`;
-  }).join(''):'<div class="empty">还没有旅行计划，在下方添加 ✦</div>';
+  }).join(''):'<div class="empty">还没有旅行计划，在下方添加</div>';
 
   // 愿望清单
   const wish=DATA.travel.wishlist.length?DATA.travel.wishlist.map(w=>`<div class="spread" style="padding:8px 0;border-bottom:1px solid var(--border)">
@@ -4989,7 +4989,7 @@ function renderReview(){
     <div class="field" style="margin-bottom:12px"><label>今天心情</label><div class="moods" id="moods">
       ${MOODS.map(m=>`<div class="mood ${r.mood===m.k?'sel':''}" data-mood="${m.k}" title="${m.label}">${m.svg}</div>`).join('')}</div></div>
     <div class="field"><label>今日小结</label><textarea id="reviewSummary" rows="4" placeholder="今天做了什么、感受如何、明天想做什么…">${r.summary||''}</textarea></div>
-    <div class="muted small" style="margin-top:8px">输入即时自动保存，关闭后再次打开不会消失 ✦</div>
+    <div class="muted small" style="margin-top:8px">输入即时自动保存，关闭后再次打开不会消失</div>
   </div>
   ${report?`<div class="card" data-block="report"><h3>${report.title}</h3>
     <div class="grid g2">${report.cards}</div>
@@ -5074,8 +5074,8 @@ function financeExplain(title){
 /* 检索今日时政 / 财经 / 国际 / 科技要闻：多平台融合（百度热搜为主源 + 微博热搜为辅源），过滤娱乐八卦 */
 async function loadLiveNews(container){
   const noNewsHtml=`<div class="muted" style="padding:16px 0;text-align:center">
-    <p style="margin-bottom:10px">📰 今日热搜暂无时政 / 财经 / 国际 / 科技类正经要闻</p>
-    <p class="small">热搜以娱乐内容为主，建议直接访问以下权威信源获取每日要闻：</p>
+    <p style="margin-bottom:10px">今日热搜暂无时政 / 财经 / 国际 / 科技类正经要闻</p>
+    <p class="small">当前未筛出符合条件的正经要闻，建议直接访问以下权威信源获取每日要闻：</p>
     <div style="margin-top:12px;display:flex;flex-direction:column;gap:8px">
       <a href="https://www.news.cn/" target="_blank" rel="noopener" class="btn sm" style="width:100%;justify-content:center">新华网 · 时政要闻</a>
       <a href="https://www.caixin.com/" target="_blank" rel="noopener" class="btn sm ghost" style="width:100%;justify-content:center">财新网 · 财经深度报道</a>
@@ -5176,7 +5176,7 @@ async function loadLiveNews(container){
     }
   }catch(e){
     container.innerHTML=`<div class="muted" style="padding:16px 0;text-align:center">
-      <p style="margin-bottom:10px">📡 实时接口暂不可用</p>
+      <p style="margin-bottom:10px">实时接口暂不可用</p>
       <p class="small">建议直接访问以下权威信源获取每日要闻：</p>
       <div style="margin-top:12px;display:flex;flex-direction:column;gap:8px">
         <a href="https://www.news.cn/" target="_blank" rel="noopener" class="btn sm" style="width:100%;justify-content:center">新华网 · 时政要闻</a>
@@ -5546,7 +5546,7 @@ function initBackup(){
   document.getElementById('btnDownload').onclick=()=>{
     menu.classList.remove('open');
     const url=location.href;
-    const doDownload=(htmlText)=>{const blob=new Blob([htmlText],{type:'text/html'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='雨宝工作台_离线副本.html';a.click();toast('已下载离线副本 ✦');};
+    const doDownload=(htmlText)=>{const blob=new Blob([htmlText],{type:'text/html'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='雨宝工作台_离线副本.html';a.click();toast('已下载离线副本');};
     if(url&&url.indexOf('file:')!==0){ fetch(url).then(r=>r.text()).then(doDownload).catch(()=>doDownload('<!DOCTYPE html>'+document.documentElement.outerHTML)); }
     else doDownload('<!DOCTYPE html>'+document.documentElement.outerHTML);
   };
