@@ -475,6 +475,10 @@ h3 svg{width:18px;height:18px;vertical-align:-3px;margin-right:5px}
       <strong>同步密钥</strong>留空时，每台设备的云端数据相互独立、互不可见；多台设备想共享同一份数据，就都填<strong>同一个密钥</strong>。别人不知道你的密钥就进不了你的空间。<br>
       填入后点击连接，状态栏会显示「云端已连接」。
     </div>
+    <hr style="border:none;border-top:1px solid var(--border);margin:14px 0">
+    <h3>新闻热搜数据源（可选 · 增强时政 / 财经 / 国际）</h3>
+    <div class="field" style="margin-bottom:8px"><label>v2.xxapi.cn API Key（可选）</label><input id="xxapiKey" style="width:100%" placeholder="不填也能用；填了额外接入头条 + 知乎热榜" /></div>
+    <div class="hint">默认已接入「百度热搜 + 微博」且免 Key。想接入<strong>头条、知乎</strong>热榜（时政 / 财经 / 国际内容更全），去 <a href="https://v2.xxapi.cn" target="_blank" rel="noopener">v2.xxapi.cn</a> 注册免费申请 Key 后填这里即可；Key 仅保存在本机浏览器，不上传云端。</div>
     <div class="actions">
       <button class="btn ghost" id="sbCancel">取消</button>
       <button class="btn ghost" id="sbDisconnect">断开</button>
@@ -584,7 +588,7 @@ if('speechSynthesis' in window){
    ============================================================ */
 const KEY='yubao_workbench_v1';
 const DEFAULT={
-  version:1, settings:{theme:'system',engLevel:'b1',blockOrder:{home:['today','wall','travel','summary']}}, checkins:{},
+  version:1, settings:{theme:'system',engLevel:'b1',xxapiKey:'',blockOrder:{home:['today','wall','travel','summary']}}, checkins:{},
   sideHustle:{iso:[],media:[],other:[]},
   english:[], reading:[], exercise:[],
   mediaPlan:[], videos:[], favHot:[], goals:{readingYear:12, sideMonth:0, engWeek:0},
@@ -5080,29 +5084,31 @@ async function loadLiveNews(container){
     </div>
   </div>`;
   try{
-    /* 多源并行拉取：百度(新闻向) + 微博(突发)，任一失败不影响另一源 */
-    const [bRes,wRes]=await Promise.allSettled([
-      fetch('https://v2.xxapi.cn/api/baiduhot').then(r=>r.json()),
-      fetch('https://v2.xxapi.cn/api/weibohot').then(r=>r.json())
-    ]);
-    let items=[];
-    if(bRes.status==='fulfilled'&&bRes.value&&bRes.value.code===200&&Array.isArray(bRes.value.data)){
-      items.push(...bRes.value.data.map(x=>({
-        title:x.title||'',
-        url:x.url||('https://www.baidu.com/s?wd='+encodeURIComponent(x.title||'')),
-        desc:x.desc||'',
-        hot:x.hot||'',
-        src:'百度'
-      })));
+    /* 多源并行拉取：百度(新闻向) + 微博(突发) 始终启用；头条、知乎需填 Key */
+    const key=(DATA.settings.xxapiKey||'').trim();
+    const sources=[
+      {src:'百度',url:'https://v2.xxapi.cn/api/baiduhot',fb:t=>'https://www.baidu.com/s?wd='+encodeURIComponent(t),hasDesc:true},
+      {src:'微博',url:'https://v2.xxapi.cn/api/weibohot',fb:t=>'https://s.weibo.com/weibo?q='+encodeURIComponent(t),hasDesc:false}
+    ];
+    if(key){
+      sources.push({src:'头条',url:'https://v2.xxapi.cn/api/toutiaohot?key='+encodeURIComponent(key),fb:t=>'https://www.toutiao.com/search/?keyword='+encodeURIComponent(t),hasDesc:true});
+      sources.push({src:'知乎',url:'https://v2.xxapi.cn/api/zhihuhot?key='+encodeURIComponent(key),fb:t=>'https://www.zhihu.com/search?type=content&q='+encodeURIComponent(t),hasDesc:true});
     }
-    if(wRes.status==='fulfilled'&&wRes.value&&wRes.value.code===200&&Array.isArray(wRes.value.data)){
-      items.push(...wRes.value.data.map(x=>({
-        title:x.title||'',
-        url:x.url||('https://s.weibo.com/weibo?q='+encodeURIComponent(x.title||'')),
-        desc:'',
-        hot:x.hot||'',
-        src:'微博'
-      })));
+    const settled=await Promise.allSettled(sources.map(s=>fetch(s.url).then(r=>r.json()).then(j=>({s,j}))));
+    let items=[];
+    for(const r of settled){
+      if(r.status!=='fulfilled'||!r.value||r.value.code!==200||!Array.isArray(r.value.data))continue;
+      const s=r.value.s;
+      for(const x of r.value.data){
+        const title=(x.title||'').trim();if(!title)continue;
+        items.push({
+          title,
+          url:x.url||s.fb(title),
+          desc:s.hasDesc?(x.desc||x.content||x.excerpt||''):'',
+          hot:x.hot||x.heat||'',
+          src:s.src
+        });
+      }
     }
     if(!items.length)throw new Error('all empty');
     /* 去重（标题相同视为同一事件） */
@@ -5551,11 +5557,12 @@ function initBackup(){
    ============================================================ */
 function initSbModal(){
   const modal=document.getElementById('sbModal');
-  document.getElementById('connBtn').onclick=()=>{document.getElementById('sbUrl').value=sbCfg?.url||'';document.getElementById('sbKey').value=sbCfg?.key||'';document.getElementById('sbSpace').value=sbCfg?.space||'';modal.classList.add('open');};
+  document.getElementById('connBtn').onclick=()=>{document.getElementById('sbUrl').value=sbCfg?.url||'';document.getElementById('sbKey').value=sbCfg?.key||'';document.getElementById('sbSpace').value=sbCfg?.space||'';document.getElementById('xxapiKey').value=DATA.settings.xxapiKey||'';modal.classList.add('open');};
   document.getElementById('sbCancel').onclick=()=>modal.classList.remove('open');
   document.getElementById('sbConnect').onclick=()=>{
     sbCfg={url:document.getElementById('sbUrl').value.trim(),key:document.getElementById('sbKey').value.trim(),space:document.getElementById('sbSpace').value.trim()};
-    localStorage.setItem(SBKEY,JSON.stringify(sbCfg));modal.classList.remove('open');connectSupabase();
+    DATA.settings.xxapiKey=document.getElementById('xxapiKey').value.trim();
+    localStorage.setItem(SBKEY,JSON.stringify(sbCfg));save();modal.classList.remove('open');connectSupabase();
   };
   document.getElementById('sbDisconnect').onclick=()=>{
     sbCfg=null;localStorage.removeItem(SBKEY);sbClient=null;setSbStatus('off');modal.classList.remove('open');toast('已断开云端');
