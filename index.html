@@ -409,7 +409,9 @@ h3 svg{width:18px;height:18px;vertical-align:-3px;margin-right:5px}
 .nc-highlights .nh-icon{flex:0 0 auto;font-size:16px}
 .nc-highlights ul{margin:4px 0 0;padding-left:18px}
 .nc-highlights li{margin:3px 0;color:var(--text-2)}
-.nc-tip{display:flex;gap:8px;padding:10px 12px;background:#fff8f0;border-radius:10px;font-size:12.5px;line-height:1.6;color:#8b6914;margin-top:8px}
+.grow-cat{margin-top:6px}
+.grow-cat-h{font-size:13px;font-weight:700;color:var(--primary-strong);padding:10px 0 4px;border-top:1px dashed var(--border);margin-top:6px}
+.grow-cat:first-child .grow-cat-h{border-top:none;padding-top:2px}.nc-tip{display:flex;gap:8px;padding:10px 12px;background:#fff8f0;border-radius:10px;font-size:12.5px;line-height:1.6;color:#8b6914;margin-top:8px}
 [data-theme="dark"] .nc-tip{background:#2a2410;color:#d4c48a}
 .nc-actions{display:flex;gap:8px;margin-top:12px;padding-top:10px;border-top:1px solid var(--border)}
 /* 兼容旧样式 */
@@ -690,7 +692,8 @@ const DEFAULT={
   engWords:{done:{},wrong:[]},
   travel:{trips:[],wishlist:[],itineraries:[],rates:{},plan:''},
   reviews:{},
-  inbox:[]
+  inbox:[],
+  push:{grow:{date:'',ts:0,fallback:false,items:[]},videos:{date:'',ts:0,fallback:false,items:[]}}
 };
 function deepMerge(base,over){
   if(Array.isArray(base)) return Array.isArray(over)?over:base;
@@ -4884,8 +4887,31 @@ function genScript(h){
     '· 结尾 CTA：你呢？评论区聊聊。点赞收藏，下期接着讲。\n'+
     '（口播风格：自然像唠嗑，不用提词器也能量产；前期主做口播类型）';
 }
-/* 你的赛道关键词：大龄单身女 / 独居 / 女性成长 / 相亲 / 搞钱 等 */
-const HOT_KEYWORDS=['大龄','单身','独居','相亲','女性','女生','成长','自我','学习','搞钱','理财','存款','养老','婚姻','脱单','内耗','情绪','副业','独立','清醒','治愈','读书','自律','三十','30岁','姐姐','离婚','不婚','认知','原生家庭','职场','宝妈','情感','提升','焦虑','催婚','买房','独身','未婚','普通女孩','中年','情绪价值','悦己','自我提升'];
+/* 女性成长赛道：精筛关键词（命中即视为「女性成长 / 独居 / 搞钱 / 自我提升」相关） */
+const HOT_KEYWORDS=['大龄','单身','独居','相亲','女性','女生','成长','自我','学习','搞钱','理财','存款','养老','脱单','内耗','情绪','副业','独立','清醒','治愈','读书','自律','三十','30岁','姐姐','不婚','认知','职场','提升','焦虑','催婚','买房','独身','未婚','普通女孩','中年','情绪价值','悦己','自我提升','松弛','爱自己','边界感','断舍离','攒钱','极简','一个人','独立女性','搞钱女孩'];
+/* 家庭八卦黑名单：命中即排除（避免把婆媳 / 育儿 / 夫妻吵架等误推给用户） */
+const WOMEN_GOSSIP=['婆婆','公公','婆媳','老公','老婆','夫妻','育儿','带娃','早教','幼儿园','孕妇','怀孕','胎','月子','生娃','二胎','三胎','婚姻危机','小三','原配','妯娌','孕肚','产检','婚变','家暴','出轨'];
+/* 女性成长离线选题池：接口不可用时按日期轮换展示，保证每日变化且不偏题（绝不回退到全员八卦热榜） */
+const WOMEN_POOL=[
+  {title:'30岁单身独居第1000天，我过得比恋爱时爽',src:'独居生活·治愈'},
+  {title:'大龄女青年搞钱实录：工资5k到副业2w',src:'理财·女性搞钱'},
+  {title:'相亲30次后，我总结的避坑指南',src:'相亲·情感认知'},
+  {title:'下班后3小时，我是怎么读完一本书的',src:'学习·自我提升'},
+  {title:'不婚不育，我的存款到底够不够养老',src:'理财·独立规划'},
+  {title:'停止内耗：一个普通女孩的自我重建',src:'女性成长·情绪疗愈'},
+  {title:'一个人住，如何把出租屋住成家',src:'独居·生活方式'},
+  {title:'30岁才明白的5件事，早点知道就好了',src:'女性成长·认知提升'},
+  {title:'普通女孩如何攒下第一个10万：我的极简记账法',src:'理财·攒钱实操'},
+  {title:'独居女生的安全感清单：从一个人住开始强大',src:'独居·自我成长'},
+  {title:'职场普通女孩晋升记：不靠关系靠这3件事',src:'职场·女性成长'},
+  {title:'戒掉"等别人来爱我"：悦己才是顶级自律',src:'女性成长·自我疗愈'},
+  {title:'一个人旅行上瘾后，我不再害怕孤独',src:'独居·悦己生活'},
+  {title:'副业从0到月入过万：普通女孩能复制的路',src:'搞钱·副业实操'},
+  {title:'停止精神内耗的7个具体方法，亲测有效',src:'情绪·自我提升'},
+  {title:'买房还是租房？独居女孩的清醒算账',src:'理财·居住规划'},
+  {title:'30+未婚，我是怎么和家人谈"不催婚"的',src:'原生家庭·边界感'},
+  {title:'读书让我越过越好的真正原因',src:'学习·认知提升'}
+];
 function fmtHot(n){n=+n||0;if(n>=10000)return (n/10000).toFixed(1)+'w';return ''+n;}
 /* 爆款收藏：把实时匹配到的真实爆款存起来（独立于"我的爆款拆解库"） */
 function toggleFav(item){
@@ -4901,8 +4927,17 @@ function renderFavHot(){
   if(!arr.length)return '<div class="empty">还没有收藏。在上方「为你匹配的真实爆款」里点 ☆ 收藏，灵感就永久存这里啦。</div>';
   return arr.slice().reverse().map((f,i)=>{const key=arr.length-1-i;return '<div class="hot-card"><div class="hot-head"><div style="font-weight:700">'+esc(f.title)+'</div><span class="tag warn">'+esc(f.src||'')+'</span></div><div class="muted small" style="margin:4px 0 8px">收藏于 '+esc(f.t||'')+(f.hot!=null&&f.hot!==''?' · 热度 '+fmtHot(f.hot):'')+'</div><div class="fr" style="gap:8px;margin-top:6px"><a class="btn sm" href="'+esc(f.url)+'" target="_blank" rel="noopener">打开 →</a><button class="btn sm ghost" data-favdel="'+key+'">取消收藏</button></div></div>';}).join('');
 }
-/* 实时拉取真实热榜，并按你的赛道过滤（失败回退静态灵感） */
-async function loadLiveHot(container){
+/* 按日期种子做确定性洗牌，保证同一天结果稳定、每天不同 */
+function dailyPick(pool,n){
+  const seedStr=D.today();let h=2166136261;
+  for(const c of seedStr)h=(h^c.charCodeAt(0))*16777619>>>0;
+  let s=h||1;const arr=pool.slice();
+  for(let i=arr.length-1;i>0;i--){s=(s*1103515245+12345)&0x7fffffff;const j=s%(i+1);const t=arr[i];arr[i]=arr[j];arr[j]=t;}
+  return arr.slice(0,Math.min(n,arr.length));
+}
+let curVideoItems=[];
+/* 实时拉取真实热榜，仅保留「女性成长」赛道（排除家庭八卦），绝不回退到全员热榜 */
+async function fetchVideosLive(){
   try{
     const [dy,wb]=await Promise.allSettled([
       fetch('https://v2.xxapi.cn/api/douyinhot').then(r=>r.json()),
@@ -4915,16 +4950,55 @@ async function loadLiveHot(container){
     if(wb.status==='fulfilled'&&wb.value&&wb.value.code===200){
       items=items.concat((wb.value.data||[]).map(x=>({title:x.title||'',hot:x.hot,url:x.url||('https://s.weibo.com/weibo?q='+encodeURIComponent(x.title||'')),src:'微博'})));
     }
-    if(!items.length)throw new Error('empty');
-    const matched=items.filter(it=>HOT_KEYWORDS.some(k=>it.title.includes(k)));
-    const show=matched.length?matched:items.slice(0,12);
-    const note=matched.length?('为你匹配到 <b>'+matched.length+'</b> 条「女性成长·独居·相亲·搞钱」相关爆款'):'今日匹配你赛道的内容较少，以下是全部热门供参考';
-    const list=show.slice(0,15);
-    container.innerHTML='<div class="muted small" style="margin-bottom:10px">'+note+'</div>'+list.map((it,idx)=>{const faved=(DATA.favHot||[]).some(f=>f.title===it.title&&f.url===it.url);return '<div class="hot-card"><div class="hot-head"><div style="font-weight:700">'+esc(it.title)+'</div><span class="tag warn">'+it.src+'</span></div><div class="muted small" style="margin:4px 0 8px">热度 '+fmtHot(it.hot)+'</div><div class="fr" style="gap:8px;margin-top:6px"><a class="btn sm" href="'+esc(it.url)+'" target="_blank" rel="noopener">跳转观看 →</a><button class="btn sm ghost fav-btn" data-favidx="'+idx+'">'+(faved?ico('star')+' 已收藏':'☆ 收藏')+'</button></div></div>';}).join('');
-    container.querySelectorAll('.fav-btn').forEach(b=>b.onclick=()=>{toggleFav(list[+b.dataset.favidx]);});
-  }catch(e){
-    container.innerHTML='<div class="muted small" style="margin-bottom:10px">实时接口暂不可用，已为你展示往期灵感 ↓</div>'+HOT_SEED.map(h=>'<div class="hot-card"><div class="hot-head"><div style="font-weight:700">'+esc(h.title)+'</div><span class="tag warn">'+h.hot+'</span></div><div class="muted small" style="margin:4px 0 8px">赛道：'+esc(h.src)+'</div><a class="btn sm" href="https://www.douyin.com/search/'+encodeURIComponent(h.title)+'" target="_blank" rel="noopener">搜索相关 →</a></div>').join('');
-  }
+    if(!items.length)return {ok:false,items:[]};
+    const seen=new Set(),uniq=[];
+    for(const it of items){const k=it.title.trim();if(k&&!seen.has(k)){seen.add(k);uniq.push(it);}}
+    const matched=uniq.filter(it=>HOT_KEYWORDS.some(k=>it.title.includes(k))&&!WOMEN_GOSSIP.some(b=>it.title.includes(b)));
+    if(!matched.length)return {ok:false,items:[]};
+    return {ok:true,items:matched.slice(0,12).map(it=>({title:it.title,src:it.src,hot:it.hot,url:it.url}))};
+  }catch(e){ return {ok:false,items:[]}; }
+}
+function videoFallback(){ return dailyPick(WOMEN_POOL,8).map(p=>({title:p.title,src:p.src,hot:'',url:'https://www.douyin.com/search/'+encodeURIComponent(p.title)})); }
+function videoStale(){
+  const p=DATA.push.videos;const t=D.today();
+  if(p.date!==t)return true;
+  const now=new Date(),nine=new Date();nine.setHours(9,0,0,0);
+  return now>=nine&&(p.ts||0)<nine.getTime();
+}
+/* 把每条爆款渲染为「内联可看」的内容卡：标题 + 赛道 + 自动拆解 + 口播脚本（可直接拍），不再只是跳转链接 */
+function renderVideoItems(){
+  const items=DATA.push.videos.items||[];
+  if(!items.length)return '<div class="empty">今日暂无匹配内容</div>';
+  const note=DATA.push.videos.fallback?'（接口暂不可用，展示今日女性成长选题 · 联网后自动更新为实时爆款）':'（实时匹配「女性成长·独居·相亲·搞钱」爆款）';
+  curVideoItems=items;
+  return '<div class="muted small" style="margin-bottom:10px">'+note+'</div>'+items.map((it,idx)=>{
+    const faved=(DATA.favHot||[]).some(f=>f.title===it.title&&f.url===it.url);
+    const angle=genDeconstruct({title:it.title,src:it.src||'女性成长'});
+    return `<div class="hot-card" data-vidx="${idx}">
+      <div class="hot-head"><div style="font-weight:700">${esc(it.title)}</div><span class="tag warn">${esc(it.src||'女性成长')}</span></div>
+      <div class="muted small" style="margin:4px 0 8px">${it.hot!=null&&it.hot!==''?('热度 '+fmtHot(it.hot)+' · '):''}来源：${esc(it.src||'')}</div>
+      <div class="sub-h">为什么适合你的赛道 / 拆解角度</div><div class="box">${esc(angle)}</div>
+      <div class="fr mt" style="align-items:center;gap:8px">
+        <button class="btn sm ghost" data-vscript="${idx}">口播二创脚本 ▾</button>
+        <button class="btn sm fav-btn" data-favidx="${idx}">${faved?ico('star')+' 已收藏':'☆ 收藏'}</button>
+        <a class="btn sm ghost" href="${esc(it.url)}" target="_blank" rel="noopener" style="margin-left:auto">原平台 ↗</a>
+      </div>
+      <div class="hot-script" id="vscript-${idx}" style="display:none;margin-top:8px"><div class="sub-h mt">口播二创脚本（可直接拍）</div><div class="box">${esc(genScript({title:it.title}))}</div></div>
+    </div>`;
+  }).join('');
+}
+async function refreshVideos(){
+  const r=await fetchVideosLive();
+  const items=r.ok?r.items:videoFallback();
+  DATA.push.videos={date:D.today(),ts:Date.now(),fallback:!r.ok,items};save();
+  const box=document.getElementById('videoBox');
+  if(box&&state.view==='videos'){box.innerHTML=renderVideoItems();const st=document.getElementById('videoStamp');if(st)st.textContent=pushStamp(DATA.push.videos);bindVideoBoxHandlers(document);}
+}
+/* 给「为你匹配的真实爆款」卡片绑定 收藏 / 口播脚本展开（渲染后或刷新后都要重绑） */
+function bindVideoBoxHandlers(scope){
+  const box=(scope||document).querySelector('#videoBox');if(!box)return;
+  box.querySelectorAll('[data-vscript]').forEach(b=>b.onclick=()=>{const el=box.querySelector('#vscript-'+b.dataset.vscript);if(el)el.style.display=el.style.display==='none'?'block':'none';});
+  box.querySelectorAll('.fav-btn').forEach(b=>b.onclick=()=>{toggleFav(curVideoItems[+b.dataset.favidx]);});
 }
 
 function renderVideos(){
@@ -4951,8 +5025,9 @@ function renderVideos(){
     <div id="favHotList">${renderFavHot()}</div>
   </div>
   <div class="card mt" data-block="match">
-    <h3>为你匹配的真实爆款 <span class="cs">女性成长 · 独居 · 相亲 · 搞钱 · 实时</span></h3>
-    <div id="liveHot"><div class="muted small" style="padding:8px 0">正在拉取真实热榜…</div></div>
+    <h3>为你匹配的真实爆款 <span class="cs">女性成长 · 独居 · 相亲 · 搞钱</span> <button type="button" class="btn sm ghost" id="videoRefresh" style="float:right;margin-top:-4px">${ico('refresh')} 刷新</button></h3>
+    <div id="videoBox"><div class="muted small" style="padding:8px 0">${DATA.push.videos.items&&DATA.push.videos.items.length?renderVideoItems():'正在拉取今日真实爆款…'}</div></div>
+    <div class="muted small" id="videoStamp" style="padding-top:6px">${DATA.push.videos.date?pushStamp(DATA.push.videos):''}</div>
   </div>
   <div class="card mt" data-block="lib">
     <h3>我的爆款拆解库 <span class="cs">收藏 + 笔记</span></h3>
@@ -5260,6 +5335,40 @@ const GOSSIP_BLOCKLIST=[
   '霸总','甜宠','古偶','现偶','耽改','姐弟恋','年龄差','姐弟','状态','生图','氛围感'
 ];
 const FINANCE_TIP='复利被称为「世界第八大奇迹」——哪怕每月只存 500 元、年化 4%，坚持 10 年本金+利息也会超出直觉。理财的第一步不是赚钱，而是先搞清楚自己的钱去了哪里。';
+/* 自我成长推送：三大分类关键词（用于把实时热搜归类到 时事·国际 / 理财·股票 / 科技） */
+const GROW_CATS=[
+  {key:'时事·国际',kws:['外交','中美','中欧','中俄','联合国','欧盟','北约','制裁','关税','地缘','战争','冲突','军援','峰会','访华','出访','一带一路','东盟','APEC','G20','金砖','政策','法规','法律','反腐','两会','人大','政协','国务院','教育部','卫健委','工信部','发改委','公安部','最高法','最高检','民生','就业','失业','养老','医疗','教育','住房','社保','医保','粮食','农业','地震','台风','暴雨','洪灾','疫情','改革','边境','制裁']},
+  {key:'理财·股票',kws:['理财','经济','金融','美股','美债','美联储','央行','利率','降准','降息','房价','楼市','房地产','股市','A股','港股','基金','存款','保险','通胀','CPI','GDP','汇率','黄金','比特币','养老金','税收','财政','国债','贷款','房贷','营收','利润','裁员','涨薪','工资','收入','消费','贸易','出口','进口','外资','并购','IPO','创投','融资','估值','市值','破产','违约','债务','补贴','反垄断','平台经济']},
+  {key:'科技',kws:['AI','人工智能','芯片','半导体','新能源','电池','光伏','航天','卫星','5G','6G','量子','大模型','自动驾驶','机器人','算力','云计算','网络安全','无人机','元宇宙','VR','AR','操作系统','电动车','特斯拉','数据中心']}
+];
+/* 离线选题池：实时接口不可用时的每日轮换兜底（保证每日变化、不偏题、非八卦） */
+const GROW_POOL=[
+  {cat:'时事·国际',title:'中美关税博弈：对普通人意味着什么',desc:'关税变动影响进出口商品价格、就业与汇率，关系日常消费与海淘成本。'},
+  {cat:'时事·国际',title:'读懂政府工作报告：和钱袋子相关的信号',desc:'报告定调当年财政、货币、就业与民生方向，是判断宏观环境的风向标。'},
+  {cat:'时事·国际',title:'国际关系变局下，普通人如何保护资产',desc:'地缘风险升温时，黄金、美元与避险资产波动加大，了解底层逻辑更从容。'},
+  {cat:'时事·国际',title:'延迟退休渐进落地，养老怎么规划',desc:'退休年龄与养老金领取规则调整，直接影响长期现金流与退休安排。'},
+  {cat:'理财·股票',title:'美联储降息预期对普通人意味着什么',desc:'降息压低存款与理财收益，也降低房贷成本，牵动你的资产负债。'},
+  {cat:'理财·股票',title:'A股震荡期，普通投资者怎样不慌',desc:'市场波动时，分散配置、控制仓位、长期视角比追涨杀跌更稳。'},
+  {cat:'理财·股票',title:'黄金为何再创新高：避险逻辑与配置比例',desc:'地缘与通胀预期推高金价，了解其在组合中的对冲作用。'},
+  {cat:'理财·股票',title:'通胀回来了？物价、工资与你的购买力',desc:'CPI 回升影响实际购买力，关注收入增速能否跑赢物价。'},
+  {cat:'科技',title:'大模型降价潮：AI 如何真正帮你提效',desc:'推理成本下降让 AI 工具更普惠，学会处理重复工作能省下大量时间。'},
+  {cat:'科技',title:'国产芯片进展：看懂"卡脖子"与突破',desc:'半导体自主化关系产业链安全与科技竞争，是长期确定性方向。'},
+  {cat:'科技',title:'新能源与储能：房价之外的另一笔账',desc:'光伏、电池与储能成本下探，家庭能源与出行的长期成本结构正在改变。'},
+  {cat:'科技',title:'自动驾驶加速落地：会改变哪些行业',desc:'L2+ 普及与 Robotaxi 试点扩大，物流、出行与保险行业将被重塑。'}
+].map(p=>({...p,url:'https://www.baidu.com/s?wd='+encodeURIComponent(p.title)}));
+/* 推送时间戳与"是否过期"判定（每日 9 点视为一次新推送） */
+function pushStamp(p){
+  if(!p||!p.ts)return '';
+  const d=new Date(p.ts);
+  const t=d.toLocaleString('zh-CN',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'});
+  return '推送于 '+t+(p.fallback?' · 离线选题':' · 实时');
+}
+function growStale(){
+  const p=DATA.push.grow;const t=D.today();
+  if(p.date!==t)return true;
+  const now=new Date(),nine=new Date();nine.setHours(9,0,0,0);
+  return now>=nine&&(p.ts||0)<nine.getTime();
+}
 /* 理财学习：结合当日时政热点的"为什么和你的钱有关"解读 */
 function financeExplain(title){
   const map=[
@@ -5274,27 +5383,13 @@ function financeExplain(title){
   return '这条与宏观经济或民生政策相关，建议结合自身理财、职业规划，思考它可能带来的影响。';
 }
 /* 检索今日时政 / 财经 / 国际 / 科技要闻：多平台融合（百度热搜为主源 + 微博热搜为辅源），过滤娱乐八卦 */
-async function loadLiveNews(container){
-  const noNewsHtml=`<div class="muted" style="padding:16px 0;text-align:center">
-    <p style="margin-bottom:10px">今日热搜暂无时政 / 财经 / 国际 / 科技类正经要闻</p>
-    <p class="small">当前未筛出符合条件的正经要闻，建议直接访问以下权威信源获取每日要闻：</p>
-    <div style="margin-top:12px;display:flex;flex-direction:column;gap:8px">
-      <a href="https://www.news.cn/" target="_blank" rel="noopener" class="btn sm" style="width:100%;justify-content:center">新华网 · 时政要闻</a>
-      <a href="https://www.caixin.com/" target="_blank" rel="noopener" class="btn sm ghost" style="width:100%;justify-content:center">财新网 · 财经深度报道</a>
-      <a href="https://36kr.com/newsflashes" target="_blank" rel="noopener" class="btn sm ghost" style="width:100%;justify-content:center">36氪 · 科技创投快讯</a>
-      <a href="http://www.pbc.gov.cn/" target="_blank" rel="noopener" class="btn sm ghost" style="width:100%;justify-content:center">中国人民银行 · 货币政策</a>
-    </div>
-  </div>`;
+async function fetchGrowLive(){
   try{
-    /* 多源并行拉取：百度(新闻向) + 微博(突发) 始终启用；头条、知乎需填 Key */
     const key=(DATA.settings.xxapiKey||'').trim();
-    const sources=[
-      {src:'百度',url:'https://v2.xxapi.cn/api/baiduhot',fb:t=>'https://www.baidu.com/s?wd='+encodeURIComponent(t),hasDesc:true},
-      {src:'微博',url:'https://v2.xxapi.cn/api/weibohot',fb:t=>'https://s.weibo.com/weibo?q='+encodeURIComponent(t),hasDesc:false}
-    ];
+    const sources=[{src:'百度',url:'https://v2.xxapi.cn/api/baiduhot',hasDesc:true,fb:t=>'https://www.baidu.com/s?wd='+encodeURIComponent(t)}];
     if(key){
-      sources.push({src:'头条',url:'https://v2.xxapi.cn/api/toutiaohot?key='+encodeURIComponent(key),fb:t=>'https://www.toutiao.com/search/?keyword='+encodeURIComponent(t),hasDesc:true});
-      sources.push({src:'知乎',url:'https://v2.xxapi.cn/api/zhihuhot?key='+encodeURIComponent(key),fb:t=>'https://www.zhihu.com/search?type=content&q='+encodeURIComponent(t),hasDesc:true});
+      sources.push({src:'头条',url:'https://v2.xxapi.cn/api/toutiaohot?key='+encodeURIComponent(key),hasDesc:true,fb:t=>'https://www.toutiao.com/search/?keyword='+encodeURIComponent(t)});
+      sources.push({src:'知乎',url:'https://v2.xxapi.cn/api/zhihuhot?key='+encodeURIComponent(key),hasDesc:true,fb:t=>'https://www.zhihu.com/search?type=content&q='+encodeURIComponent(t)});
     }
     const settled=await Promise.allSettled(sources.map(s=>fetch(s.url).then(r=>r.json()).then(j=>({s,j}))));
     let items=[];
@@ -5303,103 +5398,75 @@ async function loadLiveNews(container){
       const s=r.value.s;
       for(const x of r.value.data){
         const title=(x.title||'').trim();if(!title)continue;
-        items.push({
-          title,
-          url:x.url||s.fb(title),
-          desc:s.hasDesc?(x.desc||x.content||x.excerpt||''):'',
-          hot:x.hot||x.heat||'',
-          src:s.src
-        });
+        items.push({title,url:x.url||s.fb(title),desc:s.hasDesc?(x.desc||x.content||x.excerpt||''):'',hot:x.hot||x.heat||'',src:s.src});
       }
     }
-    if(!items.length)throw new Error('all empty');
-    /* 去重（标题相同视为同一事件） */
+    if(!items.length)return {ok:false,items:[]};
     const seen=new Set(),uniq=[];
     for(const it of items){const k=it.title.trim();if(k&&!seen.has(k)){seen.add(k);uniq.push(it);}}
-    /* 第一步：排除娱乐八卦 */
     const serious=uniq.filter(it=>!GOSSIP_BLOCKLIST.some(b=>it.title.includes(b)));
-    /* 第二步：只保留时政 / 财经 / 国际 / 科技相关 */
-    const matched=serious.filter(it=>NEWS_KEYWORDS.some(k=>it.title.includes(k)));
-    /* 只展示正经新闻，宁缺毋滥（最多10条） */
-    const show=matched.slice(0,10);
-    if(!show.length){
-      container.innerHTML=noNewsHtml;
-      const fc=document.getElementById('financeNews');
-      if(fc)fc.innerHTML='<div class="muted small" style="padding:8px 0">今日暂无匹配的理财相关热点，建议访问上方权威信源。</div>';
-      return;
+    const out=[];
+    for(const it of serious){
+      let cat=null;
+      for(const c of GROW_CATS){ if(c.kws.some(k=>it.title.includes(k))){cat=c.key;break;} }
+      if(cat)out.push({cat,title:it.title,desc:it.desc,url:it.url,src:it.src,hot:it.hot});
     }
-    container.innerHTML=show.map((it,idx)=>{
+    if(!out.length)return {ok:false,items:[]};
+    return {ok:true,items:out.slice(0,18)};
+  }catch(e){ return {ok:false,items:[]}; }
+}
+function growFallback(){
+  const res=[];
+  GROW_CATS.forEach(c=>{ res.push(...dailyPick(GROW_POOL.filter(p=>p.cat===c.key),4).map(p=>({cat:p.cat,title:p.title,desc:p.desc,url:p.url,src:'选题',hot:''}))); });
+  return res;
+}
+/* 为什么关注：按分类给出一句"和你有关"的解读 */
+function growWhy(title,cat){
+  if(cat==='理财·股票')return financeExplain(title);
+  if(cat==='科技')return '科技动向影响产业格局与就业机会，关注底层趋势比追单条热点更有价值。';
+  return '这条时政 / 国际动态与你所处的环境与政策预期相关，保持基本了解有助于做出更稳的判断。';
+}
+/* 渲染「今日推送」：按 时事·国际 / 理财·股票 / 科技 分组，内联展示内容（不再只是跳转链接） */
+function renderGrowItems(){
+  const items=DATA.push.grow.items||[];
+  if(!items.length)return '<div class="empty">今日暂无匹配内容</div>';
+  const note=DATA.push.grow.fallback?'（接口暂不可用，展示今日离线选题 · 联网后自动更新为实时要闻）':'';
+  let html=note?('<div class="muted small" style="margin-bottom:10px">'+note+'</div>'):'';
+  ['时事·国际','理财·股票','科技'].forEach(cat=>{
+    const list=items.filter(it=>it.cat===cat);
+    if(!list.length)return;
+    html+='<div class="grow-cat"><div class="grow-cat-h">'+cat+'</div>'+list.map((it,idx)=>{
+      const summary=it.desc?('<p class="nc-summary">'+esc(it.desc.length>120?it.desc.slice(0,120)+'…':it.desc)+'</p>'):'';
       const wb='https://s.weibo.com/weibo?q='+encodeURIComponent(it.title);
-      const wx='https://weixin.sogou.com/weixin?type=2&query='+encodeURIComponent(it.title);
-      const tags=NEWS_KEYWORDS.filter(k=>it.title.includes(k)).slice(0,3);
-      const tagHtml=tags.length?`<div class="news-tags">${tags.map(t=>`<span class="ntag">${esc(t)}</span>`).join('')}</div>`:'';
-      const summary=it.desc
-        ? `<p class="nc-summary">${esc(it.desc.length>90?it.desc.slice(0,90)+'…':it.desc)}</p>`
-        : `<p class="nc-summary">该话题当前在${it.src}热榜引发广泛关注${it.hot?('，热度 '+esc(it.hot)):''}。点击下方按钮可阅读原文报道或查看公众号深度解读，帮助快速掌握事件脉络与多方观点。</p>`;
-      return `<article class="news-card" data-idx="${idx}">
+      return `<article class="news-card">
         <div class="nc-head"><span class="nc-num">${String(idx+1).padStart(2,'0')}</span><h4 class="nc-title">${esc(it.title)}</h4></div>
-        <div class="nc-meta">${it.hot?('热度 <b>'+esc(it.hot)+'</b> · '):''}来源：${esc(it.src)} ${tagHtml}</div>
+        <div class="nc-meta">${it.hot?('热度 <b>'+esc(it.hot)+'</b> · '):''}来源：${esc(it.src||'')}</div>
         <div class="nc-body">
           ${summary}
-          <div class="nc-highlights"><span class="nh-icon">${ico('bulb')}</span><div><b>核心要点</b><ul>${tags.length?tags.map(t=>`<li>关注「${t}」相关动态与政策走向</li>`).join(''):''}<li>结合自身理财 / 职业规划思考影响</li></ul></div></div>
-          <div class="nc-tip"><span class="nh-icon">${ico('bulb')}</span> 通过多源对比阅读（原文+公众号解读），建立独立判断力，避免单一信息源的偏差。</div>
+          <div class="nc-highlights"><span class="nh-icon">${ico('bulb')}</span><div><b>为什么关注</b><p style="margin:2px 0 0">${esc(growWhy(it.title,cat))}</p></div></div>
         </div>
-        <div class="nc-actions">
-          <a href="${esc(it.url||wb)}" target="_blank" rel="noopener" class="btn sm">${ico('link')} 原文阅读</a>
-          <a href="${esc(wx)}" target="_blank" rel="noopener" class="btn sm ghost">${tags[0]||'热点'}解读 ${ico('chev')}</a>
-        </div>
+        <div class="nc-actions"><a href="${esc(it.url||wb)}" target="_blank" rel="noopener" class="btn sm ghost">原文 ↗</a></div>
       </article>`;
-    }).join('');
-    // 理财学习：用当日与"钱"相关的话题，给出"为什么和你的钱有关"的解读
-    const fc=document.getElementById('financeNews');
-    if(fc){
-      if(matched.length){
-        fc.innerHTML=matched.slice(0,8).map((it,idx)=>{
-          const wb='https://s.weibo.com/weibo?q='+encodeURIComponent(it.title);
-          const wx='https://weixin.sogou.com/weixin?type=2&query='+encodeURIComponent(it.title);
-          const tags=NEWS_KEYWORDS.filter(k=>it.title.includes(k)).slice(0,3);
-          const tagHtml=tags.length?`<div class="news-tags">${tags.map(t=>`<span class="ntag">${esc(t)}</span>`).join('')}</div>`:'';
-          return `<article class="news-card">
-            <div class="nc-head"><span class="nc-num">${String(idx+1).padStart(2,'0')}</span><h4 class="nc-title">${esc(it.title)}</h4></div>
-            <div class="nc-meta">来源：${esc(it.src)} ${tagHtml}</div>
-            <div class="nc-body">
-              <p class="nc-summary">${financeExplain(it.title)}</p>
-              <div class="nc-highlights"><span class="nh-icon">${ico('bulb')}</span><div><b>关注点</b><ul>${tags.length?tags.map(t=>`<li>「${t}」相关动态与政策走向</li>`).join(''):''}<li>结合自身理财 / 职业规划思考影响</li></ul></div></div>
-            </div>
-            <div class="nc-actions">
-              <a href="${esc(it.url||wb)}" target="_blank" rel="noopener" class="btn sm">${ico('link')} 原文阅读</a>
-              <a href="${esc(wx)}" target="_blank" rel="noopener" class="btn sm ghost">${tags[0]||'热点'}解读 ${ico('chev')}</a>
-            </div>
-          </article>`;
-        }).join('');
-      }else{
-        fc.innerHTML='<div class="muted small" style="padding:8px 0">今日暂无匹配的理财相关热点。</div>';
-      }
-    }
-  }catch(e){
-    container.innerHTML=`<div class="muted" style="padding:16px 0;text-align:center">
-      <p style="margin-bottom:10px">实时接口暂不可用</p>
-      <p class="small">建议直接访问以下权威信源获取每日要闻：</p>
-      <div style="margin-top:12px;display:flex;flex-direction:column;gap:8px">
-        <a href="https://www.news.cn/" target="_blank" rel="noopener" class="btn sm" style="width:100%;justify-content:center">新华网 · 时政要闻</a>
-        <a href="https://www.caixin.com/" target="_blank" rel="noopener" class="btn sm ghost" style="width:100%;justify-content:center">财新网 · 财经深度报道</a>
-        <a href="https://36kr.com/newsflashes" target="_blank" rel="noopener" class="btn sm ghost" style="width:100%;justify-content:center">36氪 · 科技创投快讯</a>
-        <a href="http://www.pbc.gov.cn/" target="_blank" rel="noopener" class="btn sm ghost" style="width:100%;justify-content:center">中国人民银行 · 货币政策</a>
-      </div>
-    </div>`;
-    const fc=document.getElementById('financeNews');
-    if(fc)fc.innerHTML='<div class="muted small" style="padding:8px 0">接口暂不可用，建议访问上方权威信源。</div>';
-  }
+    }).join('')+'</div>';
+  });
+  return html;
 }
+async function refreshGrow(){
+  const r=await fetchGrowLive();
+  const items=r.ok?r.items:growFallback();
+  DATA.push.grow={date:D.today(),ts:Date.now(),fallback:!r.ok,items};save();
+  const box=document.getElementById('growBox');
+  if(box&&state.view==='grow'){box.innerHTML=renderGrowItems();const st=document.getElementById('growStamp');if(st)st.textContent=pushStamp(DATA.push.grow);}
+}
+/* 每日推送调度：打开 App 与每分钟定时器都会检查；当天日期变化，或已过 9:00 而今日缓存早于 9:00，则触发刷新 */
+function maybeDailyPush(){ if(growStale())refreshGrow(); if(videoStale())refreshVideos(); }
 function renderGrow(){
+  const cached=DATA.push.grow.items||[];
   return `
   <div class="card" data-block="news">
-    <h3>${ico('news')} 时政热点 <span class="cs">每日检索 · 结构化要闻</span> <button type="button" class="btn sm ghost" id="newsRefresh" style="float:right;margin-top:-4px">${ico('refresh')} 刷新推送</button></h3>
-    <div id="liveNews"><div class="muted small" style="padding:8px 0">正在检索今日时政 / 财经 / 国际 / 科技要闻（百度 + 微博多源融合）…</div></div>
-  </div>
-  <div class="card mt" data-block="finance">
-    <h3>${ico('finance')} 理财学习 <span class="cs">结合今日时政热点</span></h3>
-    <div id="financeNews"><div class="muted small" style="padding:8px 0">正在匹配今日理财相关热点…</div></div>
+    <h3>${ico('news')} 今日推送 <span class="cs">时事 · 国际 · 理财 · 股票 · 科技</span> <button type="button" class="btn sm ghost" id="newsRefresh" style="float:right;margin-top:-4px">${ico('refresh')} 刷新</button></h3>
+    <div id="growBox">${cached.length?renderGrowItems():'<div class="muted small" style="padding:8px 0">正在检索今日时政 / 财经 / 国际 / 科技要闻…</div>'}</div>
+    <div class="muted small" id="growStamp" style="padding-top:6px">${DATA.push.grow.date?pushStamp(DATA.push.grow):''}</div>
   </div>
   <div class="card mt" data-block="tip">
     <h3>${ico('bulb')} 每日一句理财干货</h3>
@@ -5598,14 +5665,19 @@ function bindView(view){
     const gi=+b.dataset.reviewMaster; const w=DATA.engWords.wrong||(DATA.engWords.wrong=[]); const i=w.indexOf(gi);
     if(i>=0){w.splice(i,1);save();toast('已从错词本移除');render();}
   });
-  // 实时爆款拉取（女性成长赛道匹配）
-  const liveHot=view.querySelector('#liveHot');
-  if(liveHot)loadLiveHot(liveHot);
-  // 自我成长：时政热点实时检索
-  const liveNews=view.querySelector('#liveNews');
-  if(liveNews)loadLiveNews(liveNews);
-  const nr=view.querySelector('#newsRefresh');
-  if(nr)nr.onclick=()=>{const c=view.querySelector('#liveNews');if(c){c.innerHTML='<div class="muted small" style="padding:8px 0">正在重新检索…</div>';loadLiveNews(c);}};
+  // 爆款视频「为你匹配的真实爆款」：过期则刷新 + 收藏/脚本交互
+  if(state.view==='videos'){
+    if(videoStale())refreshVideos();
+    const vr=view.querySelector('#videoRefresh');
+    if(vr)vr.onclick=()=>{const b=view.querySelector('#videoBox');if(b){b.innerHTML='<div class="muted small" style="padding:8px 0">正在拉取今日真实爆款…</div>';refreshVideos();}};
+    bindVideoBoxHandlers(view);
+  }
+  // 自我成长「今日推送」：过期则刷新
+  if(state.view==='grow'){
+    if(growStale())refreshGrow();
+    const nr=view.querySelector('#newsRefresh');
+    if(nr)nr.onclick=()=>{const b=view.querySelector('#growBox');if(b){b.innerHTML='<div class="muted small" style="padding:8px 0">正在重新检索…</div>';refreshGrow();}};
+  }
   // 爆款收藏（默认带上自动生成的拆解 + 口播脚本）
   view.querySelectorAll('[data-collect]').forEach(b=>b.onclick=()=>{
     const h=HOT_SEED[+b.dataset.collect];
@@ -5955,6 +6027,8 @@ function init(){
   document.getElementById('overlay').onclick=closeSidebar;
   setView('home');
   registerSW();
+  maybeDailyPush();
+  setInterval(maybeDailyPush,60000);
   setSbStatus(sbCfg?'sync':'off');
   if(sbCfg)connectSupabase();
   window.addEventListener('online',()=>{ if(sbCfg)connectSupabase(); else setSbStatus('off'); });

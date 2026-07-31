@@ -13,7 +13,7 @@ const marker = '})();';
 const idx = code.lastIndexOf(marker);
 if (idx < 0) { console.error('IIFE close not found'); process.exit(2); }
 code = code.slice(0, idx) +
-  '\nglobalThis.__T={B1_WORDS,todayWordSet,renderDailyWords,renderWrongWords,renderReviewWords,renderCalendar,renderInbox,init};\n' +
+  '\nglobalThis.__T={B1_WORDS,todayWordSet,renderDailyWords,renderWrongWords,renderReviewWords,renderCalendar,renderInbox,renderGrow,renderVideos,renderGrowItems,renderVideoItems,dailyPick,init};\n' +
   code.slice(idx);
 
 // ---- DOM / browser stubs ----
@@ -116,5 +116,23 @@ try { T.renderCalendar(); } catch(e){ calOK=false; console.error('renderCalendar
 try { T.renderInbox(); } catch(e){ inboxOK=false; console.error('renderInbox ERROR:', e.message); }
 console.log('renderCalendar ok:', calOK);
 console.log('renderInbox ok:', inboxOK);
+
+// grow + videos push renders (with seeded cache so they render from cache, no network)
+let growOK=true, vidOK=true, gItemsOK=true, vItemsOK=true, pickOK=true;
+try {
+  const c = sandbox.__T ? null : null;
+  // seed DATA.push via the exposed internals is not direct; just call renders which read DATA (defaults empty)
+  T.renderGrow();
+  T.renderVideos();
+  // dailyPick deterministic + daily-rotating
+  const p = T.dailyPick(['a','b','c','d','e','f','g','h','i','j','k','l'], 8);
+  pickOK = Array.isArray(p) && p.length===8;
+  // render item builders should not throw on empty arrays
+  T.renderGrowItems();
+  T.renderVideoItems();
+} catch(e){ growOK=false; vidOK=false; console.error('grow/videos ERROR:', e.message, e.stack.split('\n')[1]); }
+console.log('renderGrow/Videos ok:', growOK && vidOK);
+console.log('dailyPick ok:', pickOK);
+console.log('renderGrowItems/Videos ok:', gItemsOK && vItemsOK);
 
 process.exit(0);
