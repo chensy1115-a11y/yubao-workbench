@@ -5067,37 +5067,55 @@ function financeExplain(title){
   for(const [re,txt] of map){ if(re.test(title)) return txt; }
   return '这条与宏观经济或民生政策相关，建议结合自身理财、职业规划，思考它可能带来的影响。';
 }
-/* 检索今日时政 / 财经 / 国际 / 科技要闻：结构化新闻卡片（过滤娱乐八卦） */
+/* 检索今日时政 / 财经 / 国际 / 科技要闻：多平台融合（百度热搜为主源 + 微博热搜为辅源），过滤娱乐八卦 */
 async function loadLiveNews(container){
+  const noNewsHtml=`<div class="muted" style="padding:16px 0;text-align:center">
+    <p style="margin-bottom:10px">📰 今日热搜暂无时政 / 财经 / 国际 / 科技类正经要闻</p>
+    <p class="small">热搜以娱乐内容为主，建议直接访问以下权威信源获取每日要闻：</p>
+    <div style="margin-top:12px;display:flex;flex-direction:column;gap:8px">
+      <a href="https://www.news.cn/" target="_blank" rel="noopener" class="btn sm" style="width:100%;justify-content:center">新华网 · 时政要闻</a>
+      <a href="https://www.caixin.com/" target="_blank" rel="noopener" class="btn sm ghost" style="width:100%;justify-content:center">财新网 · 财经深度报道</a>
+      <a href="https://36kr.com/newsflashes" target="_blank" rel="noopener" class="btn sm ghost" style="width:100%;justify-content:center">36氪 · 科技创投快讯</a>
+      <a href="http://www.pbc.gov.cn/" target="_blank" rel="noopener" class="btn sm ghost" style="width:100%;justify-content:center">中国人民银行 · 货币政策</a>
+    </div>
+  </div>`;
   try{
-    const res=await fetch('https://v2.xxapi.cn/api/weibohot');
-    const json=await res.json();
+    /* 多源并行拉取：百度(新闻向) + 微博(突发)，任一失败不影响另一源 */
+    const [bRes,wRes]=await Promise.allSettled([
+      fetch('https://v2.xxapi.cn/api/baiduhot').then(r=>r.json()),
+      fetch('https://v2.xxapi.cn/api/weibohot').then(r=>r.json())
+    ]);
     let items=[];
-    if(json&&json.code===200&&Array.isArray(json.data)){
-      items=json.data.map(x=>({title:x.title||'',url:x.url||('https://s.weibo.com/weibo?q='+encodeURIComponent(x.title||'')),hot:x.hot}));
+    if(bRes.status==='fulfilled'&&bRes.value&&bRes.value.code===200&&Array.isArray(bRes.value.data)){
+      items.push(...bRes.value.data.map(x=>({
+        title:x.title||'',
+        url:x.url||('https://www.baidu.com/s?wd='+encodeURIComponent(x.title||'')),
+        desc:x.desc||'',
+        hot:x.hot||'',
+        src:'百度'
+      })));
     }
-    if(!items.length)throw new Error('empty');
+    if(wRes.status==='fulfilled'&&wRes.value&&wRes.value.code===200&&Array.isArray(wRes.value.data)){
+      items.push(...wRes.value.data.map(x=>({
+        title:x.title||'',
+        url:x.url||('https://s.weibo.com/weibo?q='+encodeURIComponent(x.title||'')),
+        desc:'',
+        hot:x.hot||'',
+        src:'微博'
+      })));
+    }
+    if(!items.length)throw new Error('all empty');
+    /* 去重（标题相同视为同一事件） */
+    const seen=new Set(),uniq=[];
+    for(const it of items){const k=it.title.trim();if(k&&!seen.has(k)){seen.add(k);uniq.push(it);}}
     /* 第一步：排除娱乐八卦 */
-    const serious=items.filter(it=>{
-      const t=it.title;
-      if(GOSSIP_BLOCKLIST.some(b=>t.includes(b))) return false;
-      return true;
-    });
-    /* 第二步：只保留时政/财经/国际/科技相关 */
+    const serious=uniq.filter(it=>!GOSSIP_BLOCKLIST.some(b=>it.title.includes(b)));
+    /* 第二步：只保留时政 / 财经 / 国际 / 科技相关 */
     const matched=serious.filter(it=>NEWS_KEYWORDS.some(k=>it.title.includes(k)));
-    /* 只展示正经新闻，宁缺毋滥（最多8条） */
-    const show=matched.slice(0,8);
+    /* 只展示正经新闻，宁缺毋滥（最多10条） */
+    const show=matched.slice(0,10);
     if(!show.length){
-      container.innerHTML=`<div class="muted" style="padding:16px 0;text-align:center">
-        <p style="margin-bottom:10px">📰 今日热搜暂无时政/财经/国际/科技类正经要闻</p>
-        <p class="small">微博热搜以娱乐内容为主，建议直接访问以下权威信源获取每日要闻：</p>
-        <div style="margin-top:12px;display:flex;flex-direction:column;gap:8px">
-          <a href="https://www.news.cn/" target="_blank" rel="noopener" class="btn sm" style="width:100%;justify-content:center">新华网 · 时政要闻</a>
-          <a href="https://www.caixin.com/" target="_blank" rel="noopener" class="btn sm ghost" style="width:100%;justify-content:center">财新网 · 财经深度报道</a>
-          <a href="https://36kr.com/newsflashes" target="_blank" rel="noopener" class="btn sm ghost" style="width:100%;justify-content:center">36氪 · 科技创投快讯</a>
-          <a href="http://www.pbc.gov.cn/" target="_blank" rel="noopener" class="btn sm ghost" style="width:100%;justify-content:center">中国人民银行 · 货币政策</a>
-        </div>
-      </div>`;
+      container.innerHTML=noNewsHtml;
       const fc=document.getElementById('financeNews');
       if(fc)fc.innerHTML='<div class="muted small" style="padding:8px 0">今日暂无匹配的理财相关热点，建议访问上方权威信源。</div>';
       return;
@@ -5107,16 +5125,19 @@ async function loadLiveNews(container){
       const wx='https://weixin.sogou.com/weixin?type=2&query='+encodeURIComponent(it.title);
       const tags=NEWS_KEYWORDS.filter(k=>it.title.includes(k)).slice(0,3);
       const tagHtml=tags.length?`<div class="news-tags">${tags.map(t=>`<span class="ntag">${esc(t)}</span>`).join('')}</div>`:'';
+      const summary=it.desc
+        ? `<p class="nc-summary">${esc(it.desc.length>90?it.desc.slice(0,90)+'…':it.desc)}</p>`
+        : `<p class="nc-summary">该话题当前在${it.src}热榜引发广泛关注${it.hot?('，热度 '+esc(it.hot)):''}。点击下方按钮可阅读原文报道或查看公众号深度解读，帮助快速掌握事件脉络与多方观点。</p>`;
       return `<article class="news-card" data-idx="${idx}">
         <div class="nc-head"><span class="nc-num">${String(idx+1).padStart(2,'0')}</span><h4 class="nc-title">${esc(it.title)}</h4></div>
-        <div class="nc-meta">${it.hot?'热度 <b>'+esc(it.hot)+'</b> · ':''}来源：微博热搜 ${tagHtml}</div>
+        <div class="nc-meta">${it.hot?('热度 <b>'+esc(it.hot)+'</b> · '):''}来源：${esc(it.src)} ${tagHtml}</div>
         <div class="nc-body">
-          <p class="nc-summary">该话题当前在微博引发广泛关注${it.hot?('，热度值达 '+it.hot):''}。点击下方按钮可阅读原文报道或查看公众号深度解读，帮助你快速掌握事件脉络与多方观点。</p>
-          <div class="nc-highlights"><span class="nh-icon">${ico('bulb')}</span><div><b>核心要点</b><ul>${tags.map(t=>`<li>关注「${t}」相关动态与政策走向</li>`).join('')}<li>结合自身理财 / 职业规划思考影响</li></ul></div></div>
+          ${summary}
+          <div class="nc-highlights"><span class="nh-icon">${ico('bulb')}</span><div><b>核心要点</b><ul>${tags.length?tags.map(t=>`<li>关注「${t}」相关动态与政策走向</li>`).join(''):''}<li>结合自身理财 / 职业规划思考影响</li></ul></div></div>
           <div class="nc-tip"><span class="nh-icon">${ico('bulb')}</span> 通过多源对比阅读（原文+公众号解读），建立独立判断力，避免单一信息源的偏差。</div>
         </div>
         <div class="nc-actions">
-          <a href="${esc(wb)}" target="_blank" rel="noopener" class="btn sm">${ico('link')} 原文阅读</a>
+          <a href="${esc(it.url||wb)}" target="_blank" rel="noopener" class="btn sm">${ico('link')} 原文阅读</a>
           <a href="${esc(wx)}" target="_blank" rel="noopener" class="btn sm ghost">${tags[0]||'热点'}解读 ${ico('chev')}</a>
         </div>
       </article>`;
@@ -5132,13 +5153,13 @@ async function loadLiveNews(container){
           const tagHtml=tags.length?`<div class="news-tags">${tags.map(t=>`<span class="ntag">${esc(t)}</span>`).join('')}</div>`:'';
           return `<article class="news-card">
             <div class="nc-head"><span class="nc-num">${String(idx+1).padStart(2,'0')}</span><h4 class="nc-title">${esc(it.title)}</h4></div>
-            <div class="nc-meta">来源：微博热搜 ${tagHtml}</div>
+            <div class="nc-meta">来源：${esc(it.src)} ${tagHtml}</div>
             <div class="nc-body">
               <p class="nc-summary">${financeExplain(it.title)}</p>
-              <div class="nc-highlights"><span class="nh-icon">${ico('bulb')}</span><div><b>关注点</b><ul>${tags.map(t=>`<li>「${t}」相关动态与政策走向</li>`).join('')}<li>结合自身理财 / 职业规划思考影响</li></ul></div></div>
+              <div class="nc-highlights"><span class="nh-icon">${ico('bulb')}</span><div><b>关注点</b><ul>${tags.length?tags.map(t=>`<li>「${t}」相关动态与政策走向</li>`).join(''):''}<li>结合自身理财 / 职业规划思考影响</li></ul></div></div>
             </div>
             <div class="nc-actions">
-              <a href="${esc(wb)}" target="_blank" rel="noopener" class="btn sm">${ico('link')} 原文阅读</a>
+              <a href="${esc(it.url||wb)}" target="_blank" rel="noopener" class="btn sm">${ico('link')} 原文阅读</a>
               <a href="${esc(wx)}" target="_blank" rel="noopener" class="btn sm ghost">${tags[0]||'热点'}解读 ${ico('chev')}</a>
             </div>
           </article>`;
@@ -5166,7 +5187,7 @@ function renderGrow(){
   return `
   <div class="card" data-block="news">
     <h3>${ico('news')} 时政热点 <span class="cs">每日检索 · 结构化要闻</span> <button type="button" class="btn sm ghost" id="newsRefresh" style="float:right;margin-top:-4px">${ico('refresh')} 刷新推送</button></h3>
-    <div id="liveNews"><div class="muted small" style="padding:8px 0">正在检索今日时政 / 财经热点…</div></div>
+    <div id="liveNews"><div class="muted small" style="padding:8px 0">正在检索今日时政 / 财经 / 国际 / 科技要闻（百度 + 微博多源融合）…</div></div>
   </div>
   <div class="card mt" data-block="finance">
     <h3>${ico('finance')} 理财学习 <span class="cs">结合今日时政热点</span></h3>
