@@ -905,10 +905,11 @@ function pull(){
    .then(({data,error})=>{ if(!error&&data&&data.payload){try{importJSON(JSON.stringify(data.payload));render();}catch(e){}} })
    .catch(()=>{});
 }
+let sbSyncTimer=null;
 function scheduleSync(){
   if(sbStatus!=='connected'||!sbClient||!sbRowId)return;
-  clearTimeout(sbTimer);
-  sbTimer=setTimeout(()=>{
+  clearTimeout(sbSyncTimer);
+  sbSyncTimer=setTimeout(()=>{
     setSbStatus('sync');
     sbClient.from('yubao_data').upsert({id:sbRowId,payload:DATA,updated_at:new Date().toISOString()})
       .then(()=>setSbStatus('connected')).catch(()=>setSbStatus('err','同步失败'));
@@ -4938,11 +4939,14 @@ function dailyPick(pool,n){
 let curVideoItems=[];
 /* 实时拉取真实热榜，仅保留「女性成长」赛道（排除家庭八卦），绝不回退到全员热榜 */
 async function fetchVideosLive(){
+  const ctrl=new AbortController();
+  const to=setTimeout(()=>ctrl.abort(),7000);
   try{
     const [dy,wb]=await Promise.allSettled([
-      fetch('https://v2.xxapi.cn/api/douyinhot').then(r=>r.json()),
-      fetch('https://v2.xxapi.cn/api/weibohot').then(r=>r.json())
+      fetch('https://v2.xxapi.cn/api/douyinhot',{signal:ctrl.signal}).then(r=>r.json()),
+      fetch('https://v2.xxapi.cn/api/weibohot',{signal:ctrl.signal}).then(r=>r.json())
     ]);
+    clearTimeout(to);
     let items=[];
     if(dy.status==='fulfilled'&&dy.value&&dy.value.code===200){
       items=items.concat((dy.value.data||[]).map(x=>({title:x.word||'',hot:x.hot_value,url:x.group_id?('https://www.douyin.com/video/'+x.group_id):('https://www.douyin.com/search/'+encodeURIComponent(x.word||'')),src:'抖音'})));
@@ -4956,7 +4960,7 @@ async function fetchVideosLive(){
     const matched=uniq.filter(it=>HOT_KEYWORDS.some(k=>it.title.includes(k))&&!WOMEN_GOSSIP.some(b=>it.title.includes(b)));
     if(!matched.length)return {ok:false,items:[]};
     return {ok:true,items:matched.slice(0,12).map(it=>({title:it.title,src:it.src,hot:it.hot,url:it.url}))};
-  }catch(e){ return {ok:false,items:[]}; }
+  }catch(e){ clearTimeout(to); return {ok:false,items:[]}; }
 }
 function videoFallback(){ return dailyPick(WOMEN_POOL,8).map(p=>({title:p.title,src:p.src,hot:'',url:'https://www.douyin.com/search/'+encodeURIComponent(p.title)})); }
 function videoStale(){
@@ -4987,12 +4991,17 @@ function renderVideoItems(){
     </div>`;
   }).join('');
 }
+let refreshingVideos=false;
 async function refreshVideos(){
-  const r=await fetchVideosLive();
-  const items=r.ok?r.items:videoFallback();
-  DATA.push.videos={date:D.today(),ts:Date.now(),fallback:!r.ok,items};save();
-  const box=document.getElementById('videoBox');
-  if(box&&state.view==='videos'){box.innerHTML=renderVideoItems();const st=document.getElementById('videoStamp');if(st)st.textContent=pushStamp(DATA.push.videos);bindVideoBoxHandlers(document);}
+  if(refreshingVideos)return;
+  refreshingVideos=true;
+  try{
+    const r=await fetchVideosLive();
+    const items=r.ok?r.items:videoFallback();
+    DATA.push.videos={date:D.today(),ts:Date.now(),fallback:!r.ok,items};save();
+    const box=document.getElementById('videoBox');
+    if(box&&state.view==='videos'){box.innerHTML=renderVideoItems();const st=document.getElementById('videoStamp');if(st)st.textContent=pushStamp(DATA.push.videos);bindVideoBoxHandlers(document);}
+  }finally{ refreshingVideos=false; }
 }
 /* 给「为你匹配的真实爆款」卡片绑定 收藏 / 口播脚本展开（渲染后或刷新后都要重绑） */
 function bindVideoBoxHandlers(scope){
@@ -5384,6 +5393,8 @@ function financeExplain(title){
 }
 /* 检索今日时政 / 财经 / 国际 / 科技要闻：多平台融合（百度热搜为主源 + 微博热搜为辅源），过滤娱乐八卦 */
 async function fetchGrowLive(){
+  const ctrl=new AbortController();
+  const to=setTimeout(()=>ctrl.abort(),7000);
   try{
     const key=(DATA.settings.xxapiKey||'').trim();
     const sources=[{src:'百度',url:'https://v2.xxapi.cn/api/baiduhot',hasDesc:true,fb:t=>'https://www.baidu.com/s?wd='+encodeURIComponent(t)}];
@@ -5391,7 +5402,8 @@ async function fetchGrowLive(){
       sources.push({src:'头条',url:'https://v2.xxapi.cn/api/toutiaohot?key='+encodeURIComponent(key),hasDesc:true,fb:t=>'https://www.toutiao.com/search/?keyword='+encodeURIComponent(t)});
       sources.push({src:'知乎',url:'https://v2.xxapi.cn/api/zhihuhot?key='+encodeURIComponent(key),hasDesc:true,fb:t=>'https://www.zhihu.com/search?type=content&q='+encodeURIComponent(t)});
     }
-    const settled=await Promise.allSettled(sources.map(s=>fetch(s.url).then(r=>r.json()).then(j=>({s,j}))));
+    const settled=await Promise.allSettled(sources.map(s=>fetch(s.url,{signal:ctrl.signal}).then(r=>r.json()).then(j=>({s,j}))));
+    clearTimeout(to);
     let items=[];
     for(const r of settled){
       if(r.status!=='fulfilled'||!r.value||r.value.code!==200||!Array.isArray(r.value.data))continue;
@@ -5413,7 +5425,7 @@ async function fetchGrowLive(){
     }
     if(!out.length)return {ok:false,items:[]};
     return {ok:true,items:out.slice(0,18)};
-  }catch(e){ return {ok:false,items:[]}; }
+  }catch(e){ clearTimeout(to); return {ok:false,items:[]}; }
 }
 function growFallback(){
   const res=[];
@@ -5451,12 +5463,17 @@ function renderGrowItems(){
   });
   return html;
 }
+let refreshingGrow=false;
 async function refreshGrow(){
-  const r=await fetchGrowLive();
-  const items=r.ok?r.items:growFallback();
-  DATA.push.grow={date:D.today(),ts:Date.now(),fallback:!r.ok,items};save();
-  const box=document.getElementById('growBox');
-  if(box&&state.view==='grow'){box.innerHTML=renderGrowItems();const st=document.getElementById('growStamp');if(st)st.textContent=pushStamp(DATA.push.grow);}
+  if(refreshingGrow)return;
+  refreshingGrow=true;
+  try{
+    const r=await fetchGrowLive();
+    const items=r.ok?r.items:growFallback();
+    DATA.push.grow={date:D.today(),ts:Date.now(),fallback:!r.ok,items};save();
+    const box=document.getElementById('growBox');
+    if(box&&state.view==='grow'){box.innerHTML=renderGrowItems();const st=document.getElementById('growStamp');if(st)st.textContent=pushStamp(DATA.push.grow);}
+  }finally{ refreshingGrow=false; }
 }
 /* 每日推送调度：打开 App 与每分钟定时器都会检查；当天日期变化，或已过 9:00 而今日缓存早于 9:00，则触发刷新 */
 function maybeDailyPush(){ if(growStale())refreshGrow(); if(videoStale())refreshVideos(); }

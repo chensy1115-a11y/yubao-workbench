@@ -2,7 +2,8 @@
    策略：页面导航 network-first（保证推送/更新后下次打开是最新的），离线时回退缓存；
    其它静态资源 cache-first（vendor 脚本、manifest 等）。
 */
-const CACHE='yubao-v1';
+/* 每次部署请递增此版本号（如 yubao-v3），activate 会自动清掉旧缓存，确保用户拿到最新 index.html */
+const CACHE='yubao-v2';
 const ASSETS=[
   './',
   './index.html',
