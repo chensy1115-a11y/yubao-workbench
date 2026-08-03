@@ -13,7 +13,7 @@ const marker = '})();';
 const idx = code.lastIndexOf(marker);
 if (idx < 0) { console.error('IIFE close not found'); process.exit(2); }
 code = code.slice(0, idx) +
-  '\nglobalThis.__T={B1_WORDS,todayWordSet,renderDailyWords,renderWrongWords,renderReviewWords,renderCalendar,renderInbox,renderGrow,renderVideos,renderGrowItems,renderVideoItems,dailyPick,init};\n' +
+  '\nglobalThis.__T={B1_WORDS,todayWordSet,renderDailyWords,renderWrongWords,renderReviewWords,renderCalendar,renderInbox,renderGrow,renderVideos,renderGrowItems,renderVideoItems,dailyPick,init,renderHome,collectSearch,runSearch,monthLife,renderLifeCard,openSearch,refreshLifeCard,DATA,setView,esc};\n' +
   code.slice(idx);
 
 // ---- DOM / browser stubs ----
@@ -134,5 +134,35 @@ try {
 console.log('renderGrow/Videos ok:', growOK && vidOK);
 console.log('dailyPick ok:', pickOK);
 console.log('renderGrowItems/Videos ok:', gItemsOK && vItemsOK);
+
+// renderHome (now includes 月度生活回顾 card) must not throw
+let homeOK=true, lifeCardOK=true;
+try {
+  T.renderHome();
+  T.renderLifeCard();
+} catch(e){ homeOK=false; lifeCardOK=false; console.error('renderHome/life ERROR:', e.message, e.stack.split('\n')[1]); }
+console.log('renderHome+lifeCard ok:', homeOK && lifeCardOK);
+
+// 全局搜索：种子数据后能检索到
+let searchOK=true, collectN=0, hitN=0;
+try {
+  T.DATA.inbox=[{id:'x1',text:'周五前交水电费',done:false,created:'2026-07-30 09:00',due:''}];
+  T.DATA.reviews={'2026-07-30':{mood:'ok',summary:'今天去了健身房，状态不错'}};
+  T.DATA.travel.trips=[{name:'云南旅行',date:'2026-10-01',plan:'大理丽江'},{name:'厦门',date:'2026-03-02',plan:''}];
+  T.DATA.english=[{date:'2026-07-30',minutes:30,note:'练习了过去式'}];
+  T.DATA.reading=[{title:'被讨厌的勇气',author:'岸见一郎',status:'done',doneDate:'2026-07-15'}];
+  T.DATA.mediaPlan=[{date:'2026-07-20',platform:'小红书',plan:'30岁搞钱逻辑',status:'储备中'}];
+  const all=T.collectSearch();
+  collectN=all.length;
+  T.runSearch('健身房'); // 命中复盘
+  T.runSearch('云南');   // 命中旅行
+  T.runSearch('zzzz');   // 命中 0
+  // monthLife 聚合 2026-07
+  const L=T.monthLife('2026-07');
+  hitN = (L.reviewDays===1?1:0)+(L.inboxCount===1?1:0)+(L.studyMin===30?1:0)+(L.books.length===1?1:0)+(L.mediaCount===1?1:0);
+} catch(e){ searchOK=false; console.error('search/monthLife ERROR:', e.message, e.stack.split('\n')[1]); }
+console.log('collectSearch count:', collectN, '(期望>=6)');
+console.log('search + monthLife ok:', searchOK);
+console.log('monthLife 2026-07 聚合正确项:', hitN, '/(期望5)');
 
 process.exit(0);
