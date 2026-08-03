@@ -993,8 +993,8 @@ const MODULES=[
   {id:'exercise',name:'锻炼身体',ico:'exercise'},
   {id:'side',name:'副业统计',ico:'side'},
   {id:'media',name:'自媒体计划',ico:'media'},
-  {id:'planner',name:'日历·随手',ico:'calendar'},
-  {id:'travel',name:'旅游规划',ico:'travel'}
+  {id:'travel',name:'旅游规划',ico:'travel'},
+  {id:'planner',name:'日历·随手',ico:'calendar'}
 ];
 const CHECKIN_MODS=MODULES.map(m=>m.id);
 let state={view:'home',sideTab:'iso',plannerTab:'calendar'};
@@ -1179,27 +1179,15 @@ function setView(v){
 /* 本月小结：聚合某月所有记录 + 生活片段，纯观察、无目标压力；支持切换月份 */
 function monthLife(ym){
   const inMonth=d=>d&&(''+d).slice(0,7)===ym;
-  const checkinDays=Object.keys(DATA.checkins||{}).filter(d=>inMonth(d)&&DATA.checkins[d]&&Object.values(DATA.checkins[d]).some(v=>v)).length;
-  const reviewDays=Object.keys(DATA.reviews||{}).filter(d=>inMonth(d)&&!d.startsWith('_')&&DATA.reviews[d]&&((DATA.reviews[d].summary||'').trim()||DATA.reviews[d].mood)).length;
-  const trips=(DATA.travel.trips||[]).filter(t=>inMonth(t.date));
-  const inboxItems=(DATA.inbox||[]).filter(it=>inMonth(it.due||it.created));
   const studyMin=DATA.english.filter(r=>inMonth(r.date)).reduce((s,r)=>s+engMins(r),0);
   const exCount=DATA.exercise.filter(r=>inMonth(r.date)).length;
-  const books=DATA.reading.filter(r=>r.status==='done'&&inMonth(r.doneDate));
   const sideInc=DATA.sideHustle.iso.concat(DATA.sideHustle.media,DATA.sideHustle.other).filter(r=>inMonth(r.date)).reduce((s,r)=>s+(+r.income||0),0);
-  const mediaCount=DATA.mediaPlan.filter(r=>inMonth(r.date)).length;
-  return {checkinDays,reviewDays,trips,inboxItems,studyMin,exCount,books,sideInc,mediaCount,
-    inboxCount:inboxItems.length,
-    bookTitles:books.map(b=>b.title||'(未命名)'),
-    tripNames:trips.map(t=>t.name||'(未命名)'),
-    inboxSnips:inboxItems.slice(0,4).map(it=>it.text)
-  };
+  return {studyMin,exCount,sideInc};
 }
 function renderSummaryCard(){
   const ym=sumMonth||D.today().slice(0,7);
   const L=monthLife(ym);
   const stat=(num,unit,lbl)=>`<div class="sm-item"><div class="sm-num">${num}<span class="sm-unit"> ${unit}</span></div><div class="sm-lbl">${lbl}</div></div>`;
-  const frag=(title,arr)=>arr&&arr.length?`<div class="life-frag"><div class="lf-h">${esc(title)}</div>${arr.map(x=>`<div class="lf-line">${esc(x)}</div>`).join('')}</div>`:'';
   return `
     <div class="life-head">
       <div class="life-title">${ym.slice(0,4)} 年 ${ym.slice(5)} 月 · 本月小结</div>
@@ -1210,18 +1198,9 @@ function renderSummaryCard(){
       </div>
     </div>
     <div class="summary-grid">
-      ${stat(L.checkinDays,'天','打卡天数')}
-      ${stat(L.reviewDays,'篇','复盘记录')}
-      ${stat(L.inboxCount,'条','随手记')}
-      ${stat(L.studyMin,'分','学习时长')}
-      ${stat(L.exCount,'次','运动次数')}
-      ${stat(L.mediaCount,'条','内容选题')}
+      ${stat(L.exCount,'次','运动')}
       ${stat('¥'+L.sideInc.toFixed(0),'','副业收入')}
-    </div>
-    <div class="life-frags">
-      ${frag('这个月去了 / 计划去',L.tripNames)}
-      ${frag('这个月读完的书',L.bookTitles)}
-      ${frag('随手记摘录',L.inboxSnips)}
+      ${stat(L.studyMin,'分','学习时长')}
     </div>`;
 }
 function stepMonth(d){
