@@ -1022,7 +1022,6 @@ function b64decode(str){return decodeURIComponent(escape(atob(str)));}
    导航与页面定义
    ============================================================ */
 const MODULES=[
-  {id:'grow',name:'自我成长',ico:'grow'},
   {id:'english',name:'英语学习',ico:'en'},
   {id:'reading',name:'在读书目',ico:'reading'},
   {id:'exercise',name:'锻炼身体',ico:'exercise'},
@@ -5216,13 +5215,8 @@ function renderVideos(){
     ${seed}
   </div>
   <div class="card mt" data-block="fav">
-    <h3>我的爆款收藏 <span class="cs">点 ☆ 收藏实时爆款，灵感永久留存</span></h3>
+    <h3>我的爆款收藏 <span class="cs">收藏你喜欢的爆款灵感，永久留存</span></h3>
     <div id="favHotList">${renderFavHot()}</div>
-  </div>
-  <div class="card mt" data-block="match">
-    <h3>为你匹配的真实爆款 <span class="cs">女性成长 · 独居 · 相亲 · 搞钱</span> <button type="button" class="btn sm ghost" id="videoRefresh" style="float:right;margin-top:-4px">${ico('refresh')} 刷新</button></h3>
-    <div id="videoBox"><div class="muted small" style="padding:8px 0">${DATA.push.videos.items&&DATA.push.videos.items.length?renderVideoItems():'正在拉取今日真实爆款…'}</div></div>
-    <div class="muted small" id="videoStamp" style="padding-top:6px">${DATA.push.videos.date?pushStamp(DATA.push.videos):''}</div>
   </div>
   <div class="card mt" data-block="lib">
     <h3>我的爆款拆解库 <span class="cs">收藏 + 笔记</span></h3>
@@ -5662,7 +5656,7 @@ async function refreshGrow(){
   }finally{ refreshingGrow=false; }
 }
 /* 每日推送调度：打开 App 与每分钟定时器都会检查；当天日期变化，或已过 9:00 而今日缓存早于 9:00，则触发刷新 */
-function maybeDailyPush(){ if(growStale())refreshGrow(); if(videoStale())refreshVideos(); }
+/* 每日推送已移除：零后端架构无法实现「每天定时推送」，相关板块（自我成长 / 爆款视频实时匹配）已删除 */
 function renderGrow(){
   const cached=DATA.push.grow.items||[];
   return `
@@ -5739,7 +5733,6 @@ function render(){
     case 'videos':html=renderVideos();break;
     case 'travel':html=renderTravel();break;
     case 'review':html=renderReview();break;
-    case 'grow':html=renderGrow();break;
     case 'calendar':html=renderCalendar();break;
     case 'inbox':html=renderInbox();break;
     default:html=renderHome();
@@ -5870,19 +5863,6 @@ function bindView(view){
     const gi=+b.dataset.reviewMaster; const w=DATA.engWords.wrong||(DATA.engWords.wrong=[]); const i=w.indexOf(gi);
     if(i>=0){w.splice(i,1);save();toast('已从错词本移除');render();}
   });
-  // 爆款视频「为你匹配的真实爆款」：过期则刷新 + 收藏/脚本交互
-  if(state.view==='videos'){
-    if(videoStale())refreshVideos();
-    const vr=view.querySelector('#videoRefresh');
-    if(vr)vr.onclick=()=>{const b=view.querySelector('#videoBox');if(b){b.innerHTML='<div class="muted small" style="padding:8px 0">正在拉取今日真实爆款…</div>';refreshVideos();}};
-    bindVideoBoxHandlers(view);
-  }
-  // 自我成长「今日推送」：过期则刷新
-  if(state.view==='grow'){
-    if(growStale())refreshGrow();
-    const nr=view.querySelector('#newsRefresh');
-    if(nr)nr.onclick=()=>{const b=view.querySelector('#growBox');if(b){b.innerHTML='<div class="muted small" style="padding:8px 0">正在重新检索…</div>';refreshGrow();}};
-  }
   // 爆款收藏（默认带上自动生成的拆解 + 口播脚本）
   view.querySelectorAll('[data-collect]').forEach(b=>b.onclick=()=>{
     const h=HOT_SEED[+b.dataset.collect];
@@ -6246,8 +6226,6 @@ function init(){
   lifeMonth=D.today().slice(0,7);
   setView('home');
   registerSW();
-  maybeDailyPush();
-  setInterval(maybeDailyPush,60000);
   setSbStatus(sbCfg?'sync':'off');
   if(sbCfg)connectSupabase();
   window.addEventListener('online',()=>{ if(sbCfg)connectSupabase(); else setSbStatus('off'); });
