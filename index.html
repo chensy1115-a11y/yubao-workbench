@@ -996,13 +996,11 @@ const MODULES=[
   {id:'exercise',name:'锻炼身体',ico:'exercise'},
   {id:'side',name:'副业统计',ico:'side'},
   {id:'media',name:'自媒体计划',ico:'media'},
-  {id:'review',name:'每日复盘',ico:'review'},
-  {id:'travel',name:'旅游规划',ico:'travel'},
-  {id:'calendar',name:'日历聚合',ico:'calendar'},
-  {id:'inbox',name:'随手记',ico:'inbox'}
+  {id:'planner',name:'复盘·日历·随手',ico:'review'},
+  {id:'travel',name:'旅游规划',ico:'travel'}
 ];
 const CHECKIN_MODS=MODULES.map(m=>m.id);
-let state={view:'home',sideTab:'iso'};
+let state={view:'home',sideTab:'iso',plannerTab:'review'};
 let calMonth=new Date();   // 日历当前查看的月份
 let calSel=null;           // 日历选中的日期 yyyy-mm-dd
 let lifeMonth='';  // 月度生活回顾当前查看的月份 yyyy-mm（init 中初始化，避免引用未定义的 D）
@@ -1011,7 +1009,7 @@ function buildNav(){
   const nav=document.getElementById('nav');
   let html=`<div class="nav-item" data-view="home"><span class="ico">${ico('home')}</span>工作台</div>`;
   MODULES.forEach((m)=>{
-    const badge=m.id==='inbox'?'<span class="nav-badge" id="inboxBadge"></span>':'';
+    const badge=m.id==='planner'?'<span class="nav-badge" id="plannerBadge"></span>':'';
     html+=`<div class="nav-item" data-view="${m.id}"><span class="ico">${ico(m.ico)}</span><span class="nav-label">${m.name}</span>${badge}</div>`;
   });
   nav.innerHTML=html;
@@ -1019,8 +1017,8 @@ function buildNav(){
     setView(it.dataset.view);closeSidebar();
   });
 }
-function updateInboxBadge(){
-  const b=document.getElementById('inboxBadge');if(!b)return;
+function updatePlannerBadge(){
+  const b=document.getElementById('plannerBadge');if(!b)return;
   const n=(DATA.inbox||[]).filter(i=>!i.done).length;
   b.textContent=n?n:'';
   b.style.display=n?'inline-block':'none';
@@ -1084,7 +1082,7 @@ function runSearch(q){
     </div>`;
   }).join('');
   box.querySelectorAll('.sr-item').forEach(el=>el.onclick=()=>{
-    const v=el.dataset.jump; closeSearch(); setView(v);
+    const v=el.dataset.jump; closeSearch(); jumpTo(v);
   });
 }
 function openSearch(){ const m=document.getElementById('searchModal'); if(!m)return; m.classList.add('open'); const i=document.getElementById('searchInput'); if(i){i.value='';i.focus();} _searchAll=null; runSearch(''); }
@@ -1167,10 +1165,19 @@ function initBlockDrag(view){
   }
 }
 
+function jumpTo(j){
+  if(!j)return;
+  let v=j,t=null;
+  if(j.indexOf(':')>-1){const p=j.split(':');v=p[0];t=p[1];}
+  else if(j==='review'||j==='inbox'){v='planner';t=j;}
+  if(v==='planner'&&t)state.plannerTab=t;
+  setView(v);
+  if(window.innerWidth<=860)closeSidebar();
+}
 function setView(v){
   state.view=v;
   document.querySelectorAll('.nav-item').forEach(it=>it.classList.toggle('active',it.dataset.view===v));
-  const titles={home:['工作台','你的全能自律仪表盘'],english:['英语学习','四级六级 · 单词/短句/听力/口语'],reading:['在读书目','统计你读了多少本书'],exercise:['锻炼身体','年度活跃度热力图'],side:['副业统计','ISO审核 / 自媒体 / 其他'],media:['自媒体计划','活人感大龄女青年·女性成长'],travel:['旅游规划','愿望清单 · 行程 · 预算'],review:['每日复盘','弹性复盘 · 周/月报'],calendar:['日历聚合','旅行 / 复盘 / 打卡日期集中看'],inbox:['随手记','跨模块待办 · 随时记录']};
+  const titles={home:['工作台','你的全能自律仪表盘'],english:['英语学习','四级六级 · 单词/短句/听力/口语'],reading:['在读书目','统计你读了多少本书'],exercise:['锻炼身体','年度活跃度热力图'],side:['副业统计','ISO审核 / 自媒体 / 其他'],media:['自媒体计划','活人感大龄女青年·女性成长'],travel:['旅游规划','愿望清单 · 行程 · 预算'],planner:['复盘·日历·随手','每日复盘 · 日历聚合 · 跨页随手记']};
   const t=titles[v]||['',''];document.getElementById('pageTitle').textContent=t[0];document.getElementById('pageSub').textContent=t[1];
   render();
 }
@@ -5132,6 +5139,16 @@ function checkinHistoryRecs(){
   return Object.keys(DATA.checkins||{}).filter(d=>d!==today&&DATA.checkins[d]&&Object.values(DATA.checkins[d]).some(v=>v))
     .map(d=>({date:d,id:'ck_'+d,mods:Object.keys(DATA.checkins[d]).filter(m=>DATA.checkins[d][m]).map(m=>names[m]||m).join('、')||'—'}));
 }
+function renderPlanner(){
+  const tab=state.plannerTab||'review';
+  const tabs=[['review','每日复盘'],['calendar','日历聚合'],['inbox','随手记']];
+  const tabBar=`<div class="tabs">${tabs.map(([k,label])=>`<div class="tab ${tab===k?'active':''}" data-ptab="${k}">${label}</div>`).join('')}</div>`;
+  let body;
+  if(tab==='calendar')body=renderCalendar();
+  else if(tab==='inbox')body=renderInbox();
+  else body=renderReview();
+  return `<div class="planner">${tabBar}${body}</div>`;
+}
 function renderReview(){
   const today=D.today();const r=DATA.reviews[today]||{mood:'',summary:''};
   // 自动生成周/月报（每次进入检查）
@@ -5220,7 +5237,7 @@ function renderCalendar(){
     if(td.length)rows.push(`<div class="ev"><span class="ev-ico travel">✈</span><div><b>旅行</b>：${esc(td.join('、'))} <span class="link" data-jump="travel">查看 ›</span></div></div>`);
     if(ck.length)rows.push(`<div class="ev"><span class="ev-ico check">●</span><div><b>打卡</b>：${ck.length} 项（${esc(ck.join('、'))}）</div></div>`);
     if(rv)rows.push(`<div class="ev"><span class="ev-ico review">●</span><div><b>复盘</b>：${esc(rv.summary?rv.summary.slice(0,40):'已记录')}</div></div>`);
-    if(ib.length)rows.push(`<div class="ev"><span class="ev-ico inbox">●</span><div><b>待办到期</b>：${esc(ib.join('、'))} <span class="link" data-jump="inbox">查看 ›</span></div></div>`);
+    if(ib.length)rows.push(`<div class="ev"><span class="ev-ico inbox">●</span><div><b>待办到期</b>：${esc(ib.join('、'))} <span class="link" data-jump="planner:inbox">查看 ›</span></div></div>`);
     detail=`<div class="card mt" data-block="detail"><h3>${D.pretty(calSel)} <span class="cs">当日汇总</span></h3>${rows.length?rows.join(''):'<div class="empty">这一天没有记录</div>'}</div>`;
   }
   return `
@@ -5331,9 +5348,7 @@ function render(){
     case 'side':html=renderSide();break;
     case 'media':html=renderMedia();break;
     case 'travel':html=renderTravel();break;
-    case 'review':html=renderReview();break;
-    case 'calendar':html=renderCalendar();break;
-    case 'inbox':html=renderInbox();break;
+    case 'planner':html=renderPlanner();break;
     default:html=renderHome();
   }
   view.innerHTML=html;
@@ -5341,7 +5356,7 @@ function render(){
   bindView(view);
   if(state.view==='home')startSbClock();
   applyBlockOrder(state.view);initBlockDrag(state.view);
-  updateInboxBadge();
+  updatePlannerBadge();
   window.scrollTo(0,0);
 }
 
@@ -5360,7 +5375,7 @@ function bindView(view){
   // 首页卡片点击跳转
   view.querySelectorAll('[data-jump]').forEach(c=>c.onclick=e=>{
     if(e.target.closest('button,form,input,select,textarea,a'))return;
-    setView(c.dataset.jump);if(window.innerWidth<=860)closeSidebar();
+    jumpTo(c.dataset.jump);
   });
   // 表单新增
   view.querySelectorAll('form[data-add]').forEach(form=>form.onsubmit=e=>{
@@ -5396,6 +5411,7 @@ function bindView(view){
   });
   // 侧边 Tab
   view.querySelectorAll('.tab[data-tab]').forEach(t=>t.onclick=()=>{state.sideTab=t.dataset.tab;render();});
+  view.querySelectorAll('[data-ptab]').forEach(t=>t.onclick=()=>{state.plannerTab=t.dataset.ptab;render();});
   view.querySelectorAll('[data-booktoggle]').forEach(b=>b.onclick=()=>{
     const bk=DATA.reading.find(x=>x.id===b.dataset.booktoggle);
     if(bk){bk.status=bk.status==='done'?'reading':'done';if(bk.status==='done')bk.doneDate=D.today();save();render();}
