@@ -706,7 +706,7 @@ if('speechSynthesis' in window){
    ============================================================ */
 const KEY='yubao_workbench_v1';
 const DEFAULT={
-  version:1, settings:{theme:'system',engLevel:'b1',xxapiKey:'',blockOrder:{home:['today','wall','travel','summary','life','backup']}}, checkins:{},
+  version:1, settings:{theme:'system',engLevel:'b1',xxapiKey:'',blockOrder:{home:['today','wall','travel','summary','backup']}}, checkins:{},
   sideHustle:{iso:[],media:[],other:[]},
   english:[], reading:[], exercise:[],
   mediaPlan:[], videos:[], favHot:[], goals:{readingYear:12, sideMonth:0, engWeek:0},
@@ -1000,7 +1000,7 @@ const CHECKIN_MODS=MODULES.map(m=>m.id);
 let state={view:'home',sideTab:'iso',plannerTab:'calendar'};
 let calMonth=new Date();   // 日历当前查看的月份
 let calSel=null;           // 日历选中的日期 yyyy-mm-dd
-let lifeMonth='';  // 月度生活回顾当前查看的月份 yyyy-mm（init 中初始化，避免引用未定义的 D）
+let sumMonth='';  // 首页「本月小结」当前查看的月份 yyyy-mm（init 中初始化，避免引用未定义的 D）
 
 function buildNav(){
   const nav=document.getElementById('nav');
@@ -1176,7 +1176,7 @@ function setView(v){
 /* ============================================================
    首页 Dashboard
    ============================================================ */
-/* 月度生活回顾：聚合某月所有记录，纯观察、无目标压力 */
+/* 本月小结：聚合某月所有记录 + 生活片段，纯观察、无目标压力；支持切换月份 */
 function monthLife(ym){
   const inMonth=d=>d&&(''+d).slice(0,7)===ym;
   const checkinDays=Object.keys(DATA.checkins||{}).filter(d=>inMonth(d)&&DATA.checkins[d]&&Object.values(DATA.checkins[d]).some(v=>v)).length;
@@ -1195,18 +1195,18 @@ function monthLife(ym){
     inboxSnips:inboxItems.slice(0,4).map(it=>it.text)
   };
 }
-function renderLifeCard(){
-  const ym=lifeMonth||D.today().slice(0,7);
+function renderSummaryCard(){
+  const ym=sumMonth||D.today().slice(0,7);
   const L=monthLife(ym);
   const stat=(num,unit,lbl)=>`<div class="sm-item"><div class="sm-num">${num}<span class="sm-unit"> ${unit}</span></div><div class="sm-lbl">${lbl}</div></div>`;
   const frag=(title,arr)=>arr&&arr.length?`<div class="life-frag"><div class="lf-h">${esc(title)}</div>${arr.map(x=>`<div class="lf-line">${esc(x)}</div>`).join('')}</div>`:'';
   return `
     <div class="life-head">
-      <div class="life-title">${ym.slice(0,4)} 年 ${ym.slice(5)} 月 · 生活回顾</div>
+      <div class="life-title">${ym.slice(0,4)} 年 ${ym.slice(5)} 月 · 本月小结</div>
       <div class="life-nav">
-        <button class="mini-btn" id="lifePrev" aria-label="上个月">‹</button>
-        <input type="month" id="lifeMonthInput" value="${ym}">
-        <button class="mini-btn" id="lifeNext" aria-label="下个月">›</button>
+        <button class="mini-btn" id="sumPrev" aria-label="上个月">‹</button>
+        <input type="month" id="sumMonthInput" value="${ym}">
+        <button class="mini-btn" id="sumNext" aria-label="下个月">›</button>
       </div>
     </div>
     <div class="summary-grid">
@@ -1215,6 +1215,7 @@ function renderLifeCard(){
       ${stat(L.inboxCount,'条','随手记')}
       ${stat(L.studyMin,'分','学习时长')}
       ${stat(L.exCount,'次','运动次数')}
+      ${stat(L.mediaCount,'条','内容选题')}
       ${stat('¥'+L.sideInc.toFixed(0),'','副业收入')}
     </div>
     <div class="life-frags">
@@ -1224,29 +1225,25 @@ function renderLifeCard(){
     </div>`;
 }
 function stepMonth(d){
-  const parts=(lifeMonth||D.today().slice(0,7)).split('-').map(Number);
+  const parts=(sumMonth||D.today().slice(0,7)).split('-').map(Number);
   let ny=parts[0],nm=parts[1]+d;
   if(nm<1){nm=12;ny--;}else if(nm>12){nm=1;ny++;}
-  lifeMonth=ny+'-'+String(nm).padStart(2,'0');
-  refreshLifeCard();
+  sumMonth=ny+'-'+String(nm).padStart(2,'0');
+  refreshSummaryCard();
 }
-function refreshLifeCard(){
-  const c=document.getElementById('lifeCard');if(!c)return;
-  c.innerHTML=renderLifeCard();
-  const prev=document.getElementById('lifePrev'),next=document.getElementById('lifeNext'),inp=document.getElementById('lifeMonthInput');
+function refreshSummaryCard(){
+  const c=document.getElementById('sumCard');if(!c)return;
+  c.innerHTML=renderSummaryCard();
+  const prev=document.getElementById('sumPrev'),next=document.getElementById('sumNext'),inp=document.getElementById('sumMonthInput');
   if(prev)prev.onclick=()=>stepMonth(-1);
   if(next)next.onclick=()=>stepMonth(1);
-  if(inp)inp.onchange=()=>{if(inp.value&&/^\d{4}-\d{2}$/.test(inp.value)){lifeMonth=inp.value;refreshLifeCard();}};
+  if(inp)inp.onchange=()=>{if(inp.value&&/^\d{4}-\d{2}$/.test(inp.value)){sumMonth=inp.value;refreshSummaryCard();}};
 }
 function renderHome(){
   const today=D.today();
   const q=todayQuote();
   const ym=today.slice(0,7);
-  // 本月各项汇总
-  const monthSideInc=DATA.sideHustle.iso.concat(DATA.sideHustle.media,DATA.sideHustle.other).filter(r=>r.date&&r.date.slice(0,7)===ym).reduce((s,r)=>s+(+r.income||0),0);
-  const monthStudyMin=DATA.english.filter(r=>r.date&&r.date.slice(0,7)===ym).reduce((s,r)=>s+engMins(r),0);
-  const monthExCount=DATA.exercise.filter(r=>r.date&&r.date.slice(0,7)===ym).length;
-  const monthBooks=DATA.reading.filter(r=>r.status==='done'&&r.doneDate&&r.doneDate.slice(0,7)===ym).length;
+  // 本月小结卡片（data-block=summary）由 renderSummaryCard() 按 sumMonth 聚合，不在此重复计算
   // 旅行倒计时（最近一次设定的旅行）
   const trips=DATA.travel.trips.slice().filter(t=>t.date).sort((a,b)=>a.date.localeCompare(b.date));
   const next=trips.find(t=>D.daysBetween(today,t.date)>=0);
@@ -1285,17 +1282,8 @@ function renderHome(){
     ${travelHtml}
   </div>
   <div class="card mt" data-block="summary">
-    <h3>本月小结 <span class="cs">${ym} · 月度汇总</span></h3>
-    <div class="summary-grid">
-      <div class="sm-item"><div class="sm-num">${monthStudyMin}<span class="sm-unit"> 分钟</span></div><div class="sm-lbl">学习时长</div></div>
-      <div class="sm-item"><div class="sm-num">${monthExCount}<span class="sm-unit"> 次</span></div><div class="sm-lbl">运动次数</div></div>
-      <div class="sm-item"><div class="sm-num">${monthBooks}<span class="sm-unit"> 本</span></div><div class="sm-lbl">读完书目</div></div>
-      <div class="sm-item"><div class="sm-num">¥${monthSideInc.toFixed(0)}</div><div class="sm-lbl">副业收入</div></div>
-    </div>
-  </div>
-  <div class="card mt" data-block="life">
-    <h3>月度生活回顾 <span class="cs">只看你记下的生活，不考核目标</span></h3>
-    <div id="lifeCard">${renderLifeCard()}</div>
+    <h3>本月小结 <span class="cs">只看你记下的生活，不考核目标</span></h3>
+    <div id="sumCard">${renderSummaryCard()}</div>
   </div>
   <div class="card mt backup-card" data-block="backup">
     <h3>${ico('backup')} 数据备份 <span class="cs">无网络 / 无 VPN 也能用</span></h3>
@@ -5289,7 +5277,7 @@ function render(){
    ============================================================ */
 function bindView(view){
   // 月度生活回顾（首页）
-  if(state.view==='home')refreshLifeCard();
+  if(state.view==='home')refreshSummaryCard();
   // 打卡墙
   view.querySelectorAll('[data-check]').forEach(el=>el.onclick=()=>{
     const done=toggleCheckin(D.today(),el.dataset.check);el.classList.toggle('done',done);
@@ -5733,7 +5721,7 @@ function init(){
   document.getElementById('guideBtn').onclick=()=>{setView('guide');closeSidebar();};
   document.getElementById('menuToggle').onclick=openSidebar;
   document.getElementById('overlay').onclick=closeSidebar;
-  lifeMonth=D.today().slice(0,7);
+  sumMonth=D.today().slice(0,7);
   setView('home');
   registerSW();
   setSbStatus(sbCfg?'sync':'off');
