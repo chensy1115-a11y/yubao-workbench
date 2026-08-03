@@ -592,7 +592,7 @@ h3 svg{width:18px;height:18px;vertical-align:-3px;margin-right:5px}
   <div class="modal search-modal">
     <div class="search-bar">
       <span class="ico" data-ico="search"></span>
-      <input type="text" id="searchInput" placeholder="搜索全部记录：复盘、随手记、旅行、读书、运动…" autocomplete="off" />
+      <input type="text" id="searchInput" placeholder="搜索全部记录：随手记、旅行、读书、运动、副业…" autocomplete="off" />
       <button class="search-clear" id="searchClear" title="清空"><span data-ico="x"></span></button>
     </div>
     <div class="search-meta" id="searchMeta">在所有模块中检索你记下的内容</div>
@@ -759,9 +759,6 @@ const D={
 /* 打卡墙 */
 function toggleCheckin(date,mod){if(!DATA.checkins[date])DATA.checkins[date]={};DATA.checkins[date][mod]=!DATA.checkins[date][mod];save();return DATA.checkins[date][mod];}
 function getCheckin(date,mod){return !!(DATA.checkins[date]&&DATA.checkins[date][mod]);}
-
-/* 复盘 */
-function saveReview(date,r){DATA.reviews[date]=r;save();}
 
 /* 导入导出 */
 function exportJSON(){return JSON.stringify(DATA,null,2);}
@@ -996,11 +993,11 @@ const MODULES=[
   {id:'exercise',name:'锻炼身体',ico:'exercise'},
   {id:'side',name:'副业统计',ico:'side'},
   {id:'media',name:'自媒体计划',ico:'media'},
-  {id:'planner',name:'复盘·日历·随手',ico:'review'},
+  {id:'planner',name:'日历·随手',ico:'calendar'},
   {id:'travel',name:'旅游规划',ico:'travel'}
 ];
 const CHECKIN_MODS=MODULES.map(m=>m.id);
-let state={view:'home',sideTab:'iso',plannerTab:'review'};
+let state={view:'home',sideTab:'iso',plannerTab:'calendar'};
 let calMonth=new Date();   // 日历当前查看的月份
 let calSel=null;           // 日历选中的日期 yyyy-mm-dd
 let lifeMonth='';  // 月度生活回顾当前查看的月份 yyyy-mm（init 中初始化，避免引用未定义的 D）
@@ -1034,13 +1031,7 @@ function collectSearch(){
     if(text.length<1)return;
     out.push({text,date:(date||'').slice(0,10),moduleId,moduleName});
   };
-  // 每日复盘（小结 + 心情）
-  Object.keys(DATA.reviews||{}).forEach(d=>{
-    if(!d||d.startsWith('_')||!DATA.reviews[d])return;
-    const r=DATA.reviews[d];
-    const mood=(MOOD_LABEL&&MOOD_LABEL[r.mood])?('['+MOOD_LABEL[r.mood]+'] '):'';
-    push(mood+(r.summary||''),d,'review','每日复盘');
-  });
+
   // 随手记
   (DATA.inbox||[]).forEach(it=>push(it.text,(it.due||it.created||''),'inbox','随手记'));
   // 旅行
@@ -1169,7 +1160,7 @@ function jumpTo(j){
   if(!j)return;
   let v=j,t=null;
   if(j.indexOf(':')>-1){const p=j.split(':');v=p[0];t=p[1];}
-  else if(j==='review'||j==='inbox'){v='planner';t=j;}
+  else if(j==='inbox'){v='planner';t=j;}
   if(v==='planner'&&t)state.plannerTab=t;
   setView(v);
   if(window.innerWidth<=860)closeSidebar();
@@ -1177,7 +1168,7 @@ function jumpTo(j){
 function setView(v){
   state.view=v;
   document.querySelectorAll('.nav-item').forEach(it=>it.classList.toggle('active',it.dataset.view===v));
-  const titles={home:['工作台','你的全能自律仪表盘'],english:['英语学习','四级六级 · 单词/短句/听力/口语'],reading:['在读书目','统计你读了多少本书'],exercise:['锻炼身体','年度活跃度热力图'],side:['副业统计','ISO审核 / 自媒体 / 其他'],media:['自媒体计划','活人感大龄女青年·女性成长'],travel:['旅游规划','愿望清单 · 行程 · 预算'],planner:['复盘·日历·随手','每日复盘 · 日历聚合 · 跨页随手记']};
+  const titles={home:['工作台','你的全能自律仪表盘'],english:['英语学习','四级六级 · 单词/短句/听力/口语'],reading:['在读书目','统计你读了多少本书'],exercise:['锻炼身体','年度活跃度热力图'],side:['副业统计','ISO审核 / 自媒体 / 其他'],media:['自媒体计划','活人感大龄女青年·女性成长'],travel:['旅游规划','愿望清单 · 行程 · 预算'],planner:['日历·随手','日历聚合 · 跨页随手记']};
   const t=titles[v]||['',''];document.getElementById('pageTitle').textContent=t[0];document.getElementById('pageSub').textContent=t[1];
   render();
 }
@@ -5112,26 +5103,6 @@ function renderTravel(){
   </div>`;
 }
 
-/* ============================================================
-   每日复盘（弹性 + 周/月报）
-   ============================================================ */
-const MOODS=[
- {k:'happy',label:'开心',svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="10" r="1.4" fill="currentColor" stroke="none"/><circle cx="15" cy="10" r="1.4" fill="currentColor" stroke="none"/><path d="M8 14c1.5-2 6.5-2 8 0"/></svg>'},
- {k:'love',label:'喜欢',svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 9.5c-.9-1.1-2.7-.3-2.7.9 0 1.1 2.7 2.8 2.7 2.8s2.7-1.7 2.7-2.8c0-1.2-1.8-2-2.7-.9z" fill="currentColor" stroke="none"/><path d="M15.5 9.5c-.9-1.1-2.7-.3-2.7.9 0 1.1 2.7 2.8 2.7 2.8s2.7-1.7 2.7-2.8c0-1.2-1.8-2-2.7-.9z" fill="currentColor" stroke="none"/><path d="M8 16c1.5-1.5 6.5-1.5 8 0"/></svg>'},
- {k:'calm',label:'平静',svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 10h2M14 10h2"/><path d="M9 15c1-1 5-1 6 0"/></svg>'},
- {k:'think',label:'思考',svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="10" r="1.4" fill="currentColor" stroke="none"/><circle cx="15" cy="10" r="1.4" fill="currentColor" stroke="none"/><path d="M10 15c.6.8 2 .8 2.6 0"/><circle cx="17.5" cy="6.5" r="1"/></svg>'},
- {k:'sleepy',label:'疲惫',svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 10c1-1 3-1 4 0M12 10c1-1 3-1 4 0"/><path d="M10 15h4"/></svg>'},
- {k:'angry',label:'生气',svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 9l3 2M17 9l-3 2"/><path d="M8 15c1.5 1.5 6.5 1.5 8 0"/></svg>'},
- {k:'sad',label:'难过',svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="10" r="1.4" fill="currentColor" stroke="none"/><circle cx="15" cy="10" r="1.4" fill="currentColor" stroke="none"/><path d="M8 14c1.5 2 6.5 2 8 0"/></svg>'},
- {k:'party',label:'庆祝',svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="10" r="1.4" fill="currentColor" stroke="none"/><circle cx="15" cy="10" r="1.4" fill="currentColor" stroke="none"/><path d="M8 14c1.5-2 6.5-2 8 0"/><path d="M18 4l.9 1.8L21 6.8l-1.6 1.1.5 1.9-1.8-.9-1.8.9.5-1.9L15.4 6.8l2.3-1z" fill="currentColor" stroke="none"/></svg>'}
-];
-const MOOD_LABEL={happy:'开心',love:'喜欢',calm:'平静',think:'思考',sleepy:'疲惫',angry:'生气',sad:'难过',party:'庆祝'};
-/* 复盘历史：往日心情 + 小结，按日期折叠 */
-function reviewHistoryRecs(){
-  const today=D.today();
-  return Object.keys(DATA.reviews||{}).filter(d=>d&&!d.startsWith('_')&&d!==today&&DATA.reviews[d])
-    .map(d=>({date:d,id:'rev_'+d,mood:DATA.reviews[d].mood,summary:DATA.reviews[d].summary}));
-}
 /* 打卡历史：往日各模块打卡足迹，按日期折叠 */
 function checkinHistoryRecs(){
   const today=D.today();
@@ -5140,60 +5111,13 @@ function checkinHistoryRecs(){
     .map(d=>({date:d,id:'ck_'+d,mods:Object.keys(DATA.checkins[d]).filter(m=>DATA.checkins[d][m]).map(m=>names[m]||m).join('、')||'—'}));
 }
 function renderPlanner(){
-  const tab=state.plannerTab||'review';
-  const tabs=[['review','每日复盘'],['calendar','日历聚合'],['inbox','随手记']];
+  const tab=state.plannerTab||'calendar';
+  const tabs=[['calendar','日历聚合'],['inbox','随手记']];
   const tabBar=`<div class="tabs">${tabs.map(([k,label])=>`<div class="tab ${tab===k?'active':''}" data-ptab="${k}">${label}</div>`).join('')}</div>`;
   let body;
-  if(tab==='calendar')body=renderCalendar();
-  else if(tab==='inbox')body=renderInbox();
-  else body=renderReview();
+  if(tab==='inbox')body=renderInbox();
+  else body=renderCalendar();
   return `<div class="planner">${tabBar}${body}</div>`;
-}
-function renderReview(){
-  const today=D.today();const r=DATA.reviews[today]||{mood:'',summary:''};
-  // 自动生成周/月报（每次进入检查）
-  const report=buildReport();
-  return `
-  <div class="card" data-block="today">
-    <h3>今日复盘 <span class="cs">${D.pretty(today)}</span></h3>
-    <div class="field" style="margin-bottom:12px"><label>今天心情</label><div class="moods" id="moods">
-      ${MOODS.map(m=>`<div class="mood ${r.mood===m.k?'sel':''}" data-mood="${m.k}" title="${m.label}">${m.svg}</div>`).join('')}</div></div>
-    <div class="field"><label>今日小结</label><textarea id="reviewSummary" rows="4" placeholder="今天做了什么、感受如何、明天想做什么…">${r.summary||''}</textarea></div>
-    <div class="muted small" style="margin-top:8px">输入即时自动保存，关闭后再次打开不会消失</div>
-  </div>
-  ${report?`<div class="card" data-block="report"><h3>${report.title}</h3>
-    <div class="grid g2">${report.cards}</div>
-    <div class="field mt"><label>我的感想</label><textarea id="reportNote" rows="3" placeholder="对这段时间的总结与下一步…">${report.note||''}</textarea></div>
-    <button class="btn mt" id="saveReport" data-title="${report.title}">保存报告</button></div>`:''}
-  <div class="card mt" data-block="hist">
-    <h3>复盘历史 <span class="cs">按日期折叠 · 往日心情与小结（也作你的日记 / 随笔）</span></h3>
-    ${historyBlock(reviewHistoryRecs(),[{t:'心情',render:r=>MOOD_LABEL[r.mood]||'—'},{t:'小结',render:r=>(r.summary||'(空)')}],'reviews')}
-  </div>
-`;
-}
-function buildReport(){
-  const now=new Date();const dow=now.getDay();const date=D.today();
-  let title=null,start,end,key;
-  if(dow===1){ // 周一 → 上周
-    start=D.fmt(D.addDays(D.startOfWeek(now),-7));end=D.fmt(D.addDays(D.startOfWeek(now),-1));title='上周周报';key='week';
-  }else if(now.getDate()===1){ // 每月1号 → 上月
-    const lm=new Date(now.getFullYear(),now.getMonth()-1,1);start=D.fmt(lm);end=D.fmt(new Date(now.getFullYear(),now.getMonth(),0));title='上月月报';key='month';
-  }else return null;
-  const days=[];let d=D.parse(start);const e=D.parse(end);
-  while(d<=e){days.push(D.fmt(d));d.setDate(d.getDate()+1);}
-  const study=DATA.english.filter(r=>days.includes(r.date)).reduce((s,r)=>s+engMins(r),0);
-  const exC=DATA.exercise.filter(r=>days.includes(r.date)).length;
-  const exMin=DATA.exercise.filter(r=>days.includes(r.date)).reduce((s,r)=>s+(+r.duration||0),0);
-  const sideInc=DATA.sideHustle.iso.concat(DATA.sideHustle.media,DATA.sideHustle.other).filter(r=>days.includes(r.date)).reduce((s,r)=>s+(+r.income||0),0);
-  const booksDone=DATA.reading.filter(r=>r.status==='done'&&r.doneDate&&days.includes(r.doneDate)).length;
-  const cards=`
-    <div class="kpi-box"><div class="v">${study}</div><div class="l">学习时长(分)</div></div>
-    <div class="kpi-box"><div class="v">${exC}</div><div class="l">运动次数</div></div>
-    <div class="kpi-box"><div class="v">${exMin}</div><div class="l">运动分钟</div></div>
-    <div class="kpi-box"><div class="v">¥${sideInc.toFixed(0)}</div><div class="l">副业收入</div></div>
-    <div class="kpi-box"><div class="v">${booksDone}</div><div class="l">读完本数</div></div>
-    <div class="kpi-box"><div class="v">${days.length}</div><div class="l">统计天数</div></div>`;
-  return {title:title+'（'+D.pretty(start)+' ~ '+D.pretty(end)+'）',cards,note:DATA.reviews['_'+key+'_'+start]?DATA.reviews['_'+key+'_'+start].summary:''};
 }
 
 /* ============================================================
@@ -5405,7 +5329,6 @@ function bindView(view){
   view.querySelectorAll('[data-del]').forEach(el=>el.onclick=()=>{
     const id=el.dataset.del;
     ['english','reading','exercise','mediaPlan','sideHustle.iso','sideHustle.media','sideHustle.other'].forEach(p=>remove(p,r=>r.id===id));
-    if(id.indexOf('rev_')===0){const d=id.slice(4);if(DATA.reviews&&DATA.reviews[d]){delete DATA.reviews[d];save();}}
     if(id.indexOf('ck_')===0){const d=id.slice(3);if(DATA.checkins&&DATA.checkins[d]){delete DATA.checkins[d];save();}}
     toast('已删除');render();
   });
@@ -5507,21 +5430,7 @@ function bindView(view){
       if(saveBtn)saveBtn.onclick=()=>{save();render();};
     }
   };
-  // 复盘心情
-  const moods=view.querySelector('#moods');
-  if(moods)moods.querySelectorAll('.mood').forEach(m=>m.onclick=()=>{
-    moods.querySelectorAll('.mood').forEach(x=>x.classList.remove('sel'));m.classList.add('sel');
-    const r=DATA.reviews[D.today()]||{};r.mood=m.dataset.mood;saveReview(D.today(),r);
-  });
-  const sum=view.querySelector('#reviewSummary');
-  if(sum)sum.oninput=()=>{const r=DATA.reviews[D.today()]||{};r.summary=sum.value;saveReview(D.today(),r);};
-  const rep=view.querySelector('#reportNote');
-  if(rep)rep.oninput=()=>{rep._v=rep.value;};
-  const saveRep=view.querySelector('#saveReport');
-  if(saveRep)saveRep.onclick=()=>{
-    const note=view.querySelector('#reportNote').value;const t=saveRep.dataset.title||'复盘报告';
-    DATA.reviews['_last_report']={summary:note,title:t};save();toast('报告已保存');
-  };
+
   // 日历：切换月份 / 选中日
   view.querySelectorAll('[data-cal-prev]').forEach(b=>b.onclick=()=>{calMonth=new Date(calMonth.getFullYear(),calMonth.getMonth()-1,1);render();});
   view.querySelectorAll('[data-cal-next]').forEach(b=>b.onclick=()=>{calMonth=new Date(calMonth.getFullYear(),calMonth.getMonth()+1,1);render();});
