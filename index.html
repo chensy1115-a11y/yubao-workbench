@@ -603,8 +603,11 @@ h3 svg{width:18px;height:18px;vertical-align:-3px;margin-right:5px}
 <div class="toast" id="toast"></div>
 <input type="file" id="fileInput" accept="application/json" style="display:none" />
 
-<script src="vendor/qrcode.js"></script>
-<script src="vendor/jsQR.js"></script>
+<!-- 这两个库只在「生成分享二维码 / 扫码导入」时用到，首屏无需就绪。
+     加 defer 让它们与 HTML 解析并行下载，不再阻塞主脚本(init)渲染首屏，
+     白屏问题由此消除；库会在 DOMContentLoaded 前就绪，用户点击相关功能时已可用。 -->
+<script src="vendor/qrcode.js" defer></script>
+<script src="vendor/jsQR.js" defer></script>
 <script>
 /* ============================================================
    雨宝工作台 — 单文件 SPA（LocalStorage + 可选 Supabase 同步）
