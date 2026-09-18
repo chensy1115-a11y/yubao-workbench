@@ -3,13 +3,11 @@
    其它静态资源 cache-first（vendor 脚本、manifest 等）。
 */
 /* 每次部署请递增此版本号（如 yubao-v3），activate 会自动清掉旧缓存，确保用户拿到最新 index.html */
-const CACHE='yubao-v2';
+const CACHE='yubao-v3';
 const ASSETS=[
   './',
   './index.html',
-  './manifest.webmanifest',
-  './vendor/qrcode.js',
-  './vendor/jsQR.js'
+  './manifest.webmanifest'
 ];
 
 self.addEventListener('install',e=>{

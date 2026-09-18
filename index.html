@@ -1122,8 +1122,8 @@ function monthLife(ym){
   const exRec=DATA.exercise.filter(r=>inMonth(r.date));
   const exCount=exRec.length;
   const exMin=exRec.reduce((s,r)=>s+(+r.duration||0),0);
-  const done=DATA.engWords.done||{};
-  const wordDays=Object.keys(done).filter(d=>(''+d).slice(0,7)===ym && done[d] && done[d].length>0).length;
+  const ck=DATA.checkins||{};
+  const wordDays=Object.keys(ck).filter(d=>(''+d).slice(0,7)===ym && ck[d] && ck[d].word).length;
   const sideInc=DATA.sideHustle.iso.concat(DATA.sideHustle.media,DATA.sideHustle.other).filter(r=>inMonth(r.date)).reduce((s,r)=>s+(+r.income||0),0);
   return {totalMin:studyMin+exMin,exCount,wordDays,sideInc};
 }
@@ -1179,7 +1179,7 @@ function renderHome(){
     let icoN, name, done;
     if(id==='word'){
       icoN='notebook'; name='单词打卡';
-      done=!!((DATA.engWords.done||{})[today]||[]).length;
+      done=getCheckin(today,'word');
     } else {
       const m=MODULES.find(x=>x.id===id);
       if(!m) return '';
@@ -5201,7 +5201,6 @@ function bindView(view){
   if(state.view==='home')refreshSummaryCard();
   // 打卡墙
   view.querySelectorAll('[data-check]').forEach(el=>el.onclick=()=>{
-    if(el.dataset.check==='word'){ jumpTo('english'); return; }
     const done=toggleCheckin(D.today(),el.dataset.check);el.classList.toggle('done',done);
     el.querySelector('.badge').innerHTML=done?ico('check'):'';
     el.querySelector('.ci-st').textContent=done?'已完成':'待完成';
