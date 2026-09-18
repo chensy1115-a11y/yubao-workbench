@@ -858,17 +858,28 @@ function setSbStatus(s,t){sbStatus=s;const b=document.getElementById('connBtn'),
   }
   if(banner){
     if(s==='off'){banner.className='sync-banner show off';banner.innerHTML='<span class="dot"></span>未连接云端 · 数据仅本地保存（点右上角「云端未连接」可配置多设备同步）';}
-    else if(s==='err'){banner.className='sync-banner show err';banner.innerHTML='<span class="dot"></span>云端连接异常 · 正在重试，数据已本地留存';}
+    else if(s==='err'){banner.className='sync-banner show err';const em=t?('：'+t.replace(/[<>&]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;'}[c]))):'';banner.innerHTML='<span class="dot"></span>云端连接异常'+em+' · 多为网络/CDN 被拦截或 Supabase 项目被暂停，可到 supabase.com 后台 Resume，或点右上角重试';}
     else if(s==='connected'){banner.className='sync-banner show ok';banner.innerHTML='<span class="dot"></span>云端已连接 · 多设备实时同步中';setTimeout(()=>{if(sbStatus==='connected')banner.classList.remove('show');},2800);}
     else {banner.className='sync-banner';banner.innerHTML='';}
   }
 }
 function loadSbScript(cb){
   if(window.supabase)return cb();
-  const s=document.createElement('script');
-  s.src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
-  s.onload=()=>cb();s.onerror=()=>cb(new Error('cdn'));
-  document.head.appendChild(s);
+  const CDNS=[
+    'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2',
+    'https://fastly.jsdelivr.net/npm/@supabase/supabase-js@2',
+    'https://unpkg.com/@supabase/supabase-js@2',
+    'https://registry.npmmirror.com/@supabase/supabase-js/2/files/dist/umd/supabase.js'
+  ];
+  let i=0;
+  (function tryNext(){
+    if(i>=CDNS.length){cb(new Error('cdn'));return;}
+    const s=document.createElement('script');
+    s.src=CDNS[i++];
+    s.onload=()=>{ if(window.supabase) cb(); else tryNext(); };
+    s.onerror=()=>tryNext();
+    document.head.appendChild(s);
+  })();
 }
 function connectSupabase(){
   if(!sbCfg||!sbCfg.url||!sbCfg.key){setSbStatus('off');return;}
