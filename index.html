@@ -140,14 +140,6 @@ button{font-family:inherit}
 body.home-dragging{overscroll-behavior:none;user-select:none}
 body.home-dragging #view [data-block]{touch-action:none}
 #view [data-block].drag-clone{box-shadow:0 14px 34px rgba(60,120,40,.28);border-radius:var(--radius);background:var(--card)}
-/* 首页数据备份卡片 */
-.backup-card{background:linear-gradient(180deg,var(--primary-soft),var(--card))}
-.backup-card h3{display:flex;align-items:center;gap:8px}
-.backup-card h3 svg{width:22px;height:22px;flex:0 0 22px}
-.backup-actions{display:flex;gap:10px;flex-wrap:wrap}
-.backup-actions .btn{display:inline-flex;align-items:center;gap:8px}
-.backup-actions .btn svg{width:18px;height:18px;flex:0 0 18px}
-@media(max-width:860px){.backup-actions{flex-direction:column}.backup-actions .btn{width:100%;justify-content:center}}
 /* 旅游规划：紧凑行内列表 */
 .trip-list{display:flex;flex-direction:column;gap:6px;margin-bottom:4px}
 .trip-row{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:var(--bg);cursor:pointer;transition:border-color .2s}
@@ -245,18 +237,6 @@ h3 svg{width:18px;height:18px;vertical-align:-3px;margin-right:5px}
 .word-paw svg{width:22px;height:22px}
 .btn svg{width:15px;height:15px;vertical-align:-2px;margin-right:4px}
 .btn.ghost svg{margin-right:2px}
-
-/* 悬浮备份 */
-.fab{position:fixed;right:24px;bottom:24px;z-index:60;width:56px;height:56px;border-radius:50%;border:none;cursor:pointer;
-  background:var(--primary);color:#fff;box-shadow:var(--shadow-lg);display:flex;align-items:center;justify-content:center;transition:transform .15s}
-.fab:hover{transform:scale(1.08)} .fab svg{width:26px;height:26px}
-.fab-menu{position:fixed;right:24px;bottom:90px;z-index:60;background:var(--card);border:1px solid var(--border);
-  border-radius:14px;box-shadow:var(--shadow-lg);padding:8px;display:none;min-width:190px}
-.fab-menu.open{display:block}
-.fab-menu button{display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:11px 12px;border:none;
-  background:transparent;color:var(--text);cursor:pointer;border-radius:9px;font-size:13px;font-weight:600}
-.fab-menu button:hover{background:var(--primary-soft);color:var(--primary-strong)}
-.fab-menu button svg{width:18px;height:18px}
 
 /* 弹窗 */
 .modal-mask{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:80;display:none;align-items:center;justify-content:center;padding:20px}
@@ -518,17 +498,6 @@ h3 svg{width:18px;height:18px;vertical-align:-3px;margin-right:5px}
   </div>
 </div>
 
-<button class="fab" id="fab" title="数据备份"><span data-ico="backup"></span></button>
-<div class="fab-menu" id="fabMenu">
-  <button id="btnExport"><span data-ico="backup"></span>导出全部数据 (JSON)</button>
-  <button id="btnImport"><span data-ico="upload"></span>导入 JSON 恢复</button>
-  <button id="btnReset"><span data-ico="trash"></span>清空本地数据</button>
-  <button id="btnDownload"><span data-ico="download"></span>下载离线副本</button>
-  <button id="btnNote"><span data-ico="inbox"></span>快速记录（随手记）</button>
-  <button id="btnQr"><span data-ico="qrcode"></span>生成分享二维码</button>
-  <button id="btnScan"><span data-ico="scan"></span>扫码导入</button>
-</div>
-
 <div class="modal-mask" id="sbModal">
   <div class="modal">
     <h3>云端同步设置（Supabase）</h3>
@@ -552,42 +521,6 @@ h3 svg{width:18px;height:18px;vertical-align:-3px;margin-right:5px}
   </div>
 </div>
 
-<div class="modal-mask" id="noteModal">
-  <div class="modal">
-    <h3>快速记录 <span class="cs">随手记 · 跨模块</span></h3>
-    <div class="field"><label>内容</label><textarea id="noteText" rows="3" placeholder="随时记录一个想法或待办…"></textarea></div>
-    <div class="field"><label>截止日（可选）</label><input type="date" id="noteDue"></div>
-    <div class="actions"><button class="btn ghost" id="noteCancel">取消</button><button class="btn" id="noteSave">保存</button></div>
-  </div>
-</div>
-
-<div class="modal-mask" id="qrModal">
-  <div class="modal">
-    <h3>分享二维码 <span class="cs">手机扫码即可导入这份数据</span></h3>
-    <div class="qr-box" id="qrBox"></div>
-    <div class="hint" id="qrHint"></div>
-    <div class="actions">
-      <button class="btn ghost" id="qrCopy">复制 JSON 文本</button>
-      <button class="btn ghost" id="qrClose">关闭</button>
-    </div>
-  </div>
-</div>
-
-<div class="modal-mask" id="scanModal">
-  <div class="modal">
-    <h3>扫码导入 <span class="cs">对准包含备份数据的二维码</span></h3>
-    <video id="scanVideo" playsinline style="width:100%;border-radius:12px;background:#000;display:none"></video>
-    <div class="scan-status" id="scanStatus">点击下方「开始扫描」并允许摄像头权限</div>
-    <div class="field" style="margin-top:10px"><label>或粘贴 JSON 文本导入（适合数据较大的情况）</label><textarea id="scanPaste" rows="3" placeholder="把导出的 JSON 粘贴到这里"></textarea></div>
-    <div class="actions">
-      <button class="btn ghost" id="scanStart">开始扫描</button>
-      <button class="btn ghost" id="scanStop" style="display:none">停止</button>
-      <button class="btn" id="scanImport">导入粘贴内容</button>
-      <button class="btn ghost" id="scanClose">关闭</button>
-    </div>
-  </div>
-</div>
-
 <div class="modal-mask" id="searchModal">
   <div class="modal search-modal">
     <div class="search-bar">
@@ -601,13 +534,6 @@ h3 svg{width:18px;height:18px;vertical-align:-3px;margin-right:5px}
 </div>
 
 <div class="toast" id="toast"></div>
-<input type="file" id="fileInput" accept="application/json" style="display:none" />
-
-<!-- 这两个库只在「生成分享二维码 / 扫码导入」时用到，首屏无需就绪。
-     加 defer 让它们与 HTML 解析并行下载，不再阻塞主脚本(init)渲染首屏，
-     白屏问题由此消除；库会在 DOMContentLoaded 前就绪，用户点击相关功能时已可用。 -->
-<script src="vendor/qrcode.js" defer></script>
-<script src="vendor/jsQR.js" defer></script>
 <script>
 /* ============================================================
    雨宝工作台 — 单文件 SPA（LocalStorage + 可选 Supabase 同步）
@@ -1287,14 +1213,6 @@ function renderHome(){
   <div class="card mt" data-block="summary">
     <h3>本月小结 <span class="cs">只看你记下的生活，不考核目标</span></h3>
     <div id="sumCard">${renderSummaryCard()}</div>
-  </div>
-  <div class="card mt backup-card" data-block="backup">
-    <h3>${ico('backup')} 数据备份 <span class="cs">无网络 / 无 VPN 也能用</span></h3>
-    <p class="small muted" style="margin-bottom:12px">云端同步依赖网络，建议定期导出一份 JSON 作为本地保险。换设备、或同步失败时用「导入」一键恢复。</p>
-    <div class="backup-actions">
-      <button class="btn" id="homeExport">${ico('backup')} 导出全部数据 (JSON)</button>
-      <button class="btn ghost" id="homeImport">${ico('upload')} 导入 JSON 恢复</button>
-    </div>
   </div>`;
 }
 
@@ -5194,7 +5112,7 @@ function renderInbox(){
       <div class="field"><label>截止日(可选)</label><input type="date" name="due"></div>
       <button class="btn" type="submit">添加</button>
     </form>
-    <div class="hint">也可随时点右下角备份按钮 → 「快速记录」跨页随手记</div>
+    <div class="hint">在这里记下的内容会出现在下方待办列表</div>
   </div>
   <div class="card mt" data-block="active">
     <h3>待办 <span class="cs">${active.length} 条</span></h3>
@@ -5431,9 +5349,6 @@ function bindView(view){
   // 随手记：完成 / 删除
   view.querySelectorAll('[data-inbox-toggle]').forEach(b=>b.onclick=e=>{const it=(DATA.inbox||[]).find(x=>x.id===b.dataset.inboxToggle);if(it){it.done=!it.done;save();render();}});
   view.querySelectorAll('[data-inbox-del]').forEach(b=>b.onclick=()=>{(DATA.inbox=(DATA.inbox||[]).filter(x=>x.id!==b.dataset.inboxDel));save();render();});
-  // 首页数据备份入口（无网络 / 无 VPN 也能用的兜底）
-  const he=view.querySelector('#homeExport'); if(he)he.onclick=doExport;
-  const hi=view.querySelector('#homeImport'); if(hi)hi.onclick=doImport;
 }
 
 /* ============================================================
@@ -5493,39 +5408,6 @@ function openSidebar(){document.getElementById('sidebar').classList.add('open');
 function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('overlay').classList.remove('show');}
 
 /* ============================================================
-   备份菜单
-   ============================================================ */
-function doExport(){
-  const blob=new Blob([exportJSON()],{type:'application/json'});
-  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='雨宝工作台数据_'+D.today()+'.json';a.click();
-  toast('已导出 JSON');
-}
-function doImport(){ document.getElementById('fileInput').click(); }
-function initBackup(){
-  const fab=document.getElementById('fab'),menu=document.getElementById('fabMenu');
-  fab.onclick=()=>menu.classList.toggle('open');
-  document.addEventListener('click',e=>{if(!fab.contains(e.target)&&!menu.contains(e.target))menu.classList.remove('open');});
-  document.getElementById('btnExport').onclick=()=>{doExport();menu.classList.remove('open');};
-  document.getElementById('btnImport').onclick=()=>{doImport();menu.classList.remove('open');};
-  document.getElementById('fileInput').onchange=e=>{
-    const f=e.target.files[0];if(!f)return;const rd=new FileReader();
-    rd.onload=()=>{try{importJSON(rd.result);render();toast('数据已恢复');}catch(err){toast('文件格式错误');}};
-    rd.readAsText(f);e.target.value='';
-  };
-  document.getElementById('btnReset').onclick=()=>{
-    if(confirm('确定清空全部本地数据？此操作不可恢复！')){resetAll();render();toast('已清空');}
-    menu.classList.remove('open');
-  };
-  document.getElementById('btnDownload').onclick=()=>{
-    menu.classList.remove('open');
-    const url=location.href;
-    const doDownload=(htmlText)=>{const blob=new Blob([htmlText],{type:'text/html'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='雨宝工作台_离线副本.html';a.click();toast('已下载离线副本');};
-    if(url&&url.indexOf('file:')!==0){ fetch(url).then(r=>r.text()).then(doDownload).catch(()=>doDownload('<!DOCTYPE html>'+document.documentElement.outerHTML)); }
-    else doDownload('<!DOCTYPE html>'+document.documentElement.outerHTML);
-  };
-}
-
-/* ============================================================
    Supabase 配置弹窗
    ============================================================ */
 function initSbModal(){
@@ -5556,9 +5438,6 @@ function initShortcuts(){
 /* ============================================================
    初始化
    ============================================================ */
-/* ============================================================
-   扩展功能：随手记快速记录 / 二维码分享 / 扫码导入
-   ============================================================ */
 function copyText(t){
   try{
     if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t);return;}
@@ -5567,7 +5446,6 @@ function copyText(t){
   try{document.execCommand('copy');}catch(e){} ta.remove();
 }
 function initExtras(){
-  const fabMenu=document.getElementById('fabMenu');
   // 全局搜索
   const sModal=document.getElementById('searchModal');
   document.getElementById('searchBtn').onclick=openSearch;
@@ -5581,128 +5459,7 @@ function initExtras(){
     else if(e.key==='Escape'&&sModal.classList.contains('open')){closeSearch();}
   });
 
-  // 快速记录弹窗
-  const noteModal=document.getElementById('noteModal');
-  document.getElementById('btnNote').onclick=()=>{
-    document.getElementById('noteText').value='';document.getElementById('noteDue').value='';
-    noteModal.classList.add('open');fabMenu.classList.remove('open');
-    setTimeout(()=>document.getElementById('noteText').focus(),50);
-  };
-  document.getElementById('noteCancel').onclick=()=>noteModal.classList.remove('open');
-  document.getElementById('noteSave').onclick=()=>{
-    const text=document.getElementById('noteText').value.trim();
-    if(!text){toast('写点内容吧');return;}
-    DATA.inbox=DATA.inbox||[];
-    DATA.inbox.push({id:'n'+Date.now(),text,done:false,created:D.today()+' '+new Date().toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'}),due:document.getElementById('noteDue').value||''});
-    save();noteModal.classList.remove('open');toast('已记录到随手记');render();
-  };
-  noteModal.addEventListener('click',e=>{if(e.target===noteModal)noteModal.classList.remove('open');});
-
-  // 生成分享二维码
-  const qrModal=document.getElementById('qrModal');
-  const qrOverflow=(json,box,hint)=>{
-    box.innerHTML='<div class="empty">数据较大（约 '+(json.length/1024).toFixed(1)+' KB），单张二维码放不下</div>';
-    hint.innerHTML='请改用：①「导出全部数据」存文件；②下方「复制 JSON 文本」后在手机端「扫码导入」的粘贴框导入。';
-  };
-  document.getElementById('btnQr').onclick=()=>{
-    fabMenu.classList.remove('open');
-    const json=exportJSON();
-    const box=document.getElementById('qrBox'),hint=document.getElementById('qrHint');
-    const encoded=b64encode(json);
-    if(encoded.length<=2200){
-      try{
-        const qr=qrcode(0,'L');qr.addData(encoded);qr.make();
-        box.innerHTML='<div class="qr-svg">'+qr.createSvgTag({cellSize:4,margin:8,scalable:true})+'</div>';
-        hint.innerHTML='数据已编码为二维码（约 '+(encoded.length/1024).toFixed(1)+' KB）。手机扫码即可导入。';
-      }catch(e){ qrOverflow(json,box,hint); }
-    }else{
-      // 拆分为多张二维码，扫码时按顺序/无序集齐后自动拼接导入
-      const size=1800;const chunks=[];
-      for(let i=0;i<encoded.length;i+=size)chunks.push(encoded.slice(i,i+size));
-      const total=chunks.length;let frags='';let ok=true;
-      chunks.forEach((ch,i)=>{
-        const payload='YB1|'+(i+1)+'/'+total+'|'+ch;
-        try{const qr=qrcode(0,'L');qr.addData(payload);qr.make();frags+='<div class="qr-frame"><div class="qr-svg">'+qr.createSvgTag({cellSize:3,margin:6,scalable:true})+'</div><div class="qr-frame-no">第 '+(i+1)+' / '+total+' 张</div></div>';}
-        catch(e){ok=false;}
-      });
-      if(ok){box.innerHTML=frags;hint.innerHTML='数据约 '+(json.length/1024).toFixed(1)+' KB，已拆分为 <b>'+total+'</b> 张二维码。请用手机「扫码导入」依次扫描这 '+total+' 张（顺序不限，集齐自动导入）。';}
-      else qrOverflow(json,box,hint);
-    }
-    qrModal.classList.add('open');
-  };
-  document.getElementById('qrCopy').onclick=()=>{copyText(exportJSON());toast('已复制 JSON 文本');};
-  document.getElementById('qrClose').onclick=()=>qrModal.classList.remove('open');
-  qrModal.addEventListener('click',e=>{if(e.target===qrModal)qrModal.classList.remove('open');});
-
-  // 扫码导入
-  const scanModal=document.getElementById('scanModal');
-  document.getElementById('btnScan').onclick=()=>{
-    fabMenu.classList.remove('open');
-    scanBuf={};scanTotal=0;
-    document.getElementById('scanStatus').textContent='点击下方「开始扫描」并允许摄像头权限（需 https 或 localhost，file:// 无法使用）';
-    scanModal.classList.add('open');
-  };
-  document.getElementById('scanStart').onclick=startScan;
-  document.getElementById('scanStop').onclick=stopScan;
-  document.getElementById('scanClose').onclick=()=>{stopScan();scanModal.classList.remove('open');};
-  document.getElementById('scanImport').onclick=()=>{
-    const t=document.getElementById('scanPaste').value.trim();
-    if(!t){toast('先粘贴 JSON 文本');return;}
-    try{importJSON(t);stopScan();scanModal.classList.remove('open');render();toast('导入成功');}
-    catch(e){toast('JSON 格式错误');}
-  };
-  scanModal.addEventListener('click',e=>{if(e.target===scanModal){stopScan();scanModal.classList.remove('open');}});
 }
-let scanStream=null,scanRAF=null,scanBuf={},scanTotal=0;
-function startScan(){
-  const video=document.getElementById('scanVideo'),status=document.getElementById('scanStatus');
-  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){status.textContent='当前环境不支持摄像头（需 https 或 localhost）';return;}
-  status.textContent='正在请求摄像头权限…';
-  navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}}).then(stream=>{
-    scanStream=stream;video.srcObject=stream;video.style.display='block';video.play();
-    document.getElementById('scanStart').style.display='none';document.getElementById('scanStop').style.display='inline-block';
-    status.textContent='正在扫描… 把二维码对准摄像头';
-    const tick=()=>{
-      if(video.readyState>=2&&video.videoWidth){
-        const cv=document.createElement('canvas');cv.width=video.videoWidth;cv.height=video.videoHeight;
-        const ctx=cv.getContext('2d');ctx.drawImage(video,0,0,cv.width,cv.height);
-        const img=ctx.getImageData(0,0,cv.width,cv.height);
-        const res=(typeof jsQR==='function')?jsQR(img.data,cv.width,cv.height,{inversionAttempts:'attemptBoth'}):null;
-        if(res&&res.data){
-          const data=res.data;
-          // 多帧二维码：YB1|<i>/<n>|<chunk>
-          if(data.indexOf('YB1|')===0){
-            const m=data.match(/^YB1\|(\d+)\/(\d+)\|(.*)$/);
-            if(m){
-              const idx=+m[1],total=+m[2],chunk=m[3];
-              scanBuf[idx]=chunk;scanTotal=total;
-              const got=Object.keys(scanBuf).length;
-              status.textContent='已扫描 '+got+' / '+total+' 张，集齐自动导入…';
-              if(got===total){
-                const full=Object.keys(scanBuf).sort((a,b)=>a-b).map(k=>scanBuf[k]).join('');
-                try{const json=b64decode(full);importJSON(json);toast('扫码导入成功（'+total+' 张）');stopScan();document.getElementById('scanModal').classList.remove('open');render();scanBuf={};scanTotal=0;return;}
-                catch(e){status.textContent='二维码数据解析失败，请重新扫描';scanBuf={};scanTotal=0;}
-              }
-              return;
-            }
-          }
-          try{const json=b64decode(data);importJSON(json);toast('扫码导入成功');stopScan();document.getElementById('scanModal').classList.remove('open');render();return;}
-          catch(e){status.textContent='二维码内容不是有效的备份数据';}
-        }
-      }
-      scanRAF=requestAnimationFrame(tick);
-    };
-    scanRAF=requestAnimationFrame(tick);
-  }).catch(err=>{status.textContent='无法访问摄像头：'+(err&&err.message||err)+'（请检查权限或改用粘贴导入）';});
-}
-function stopScan(){
-  if(scanRAF)cancelAnimationFrame(scanRAF);scanRAF=null;
-  if(scanStream){scanStream.getTracks().forEach(t=>t.stop());scanStream=null;}
-  const v=document.getElementById('scanVideo');if(v){v.srcObject=null;v.style.display='none';}
-  const s=document.getElementById('scanStart'),st=document.getElementById('scanStop');
-  if(s)s.style.display='inline-block';if(st)st.style.display='none';
-}
-
 /* 离线支持：注册 Service Worker（仅 http(s)/localhost） */
 function registerSW(){
   if('serviceWorker' in navigator && location.protocol.indexOf('http')===0){
@@ -5716,7 +5473,6 @@ function init(){
   watchSystemTheme();
   paintIcons(document);
   buildNav();
-  initBackup();
   initSbModal();
   initShortcuts();
   initExtras();
